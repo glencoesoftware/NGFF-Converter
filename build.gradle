@@ -36,7 +36,8 @@ javafx {
 
 dependencies {
     implementation 'com.glencoesoftware:bioformats2raw:0.4.0'
-
+    implementation 'info.picocli:picocli:4.6.2'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"

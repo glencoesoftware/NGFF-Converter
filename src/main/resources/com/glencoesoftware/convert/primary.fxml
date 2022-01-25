@@ -1,16 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Button?>
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
+<HBox xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <children>
-      <Label text="Primary View" />
-      <Button fx:id="primaryButton" text="Switch to Secondary View" onAction="#switchToSecondary"/>
+      <VBox alignment="CENTER" prefHeight="598.0" prefWidth="530.0" spacing="20.0">
+         <children>
+            <Label text="Primary View" />
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <Label text="Output Folder">
+                     <padding>
+                        <Insets right="10.0" />
+                     </padding>
+                  </Label>
+                  <TextField fx:id="outputDirectory" promptText="Choose an output directory" text="Same as input" HBox.hgrow="ALWAYS" />
+                  <Button mnemonicParsing="false" text="Choose..." />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER" prefHeight="371.0" prefWidth="490.0">
+               <children>
+                  <ListView fx:id="inputFileList" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" prefHeight="310.0" prefWidth="275.0">
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <padding>
+                        <Insets left="5.0" right="5.0" />
+                     </padding>
+                  </ListView>
+                  <ListView fx:id="outputFileList" layoutX="95.0" layoutY="10.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" prefHeight="310.0" prefWidth="275.0">
+                     <padding>
+                        <Insets left="5.0" right="5.0" />
+                     </padding>
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </ListView>
+               </children>
+            </HBox>
+            <TextField fx:id="logBox" editable="false" text="Default text" />
+            <ProgressBar maxHeight="25.0" minHeight="25.0" prefHeight="25.0" prefWidth="520.0" progress="0.79" VBox.vgrow="ALWAYS">
+               <VBox.margin>
+                  <Insets bottom="3.0" top="3.0" />
+               </VBox.margin></ProgressBar>
+            <TextArea editable="false" prefHeight="79.0" prefWidth="490.0" />
+         </children>
+         <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         </padding>
+      </VBox>
+      <VBox prefHeight="400.0" prefWidth="136.0">
+         <children>
+            <GridPane prefHeight="202.0" prefWidth="136.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="45.0" minWidth="10.0" prefWidth="22.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="104.0" minWidth="10.0" prefWidth="104.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <CheckBox fx:id="wantDebug" mnemonicParsing="false" selected="true" />
+                  <CheckBox fx:id="wantVersion" layoutX="10.0" layoutY="17.0" mnemonicParsing="false" GridPane.rowIndex="1" />
+                  <CheckBox fx:id="wantHelp" layoutX="10.0" layoutY="47.0" mnemonicParsing="false" GridPane.rowIndex="2" />
+                  <CheckBox layoutX="10.0" layoutY="77.0" mnemonicParsing="false" GridPane.rowIndex="3" />
+                  <Label text="Debug" GridPane.columnIndex="1" />
+                  <Label text="Version" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label text="Help" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <Label text="Make pyramids" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <CheckBox layoutX="15.0" layoutY="119.0" mnemonicParsing="false" GridPane.rowIndex="4" />
+                  <CheckBox layoutX="15.0" layoutY="149.0" mnemonicParsing="false" GridPane.rowIndex="5" />
+                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="5" />
+               </children>
+               <padding>
+                  <Insets bottom="10.0" left="5.0" right="5.0" top="10.0" />
+               </padding>
+            </GridPane>
+            <Button fx:id="primaryButton" onAction="#switchToSecondary" text="Switch to Secondary View" />
+            <ProgressIndicator progress="0.45" />
+            <Button mnemonicParsing="false" onAction="#runConvert" text="Run!" />
+         </children>
+      </VBox>
    </children>
-   <padding>
-      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-   </padding>
-</VBox>
+</HBox>
