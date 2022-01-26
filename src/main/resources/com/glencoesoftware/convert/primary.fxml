@@ -6,40 +6,53 @@
 
 <HBox xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <children>
-      <VBox alignment="CENTER" prefHeight="598.0" prefWidth="530.0" spacing="20.0">
+      <VBox alignment="CENTER" prefHeight="598.0" prefWidth="581.0" spacing="20.0" HBox.hgrow="ALWAYS">
          <children>
-            <Label text="Primary View" />
-            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+            <HBox alignment="CENTER" prefHeight="31.0" prefWidth="541.0">
                <children>
-                  <Label text="Output Folder">
+                  <Label text="Output Folder" textOverrun="LEADING_ELLIPSIS">
                      <padding>
                         <Insets right="10.0" />
                      </padding>
                   </Label>
-                  <TextField fx:id="outputDirectory" promptText="Choose an output directory" text="Same as input" HBox.hgrow="ALWAYS" />
-                  <Button mnemonicParsing="false" text="Choose..." />
+                  <TextField fx:id="outputDirectory" promptText="Choose an output directory" text="&lt;Same as input&gt;" HBox.hgrow="ALWAYS">
+                     <HBox.margin>
+                        <Insets right="5.0" />
+                     </HBox.margin></TextField>
+                  <Button mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose" />
+                  <Button graphicTextGap="2.0" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Clear" textAlignment="CENTER">
+                     <HBox.margin>
+                        <Insets left="3.0" right="3.0" />
+                     </HBox.margin>
+                  </Button>
                </children>
             </HBox>
-            <HBox alignment="CENTER" prefHeight="371.0" prefWidth="490.0">
+            <VBox prefHeight="324.0" prefWidth="541.0">
                <children>
-                  <ListView fx:id="inputFileList" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" prefHeight="310.0" prefWidth="275.0">
-                     <HBox.margin>
-                        <Insets />
-                     </HBox.margin>
-                     <padding>
-                        <Insets left="5.0" right="5.0" />
-                     </padding>
-                  </ListView>
-                  <ListView fx:id="outputFileList" layoutX="95.0" layoutY="10.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" prefHeight="310.0" prefWidth="275.0">
-                     <padding>
-                        <Insets left="5.0" right="5.0" />
-                     </padding>
-                     <HBox.margin>
-                        <Insets left="10.0" />
-                     </HBox.margin>
-                  </ListView>
+                  <HBox alignment="CENTER" prefHeight="17.0" prefWidth="547.0">
+                     <children>
+                        <Label alignment="CENTER" prefHeight="17.0" prefWidth="270.0" text="Input" textAlignment="CENTER" HBox.hgrow="NEVER">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                        </Label>
+                        <Label alignment="CENTER" prefHeight="17.0" prefWidth="270.0" text="Output" textAlignment="CENTER" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" prefHeight="371.0" prefWidth="490.0">
+                     <children>
+                        <ListView fx:id="inputFileList" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" prefHeight="348.0" prefWidth="541.0" HBox.hgrow="ALWAYS">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                           <padding>
+                              <Insets left="5.0" right="5.0" />
+                           </padding>
+                        </ListView>
+                     </children>
+                  </HBox>
                </children>
-            </HBox>
+            </VBox>
             <TextField fx:id="logBox" editable="false" text="Default text" />
             <ProgressBar maxHeight="25.0" minHeight="25.0" prefHeight="25.0" prefWidth="520.0" progress="0.79" VBox.vgrow="ALWAYS">
                <VBox.margin>
@@ -51,12 +64,12 @@
             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
          </padding>
       </VBox>
-      <VBox prefHeight="400.0" prefWidth="136.0">
+      <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0">
          <children>
             <GridPane prefHeight="202.0" prefWidth="136.0">
               <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="45.0" minWidth="10.0" prefWidth="22.0" />
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="104.0" minWidth="10.0" prefWidth="104.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="45.0" minWidth="10.0" prefWidth="23.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="126.0" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -84,7 +97,6 @@
                   <Insets bottom="10.0" left="5.0" right="5.0" top="10.0" />
                </padding>
             </GridPane>
-            <Button fx:id="primaryButton" onAction="#switchToSecondary" text="Switch to Secondary View" />
             <ProgressIndicator progress="0.45" />
             <Button mnemonicParsing="false" onAction="#runConvert" text="Run!" />
          </children>

@@ -27,6 +27,8 @@ import javafx.event.EventHandler;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.Node;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 
 
 public class PrimaryController {
@@ -39,38 +41,41 @@ public class PrimaryController {
     public CheckBox wantVersion;
     public CheckBox wantHelp;
     public ListView inputFileList;
-    public ListView outputFileList;
 
     public Set<String> SupportedExtensions = new HashSet<String>(Arrays.asList("txt", "b"));
 
     @FXML
     public void initialize(){
-        inputFileList.setCellFactory(new Callback<ListView<File>,
-                                             ListCell<File>>() {
-                                         public FileCell call(ListView<File> list) {
+        inputFileList.setCellFactory(new Callback<ListView<IOPackage>,
+                                             ListCell<IOPackage>>() {
+                                         public FileCell call(ListView<IOPackage> list) {
                                              return new FileCell();
                                          }
                                      }
         );
-        outputFileList.setCellFactory(new Callback<ListView<File>,
-                                              ListCell<File>>() {
-                                          public OutputCell call(ListView<File> list) {
-                                              return new OutputCell();
-                                          }
-                                      }
-        );
-
-    }
-
-    @FXML
-    private void switchToSecondary() throws IOException {
-        App.setRoot("secondary");
-        System.out.println("Sec done");
     }
 
     @FXML
     private void addFiles() throws IOException {
         System.out.println("Drop detected");
+    }
+
+    @FXML
+    private void chooseOutputDirectory() throws IOException {
+        System.out.println("Kliked");
+        Stage stage = (Stage) outputDirectory.getScene().getWindow();
+        DirectoryChooser outputDirectoryChooser = new DirectoryChooser();
+        outputDirectoryChooser.setTitle("Choose output directory");
+        File newDir = outputDirectoryChooser.showDialog(stage);
+        if (newDir != null) {
+            outputDirectory.setText(newDir.getAbsolutePath());
+        }
+
+    }
+
+    @FXML
+    private void resetOutputDirectory() throws IOException {
+        outputDirectory.setText("<Same as input>");
     }
 
     @FXML
@@ -85,38 +90,24 @@ public class PrimaryController {
 
     @FXML
     private void handleFileDrop(DragEvent event) throws IOException {
-        // Link listbox scrollbars together
-        // This is a suboptimal place to have this functionality, but it needs to run after startup.
-        Node n1 = inputFileList.lookup(".scroll-bar");
-        Node n2 = outputFileList.lookup(".scroll-bar");
-        if (n1 instanceof ScrollBar && n2 instanceof ScrollBar) {
-            final ScrollBar barIn = (ScrollBar) n1;
-            final ScrollBar barOut = (ScrollBar) n2;
-            barIn.valueProperty().bindBidirectional(barOut.valueProperty());
-            }
-
         Dragboard db = event.getDragboard();
         boolean success = false;
         if (db.hasFiles()) {
             success = true;
 //            String filePath = null;
             List fileList = inputFileList.getItems();
-            List outputList = outputFileList.getItems();
 //            List<File> fl = db.getFiles().stream().filter(f -> SupportedExtensions.contains(FilenameUtils.getExtension(f.getName())));
             for (File file:db.getFiles()) {
                 String filePath = file.getAbsolutePath();
                 String outPath = FilenameUtils.getBaseName(filePath);
                 String outBase;
-                System.out.println(outputDirectory.getText());
-                if (outputDirectory.getText().equals("Same as input")) {
+                if (outputDirectory.getText().equals("<Same as input>")) {
                     outBase = file.getParent();
                 } else {
                     outBase = outputDirectory.getText();
                 }
-                File outfile = new File(outBase, outPath + ".zarr");
-                fileList.add(file);
-                outputList.add(outfile);
-//                inputFileList.addAll(filePath);
+                File outFile = new File(outBase, outPath + ".zarr");
+                fileList.add(new IOPackage(file, outFile));
             }
         }
         event.setDropCompleted(success);
