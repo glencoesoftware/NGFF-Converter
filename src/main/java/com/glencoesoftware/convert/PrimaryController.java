@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert;
 
+import javafx.collections.ObservableList;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextArea;
 import java.io.IOException;
@@ -7,6 +8,7 @@ import java.io.PrintWriter;
 import java.io.File;
 import java.util.*;
 
+import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
@@ -17,6 +19,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ListCell;
 import com.glencoesoftware.bioformats2raw.Converter;
@@ -29,6 +32,9 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.Node;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.kordamp.ikonli.javafx.FontIcon;
+import loci.formats.ImageReader;
+
 
 
 public class PrimaryController {
@@ -41,28 +47,52 @@ public class PrimaryController {
     public CheckBox wantVersion;
     public CheckBox wantHelp;
     public ListView<IOPackage> inputFileList;
+    public Button addFileButton;
+    public Button removeFileButton;
+    public Button clearFileButton;
 
-    public Set<String> SupportedExtensions = new HashSet<String>(Arrays.asList("txt", "b"));
+    public Set<String> SupportedExtensions = new HashSet<String>(Arrays.asList(new ImageReader().getSuffixes()));
 
     @FXML
     public void initialize(){
-        inputFileList.setCellFactory(new Callback<ListView<IOPackage>,
-                                             ListCell<IOPackage>>() {
-                                         public FileCell call(ListView<IOPackage> list) {
-                                             return new FileCell();
-                                         }
-                                     }
-        );
+        inputFileList.setCellFactory(list -> new FileCell());
+        FontIcon addIcon = new FontIcon("bi-plus");
+        FontIcon removeIcon = new FontIcon("bi-dash");
+        FontIcon clearIcon = new FontIcon("bi-x");
+        addIcon.setIconSize(20);
+        removeIcon.setIconSize(20);
+        clearIcon.setIconSize(20);
+        addFileButton.setGraphic(addIcon);
+        removeFileButton.setGraphic(removeIcon);
+        clearFileButton.setGraphic(clearIcon);
     }
 
     @FXML
-    private void addFiles() throws IOException {
-        System.out.println("Drop detected");
+    private void addFiles() {
+        Stage stage = (Stage) addFileButton.getScene().getWindow();
+        FileChooser addFileChooser = new FileChooser();
+        addFileChooser.setTitle("Select files to load...");
+        List<File> newFiles = addFileChooser.showOpenMultipleDialog(stage);
+        if (newFiles.size() > 0) {
+            addFilesToList(newFiles);
+        }
     }
 
     @FXML
-    private void chooseOutputDirectory() throws IOException {
-        System.out.println("Kliked");
+    private void removeFile() {
+        final int selectedIdx = inputFileList.getSelectionModel().getSelectedIndex();
+        if (selectedIdx != -1) {
+            inputFileList.getItems().remove(selectedIdx);
+        }
+    }
+
+    @FXML
+    private void clearFiles() {
+        inputFileList.getItems().clear();
+    }
+
+    @FXML
+    private void chooseOutputDirectory() {
         Stage stage = (Stage) outputDirectory.getScene().getWindow();
         DirectoryChooser outputDirectoryChooser = new DirectoryChooser();
         outputDirectoryChooser.setTitle("Choose output directory");
@@ -74,12 +104,12 @@ public class PrimaryController {
     }
 
     @FXML
-    private void resetOutputDirectory() throws IOException {
+    private void resetOutputDirectory() {
         outputDirectory.setText("<Same as input>");
     }
 
     @FXML
-    private void handleFileDragOver(DragEvent event) throws IOException {
+    private void handleFileDragOver(DragEvent event) {
         Dragboard db = event.getDragboard();
         if (db.hasFiles()) {
             event.acceptTransferModes(TransferMode.COPY);
@@ -89,38 +119,52 @@ public class PrimaryController {
     }
 
     @FXML
-    private void handleFileDrop(DragEvent event) throws IOException {
+    private void handleFileDrop(DragEvent event) {
         Dragboard db = event.getDragboard();
         boolean success = false;
         if (db.hasFiles()) {
             success = true;
-//            String filePath = null;
-            List<IOPackage> fileList = inputFileList.getItems();
-
-            Queue<File> fileQueue = new LinkedList<>(db.getFiles());
-            while (!fileQueue.isEmpty()) {
-                File file = fileQueue.remove();
-                if (file.isDirectory()) {
-                    fileQueue.addAll(Arrays.asList(Objects.requireNonNull(file.listFiles())));
-                    continue;
-                }
-                String filePath = file.getAbsolutePath();
-                String outPath = FilenameUtils.getBaseName(filePath);
-                String outBase;
-                if (outputDirectory.getText().equals("<Same as input>")) {
-                    outBase = file.getParent();
-                } else {
-                    outBase = outputDirectory.getText();
-                }
-                File outFile = new File(outBase, outPath + ".zarr");
-                fileList.add(new IOPackage(file, outFile));
-            }
-
+            addFilesToList(db.getFiles());
         }
         event.setDropCompleted(success);
         event.consume();
     }
 
+    @FXML
+    private void addFilesToList(List<File> files) {
+        Queue<File> fileQueue = new LinkedList<>(files);
+        List<IOPackage> fileList = inputFileList.getItems();
+        while (!fileQueue.isEmpty()) {
+            File file = fileQueue.remove();
+            if (file.isDirectory()) {
+                // Traverse subdirectory
+                fileQueue.addAll(Arrays.asList(Objects.requireNonNull(file.listFiles())));
+                continue;
+            }
+            if (!SupportedExtensions.contains(FilenameUtils.getExtension(file.getName()))) {
+                // Not a supported image file
+                continue;
+            }
+            String filePath = file.getAbsolutePath();
+            String outPath = FilenameUtils.getBaseName(filePath);
+            String outBase;
+            if (outputDirectory.getText().equals("<Same as input>")) {
+                outBase = file.getParent();
+            } else {
+                outBase = outputDirectory.getText();
+            }
+            File outFile = new File(outBase, outPath + ".zarr");
+            fileList.add(new IOPackage(file, outFile));
+        }
+    }
+
+    @FXML
+    private void testRun() {
+        inputFileList.getItems().forEach((item) -> {
+            item.status = "error";
+        });
+        inputFileList.refresh();
+    }
 
     @FXML
     private void runConvert() throws Exception {

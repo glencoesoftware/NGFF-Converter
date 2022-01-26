@@ -6,16 +6,18 @@ import java.io.File;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.control.CheckBox;
 import javafx.scene.text.*;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 public class FileCell extends ListCell<IOPackage> {
-    private HBox content;
-    private Text nameIn;
-    private Text pathIn;
-    private Text nameOut;
-    private Text pathOut;
-    private CheckBox status;
+    final HBox content;
+    final Text nameIn;
+    final Text pathIn;
+    final Text nameOut;
+    final Text pathOut;
+    final Label monitor;
+    final FontIcon ok;
+    final FontIcon notOk;
 
     public FileCell() {
         super();
@@ -31,15 +33,18 @@ public class FileCell extends ListCell<IOPackage> {
         nameOut.setFont(nameFont);
         pathIn.setFill(Color.GRAY);
         pathOut.setFill(Color.GRAY);
-        status = new CheckBox();
-        status.setSelected(true);
+        ok = new FontIcon("bi-check-circle");
+        notOk = new FontIcon("bi-exclamation-circle");
+        ok.setIconSize(20);
+        notOk.setIconSize(20);
+        monitor = new Label();
         VBox vBoxIn = new VBox(nameIn, pathIn);
         vBoxIn.setMinWidth(200);
         vBoxIn.setMaxWidth(200);
         Separator sep = new Separator();
         sep.setOrientation(Orientation.VERTICAL);
         VBox vBoxOut = new VBox(nameOut, pathOut);
-        content = new HBox(status, vBoxIn, sep, vBoxOut);
+        content = new HBox(monitor, vBoxIn, sep, vBoxOut);
         content.setAlignment(Pos.CENTER_LEFT);
 
         content.setSpacing(10);
@@ -67,10 +72,15 @@ public class FileCell extends ListCell<IOPackage> {
             pathIn.setText(inPath);
             nameOut.setText(fileOut.getName());
             pathOut.setText(outPath);
+            if (pack.status.equals("error")) {
+                monitor.setGraphic(notOk);
+            } else {
+                monitor.setGraphic(ok);
+            }
             setGraphic(content);
         } else {
             setText(null);
             setGraphic(null);
-        };
+        }
     }
 }
