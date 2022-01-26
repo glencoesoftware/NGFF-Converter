@@ -40,7 +40,7 @@ public class PrimaryController {
     public CheckBox wantDebug;
     public CheckBox wantVersion;
     public CheckBox wantHelp;
-    public ListView inputFileList;
+    public ListView<IOPackage> inputFileList;
 
     public Set<String> SupportedExtensions = new HashSet<String>(Arrays.asList("txt", "b"));
 
@@ -95,9 +95,15 @@ public class PrimaryController {
         if (db.hasFiles()) {
             success = true;
 //            String filePath = null;
-            List fileList = inputFileList.getItems();
-//            List<File> fl = db.getFiles().stream().filter(f -> SupportedExtensions.contains(FilenameUtils.getExtension(f.getName())));
-            for (File file:db.getFiles()) {
+            List<IOPackage> fileList = inputFileList.getItems();
+
+            Queue<File> fileQueue = new LinkedList<>(db.getFiles());
+            while (!fileQueue.isEmpty()) {
+                File file = fileQueue.remove();
+                if (file.isDirectory()) {
+                    fileQueue.addAll(Arrays.asList(Objects.requireNonNull(file.listFiles())));
+                    continue;
+                }
                 String filePath = file.getAbsolutePath();
                 String outPath = FilenameUtils.getBaseName(filePath);
                 String outBase;
@@ -109,6 +115,7 @@ public class PrimaryController {
                 File outFile = new File(outBase, outPath + ".zarr");
                 fileList.add(new IOPackage(file, outFile));
             }
+
         }
         event.setDropCompleted(success);
         event.consume();

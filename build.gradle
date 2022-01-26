@@ -7,8 +7,6 @@ group = 'com.glencoesoftware'
 version = '0.1-SNAPSHOT'
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
-sourceCompatibility = 11
-targetCompatibility = 11
 
 repositories {
     mavenLocal()
@@ -29,6 +27,18 @@ repositories {
     }
 }
 
+sourceCompatibility = 16
+targetCompatibility = 16
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainModule = 'com.glencoesoftware.convert'
+    mainClass = 'com.glencoesoftware.convert.Launcher'
+}
+
 javafx {
     version = '17.0.1'
     modules = [ 'javafx.controls', 'javafx.fxml' ]
@@ -38,9 +48,10 @@ dependencies {
     implementation 'com.glencoesoftware:bioformats2raw:0.4.0'
     implementation 'info.picocli:picocli:4.6.2'
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
-    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
-    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
-    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
+    implementation('org.kordamp.ikonli:ikonli-javafx:12.2.0')
+//    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
+//    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
+//    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
 }
 
 jar {
