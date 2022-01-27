@@ -60,7 +60,6 @@ public class FileCell extends ListCell<IOPackage> {
         content = new HBox(monitor, vBoxIn, sep, vBoxOut);
         content.setAlignment(Pos.CENTER_LEFT);
         content.setSpacing(10);
-        content.setBackground(null);
     }
 
     @Override

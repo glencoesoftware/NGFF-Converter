@@ -154,8 +154,11 @@
                               </HBox>
                               <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" VBox.vgrow="ALWAYS">
                                  <padding>
-                                    <Insets left="5.0" right="5.0" />
+                                    <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
                                  </padding>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
                               </ListView>
                            </children>
                         </VBox>
