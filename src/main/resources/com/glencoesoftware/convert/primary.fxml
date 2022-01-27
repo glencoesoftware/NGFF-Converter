@@ -9,14 +9,19 @@
    <children>
       <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0">
          <children>
-            <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="47.0" prefWidth="160.0" text="NGFF Converter GUI" textAlignment="CENTER">
+            <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="36.0" prefWidth="160.0" text="NGFF Converter GUI" textAlignment="CENTER">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </Label>
-            <Button mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="176.0" text="Run!">
+            <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="0.0" prefWidth="160.0" text="Version " textAlignment="CENTER">
+               <font>
+                  <Font size="10.0" />
+               </font>
+            </Label>
+            <Button mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions">
                <VBox.margin>
-                  <Insets left="20.0" right="20.0" top="25.0" />
+                  <Insets left="10.0" right="10.0" top="25.0" />
                </VBox.margin>
                <font>
                   <Font size="16.0" />
@@ -57,7 +62,6 @@
                   <Insets top="20.0" />
                </VBox.margin>
             </GridPane>
-            <ProgressIndicator progress="0.45" />
          </children>
       </VBox>
       <VBox alignment="CENTER" prefHeight="598.0" prefWidth="581.0" spacing="20.0" HBox.hgrow="ALWAYS">
@@ -83,7 +87,7 @@
             </HBox>
             <VBox prefHeight="324.0" prefWidth="541.0">
                <children>
-                  <HBox alignment="CENTER" prefHeight="371.0" prefWidth="490.0">
+                  <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
                      <children>
                         <VBox alignment="TOP_CENTER" prefHeight="287.0" prefWidth="25.0">
                            <HBox.margin>
@@ -114,14 +118,25 @@
                                     <Insets bottom="2.0" top="2.0" />
                                  </VBox.margin>
                               </Button>
-                              <Button fx:id="testRunButton" layoutX="10.0" layoutY="93.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#testRun" prefHeight="25.0" prefWidth="25.0" text="F">
+                              <Button fx:id="clearFinishedButton" layoutX="10.0" layoutY="93.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#clearFinished" prefHeight="25.0" prefWidth="25.0">
                                  <font>
                                     <Font name="System Bold" size="12.0" />
                                  </font>
+                                 <VBox.margin>
+                                    <Insets bottom="2.0" top="2.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button fx:id="testRunButton1" layoutX="10.0" layoutY="120.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#testRun" prefHeight="25.0" prefWidth="25.0" text="F">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                                 <VBox.margin>
+                                    <Insets bottom="2.0" top="2.0" />
+                                 </VBox.margin>
                               </Button>
                            </children>
                         </VBox>
-                        <VBox prefHeight="303.0" prefWidth="838.0">
+                        <VBox prefHeight="303.0" prefWidth="838.0" HBox.hgrow="ALWAYS">
                            <children>
                               <HBox alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="578.0">
                                  <children>
@@ -137,7 +152,7 @@
                                     <Region layoutX="56.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
                                  </children>
                               </HBox>
-                              <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" prefHeight="303.0" prefWidth="600.0">
+                              <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" VBox.vgrow="ALWAYS">
                                  <padding>
                                     <Insets left="5.0" right="5.0" />
                                  </padding>
@@ -148,11 +163,7 @@
                   </HBox>
                </children>
             </VBox>
-            <TextField fx:id="logBox" editable="false" text="Default text" />
-            <ProgressBar maxHeight="25.0" minHeight="25.0" prefHeight="25.0" prefWidth="520.0" progress="0.79" VBox.vgrow="ALWAYS">
-               <VBox.margin>
-                  <Insets bottom="3.0" top="3.0" />
-               </VBox.margin></ProgressBar>
+            <TextField fx:id="logBox" editable="false" text="Add files to begin" />
             <TextArea editable="false" prefHeight="79.0" prefWidth="490.0" />
          </children>
          <padding>

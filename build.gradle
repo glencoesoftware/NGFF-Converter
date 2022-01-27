@@ -49,11 +49,15 @@ dependencies {
     implementation 'ome:formats-gpl:6.8.0'
     implementation 'info.picocli:picocli:4.6.2'
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
-    implementation 'org.kordamp.ikonli:ikonli-javafx:12.2.0'
+    implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.0'
     implementation 'org.kordamp.ikonli:ikonli-bootstrapicons-pack:12.3.0'
 //    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
 //    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
 //    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
+}
+
+configurations.all {
+    exclude group: 'edu.ucar', 'module': 'cdm'
 }
 
 jar {

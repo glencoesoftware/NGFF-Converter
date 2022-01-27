@@ -1,31 +1,37 @@
 package com.glencoesoftware.convert;
 
-import javafx.scene.paint.*;
-import javafx.geometry.*;
-import java.io.File;
-import javafx.scene.control.ListCell;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.text.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.io.File;
 
 public class FileCell extends ListCell<IOPackage> {
     final HBox content;
-    final Text nameIn;
+    final Label nameIn;
     final Text pathIn;
-    final Text nameOut;
+    final Label nameOut;
     final Text pathOut;
     final Label monitor;
     final FontIcon ok;
     final FontIcon notOk;
+    final FontIcon success;
+    final FontIcon fail;
+    final ProgressIndicator progress;
 
     public FileCell() {
         super();
         Font nameFont = new Font(14);
         Font pathFont = new Font(10);
-        nameIn = new Text();
+        nameIn = new Label();
         pathIn = new Text();
-        nameOut = new Text();
+        nameOut = new Label();
         pathOut = new Text();
         pathIn.setFont(pathFont);
         nameIn.setFont(nameFont);
@@ -33,11 +39,18 @@ public class FileCell extends ListCell<IOPackage> {
         nameOut.setFont(nameFont);
         pathIn.setFill(Color.GRAY);
         pathOut.setFill(Color.GRAY);
-        ok = new FontIcon("bi-check-circle");
+        // Todo: Find a way to move these resources to a better location. Only need 1 of each.
+        ok = new FontIcon("bi-play-circle");
         notOk = new FontIcon("bi-exclamation-circle");
+        success = new FontIcon("bi-check-circle");
+        fail = new FontIcon("bi-x-circle");
         ok.setIconSize(20);
         notOk.setIconSize(20);
+        success.setIconSize(20);
+        fail.setIconSize(20);
         monitor = new Label();
+        progress = new ProgressIndicator();
+        progress.setPrefSize(20, 20);
         VBox vBoxIn = new VBox(nameIn, pathIn);
         vBoxIn.setMinWidth(200);
         vBoxIn.setMaxWidth(200);
@@ -46,7 +59,6 @@ public class FileCell extends ListCell<IOPackage> {
         VBox vBoxOut = new VBox(nameOut, pathOut);
         content = new HBox(monitor, vBoxIn, sep, vBoxOut);
         content.setAlignment(Pos.CENTER_LEFT);
-
         content.setSpacing(10);
         content.setBackground(null);
     }
@@ -72,11 +84,30 @@ public class FileCell extends ListCell<IOPackage> {
             pathIn.setText(inPath);
             nameOut.setText(fileOut.getName());
             pathOut.setText(outPath);
-            if (pack.status.equals("error")) {
-                monitor.setGraphic(notOk);
-            } else {
-                monitor.setGraphic(ok);
+            switch (pack.status) {
+                case "ready" -> {
+                    monitor.setGraphic(ok);
+                    monitor.setTooltip(new Tooltip("Ready to run"));
+                }
+                case "success" -> {
+                    monitor.setGraphic(success);
+                    monitor.setTooltip(new Tooltip("Conversion successful"));
+                }
+                case "fail" -> {
+                    monitor.setGraphic(fail);
+                    monitor.setTooltip(new Tooltip("Conversion failed"));
+                }
+                case "error" -> {
+                    monitor.setGraphic(notOk);
+                    monitor.setTooltip(new Tooltip("Output file already exists"));
+                }
+                case "working" -> {
+                    monitor.setGraphic(progress);
+                    progress.setTooltip(new Tooltip("Running"));
+                }
             }
+            nameIn.setTooltip(new Tooltip(fileIn.getAbsolutePath()));
+            nameOut.setTooltip(new Tooltip(fileOut.getAbsolutePath()));
             setGraphic(content);
         } else {
             setText(null);

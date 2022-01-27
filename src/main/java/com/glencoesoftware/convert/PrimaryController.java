@@ -1,40 +1,22 @@
 package com.glencoesoftware.convert;
 
-import javafx.collections.ObservableList;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextArea;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.File;
-import java.util.*;
-
-import javafx.stage.FileChooser;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-
-import javafx.util.Callback;
-import javafx.fxml.FXML;
-import javafx.scene.input.MouseDragEvent;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ListCell;
 import com.glencoesoftware.bioformats2raw.Converter;
-import picocli.CommandLine;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
-import javafx.event.EventHandler;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.Node;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.input.*;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.kordamp.ikonli.javafx.FontIcon;
 import loci.formats.ImageReader;
+import org.apache.commons.io.FilenameUtils;
+import org.kordamp.ikonli.javafx.FontIcon;
+import picocli.CommandLine;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class PrimaryController {
@@ -50,21 +32,34 @@ public class PrimaryController {
     public Button addFileButton;
     public Button removeFileButton;
     public Button clearFileButton;
+    public Button clearFinishedButton;
+    public Label versionDisplay;
 
-    public Set<String> SupportedExtensions = new HashSet<String>(Arrays.asList(new ImageReader().getSuffixes()));
+    public Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
 
     @FXML
     public void initialize(){
+        supportedExtensions.add("zarr");
         inputFileList.setCellFactory(list -> new FileCell());
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
         FontIcon clearIcon = new FontIcon("bi-x");
+        FontIcon finishedIcon = new FontIcon("bi-check");
         addIcon.setIconSize(20);
         removeIcon.setIconSize(20);
         clearIcon.setIconSize(20);
+        finishedIcon.setIconSize(20);
         addFileButton.setGraphic(addIcon);
         removeFileButton.setGraphic(removeIcon);
         clearFileButton.setGraphic(clearIcon);
+        clearFinishedButton.setGraphic(finishedIcon);
+        addFileButton.setTooltip(new Tooltip("Add files"));
+        removeFileButton.setTooltip(new Tooltip("Remove selected file"));
+        clearFileButton.setTooltip(new Tooltip("Remove all files"));
+        clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
+        String version = getClass().getPackage().getImplementationVersion();
+        if (version == null) { version = "DEV"; }
+        versionDisplay.setText(versionDisplay.getText() + version);
     }
 
     @FXML
@@ -136,12 +131,13 @@ public class PrimaryController {
         List<IOPackage> fileList = inputFileList.getItems();
         while (!fileQueue.isEmpty()) {
             File file = fileQueue.remove();
-            if (file.isDirectory()) {
-                // Traverse subdirectory
+            String extension = FilenameUtils.getExtension(file.getName());
+            if (file.isDirectory() && !extension.equals("zarr")) {
+                // Traverse subdirectory unless it's a zarr
                 fileQueue.addAll(Arrays.asList(Objects.requireNonNull(file.listFiles())));
                 continue;
             }
-            if (!SupportedExtensions.contains(FilenameUtils.getExtension(file.getName()))) {
+            if (!supportedExtensions.contains(extension)) {
                 // Not a supported image file
                 continue;
             }
@@ -159,51 +155,79 @@ public class PrimaryController {
     }
 
     @FXML
+    private void listClickHandler(MouseEvent event) {
+        if (event.getButton().equals(MouseButton.PRIMARY)) {
+            if (event.getClickCount() == 2) {
+                final IOPackage target = inputFileList.getSelectionModel().getSelectedItem();
+                if (target != null) {
+                    // Todo: UI for editing file path
+                    System.out.println(target.fileIn);
+                    target.setFileIn(target.fileOut);
+                    inputFileList.refresh();
+                }
+            }
+        }
+
+    }
+
+    @FXML
+    private void clearFinished() {
+        inputFileList.setItems(inputFileList.getItems()
+                .stream()
+                .filter((item) -> (!item.status.equals("success")))
+                .collect(Collectors.toCollection(FXCollections::observableArrayList)));
+    }
+
+
+    @FXML
     private void testRun() {
         inputFileList.getItems().forEach((item) -> {
-            item.status = "error";
+            item.status = "working";
         });
         inputFileList.refresh();
     }
 
     @FXML
     private void runConvert() throws Exception {
-//        ConsoleLogger console = new ConsoleLogger(systemLog);
-//        PrintWriter pw = new PrintWriter(console);
-//        System.setOut(ps);
-
-//        PrintStream printStream = new PrintStream(new ConsoleLogger(systemLog));
-//        System.setOut(printStream);
-
-        System.out.println(logBox.getText());
-
-        // These are temporary testing parameters
-        System.load("C:\\Program Files (x86)\\blosc\\bin\\blosc.dll");
-        String outputFilename = "D:\\David\\Data\\convert\\BF007.zarr";
-        FileUtils.deleteDirectory(new File(outputFilename));
-
-        List<String> args =  new ArrayList(Arrays.asList("D:\\David\\Data\\BF007.nd2", outputFilename));
+        List<String> extraArgs =  new ArrayList<String>();
         if (wantDebug.isSelected()) {
-            args.add("--debug");
+            extraArgs.add("--debug");
         }
         if (wantHelp.isSelected()) {
-            args.add("--help");
+            extraArgs.add("--help");
         }
         if (wantVersion.isSelected()) {
-            args.add("--version");
+            extraArgs.add("--version");
         }
-        System.out.println("Will execute with");
-        System.out.println(args);
-        CommandLine runner = new CommandLine(new Converter());
-        ConsoleWriter sw = new ConsoleWriter(systemLog);
-         runner.setOut(new PrintWriter(sw));
-        int exitCode = runner.execute(args.toArray(new String[args.size()]));
-
-
-        System.out.println("FFF2");
-        logBox.setText("ANALYSIS COMPLETE");
-        System.out.println(exitCode);
-
+        for (IOPackage task : inputFileList.getItems()) {
+            File in = task.fileIn;
+            File out = task.fileOut;
+            if (!task.status.equals("ready")) {
+                logBox.setText("Invalid input " + in.getName());
+                continue;
+            }
+            logBox.setText("Working on " + in.getName());
+            task.status = "running";
+            inputFileList.refresh();
+            // Construct args list
+            ArrayList<String> params = new ArrayList<>(extraArgs);
+            params.add(0, out.getAbsolutePath());
+            params.add(0, in.getAbsolutePath());
+            // Todo: Put this runner onto a thread
+            CommandLine runner = new CommandLine(new Converter());
+            ConsoleWriter sw = new ConsoleWriter(systemLog);
+            runner.setOut(new PrintWriter(sw));
+            int exitCode = runner.execute(params.toArray(new String[extraArgs.size()]));
+            if (exitCode == 0) {
+                task.status = "success";
+                logBox.setText("Successfully created" + out.getName());
+            } else {
+                task.status = "fail";
+                logBox.setText("Failed with Exit Code " + exitCode);
+            }
+            inputFileList.refresh();
+        }
+        logBox.setText("Finished");
     }
 
 
