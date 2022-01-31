@@ -196,7 +196,7 @@
                   <Insets bottom="15.0" top="15.0" />
                </StackPane.margin>
             </VBox>
-            <VBox fx:id="logVBox" alignment="CENTER" pickOnBounds="false" prefHeight="200.0" prefWidth="100.0" style="-fx-background-color: 000000 !important; -fx-border-color: 000000;" visible="false">
+            <VBox fx:id="logVBox" alignment="CENTER" pickOnBounds="false" prefHeight="200.0" prefWidth="100.0" style="-fx-background-color: EEEEEE;" visible="false">
                <children>
                   <Label fx:id="logHeader" pickOnBounds="false" text="Execution Logs">
                      <font>
