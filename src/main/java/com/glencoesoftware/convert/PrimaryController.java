@@ -5,6 +5,9 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -22,7 +25,11 @@ import java.util.stream.Collectors;
 public class PrimaryController {
 
     @FXML
-    public TextField logBox;
+    public HBox mainPanel;
+    public VBox logVBox;
+    public StackPane stackPanel;
+    public TextField statusBox;
+    public TextArea logBox;
     public TextField outputDirectory;
     public TextArea systemLog;
     public CheckBox wantDebug;
@@ -185,6 +192,11 @@ public class PrimaryController {
             item.status = "working";
         });
         inputFileList.refresh();
+    }
+
+    @FXML
+    private void displayLog() {
+        logVBox.setVisible(!logVBox.isVisible());
     }
 
     @FXML
