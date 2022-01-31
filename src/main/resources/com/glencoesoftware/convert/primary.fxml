@@ -170,7 +170,7 @@
                                           <Region layoutX="56.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
                                        </children>
                                     </HBox>
-                                    <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" VBox.vgrow="ALWAYS">
+                                    <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" style="-fx-selection-bar: #DDDDDD;" VBox.vgrow="ALWAYS">
                                        <padding>
                                           <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
                                        </padding>
@@ -187,7 +187,10 @@
                         </HBox>
                      </children>
                   </VBox>
-                  <TextField fx:id="statusBox" editable="false" text="Add files to begin" VBox.vgrow="NEVER" />
+                  <TextField fx:id="statusBox" editable="false" focusTraversable="false" mouseTransparent="true" text="Add files to begin" VBox.vgrow="NEVER">
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets></TextField>
                </children>
                <padding>
                   <Insets left="20.0" right="20.0" />

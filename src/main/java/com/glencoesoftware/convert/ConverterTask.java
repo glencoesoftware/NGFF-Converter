@@ -26,7 +26,6 @@ class ConverterTask extends Task<Integer> {
     }
 
     @Override protected Integer call() throws Exception {
-        System.out.println("Working");
         CommandLine runner = new CommandLine(new Converter());
         int count = 0;
         for (IOPackage job : inputFileList.getItems()) {
@@ -34,7 +33,6 @@ class ConverterTask extends Task<Integer> {
             File out = job.fileOut;
             if (!job.status.equals("ready")) {
                 Platform.runLater(() -> {
-                    System.out.println("Invalid input " + in.getName());
                     inputFileList.refresh();
                 });
                 continue;
@@ -43,7 +41,6 @@ class ConverterTask extends Task<Integer> {
             job.status = "running";
             Platform.runLater(() -> {
                 statusBox.setText("Working on " + in.getName());
-                System.out.println("Would update List status");
                 inputFileList.refresh();
             });
 
@@ -55,7 +52,6 @@ class ConverterTask extends Task<Integer> {
             params.add(0, in.getAbsolutePath());
             int result = runner.execute(params.toArray(new String[args.size()]));
             Platform.runLater(() -> {
-                System.out.println("Would update UI");
                 statusBox.setText("Completed task " + out);
                 if (result == 0) {
 
@@ -73,6 +69,6 @@ class ConverterTask extends Task<Integer> {
         Platform.runLater(() -> {
             statusBox.setText(String.format("Completed conversion of %s files.", finalCount));
         });
-        return 1;
+        return 0;
     }
 }

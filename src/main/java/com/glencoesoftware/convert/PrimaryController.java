@@ -185,6 +185,7 @@ public class PrimaryController {
 
     @FXML
     private void testRun() {
+        // I am a testing function to forcibly change file list item state
         inputFileList.getItems().forEach((item) -> {
             item.status = "working";
         });
@@ -214,11 +215,9 @@ public class PrimaryController {
         Thread th = new Thread(job);
         th.setDaemon(true);
         th.start();
-//            System.out.println("Waiting for thread");
-//            th.join();
+        // Todo: Freeze/unfreeze UI settings.
         System.out.println("Thread setup complete");
 
-        logBox.setText("Finished");
     }
 
 
