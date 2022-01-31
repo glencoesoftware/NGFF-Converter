@@ -1,6 +1,5 @@
 package com.glencoesoftware.convert;
 
-import com.glencoesoftware.bioformats2raw.Converter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -14,10 +13,8 @@ import javafx.stage.Stage;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
-import picocli.CommandLine;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -211,34 +208,16 @@ public class PrimaryController {
         if (wantVersion.isSelected()) {
             extraArgs.add("--version");
         }
-        for (IOPackage task : inputFileList.getItems()) {
-            File in = task.fileIn;
-            File out = task.fileOut;
-            if (!task.status.equals("ready")) {
-                logBox.setText("Invalid input " + in.getName());
-                continue;
-            }
-            logBox.setText("Working on " + in.getName());
-            task.status = "running";
-            inputFileList.refresh();
-            // Construct args list
-            ArrayList<String> params = new ArrayList<>(extraArgs);
-            params.add(0, out.getAbsolutePath());
-            params.add(0, in.getAbsolutePath());
-            // Todo: Put this runner onto a thread
-            CommandLine runner = new CommandLine(new Converter());
-            ConsoleWriter sw = new ConsoleWriter(systemLog);
-            runner.setOut(new PrintWriter(sw));
-            int exitCode = runner.execute(params.toArray(new String[extraArgs.size()]));
-            if (exitCode == 0) {
-                task.status = "success";
-                logBox.setText("Successfully created" + out.getName());
-            } else {
-                task.status = "fail";
-                logBox.setText("Failed with Exit Code " + exitCode);
-            }
-            inputFileList.refresh();
-        }
+        ConverterTask job = new ConverterTask(extraArgs, inputFileList, statusBox, logBox);
+
+
+        Thread th = new Thread(job);
+        th.setDaemon(true);
+        th.start();
+//            System.out.println("Waiting for thread");
+//            th.join();
+        System.out.println("Thread setup complete");
+
         logBox.setText("Finished");
     }
 

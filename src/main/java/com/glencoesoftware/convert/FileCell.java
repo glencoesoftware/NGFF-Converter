@@ -100,7 +100,7 @@ public class FileCell extends ListCell<IOPackage> {
                     monitor.setGraphic(notOk);
                     monitor.setTooltip(new Tooltip("Output file already exists"));
                 }
-                case "working" -> {
+                case "running" -> {
                     monitor.setGraphic(progress);
                     progress.setTooltip(new Tooltip("Running"));
                 }
