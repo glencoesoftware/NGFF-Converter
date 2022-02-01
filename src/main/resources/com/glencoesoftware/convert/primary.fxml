@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<HBox fx:id="mainPanel" minWidth="800.0" prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
+<HBox fx:id="mainPanel" minWidth="800.0" prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: EEEEEE;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <children>
       <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0" HBox.hgrow="ALWAYS">
          <children>
@@ -19,17 +30,17 @@
                   <Font size="10.0" />
                </font>
             </Label>
-            <Button mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions">
+            <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions">
                <VBox.margin>
                   <Insets left="10.0" right="10.0" top="25.0" />
                </VBox.margin>
                <font>
                   <Font size="16.0" />
                </font></Button>
-            <GridPane minHeight="192.0" prefHeight="192.0" prefWidth="160.0">
+            <GridPane minHeight="169.0">
               <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="45.0" minWidth="10.0" prefWidth="23.0" />
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="126.0" />
+                 <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="91.0" />
+                <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="59.0" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints />
@@ -38,22 +49,31 @@
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <CheckBox fx:id="wantDebug" mnemonicParsing="false" selected="true" GridPane.rowIndex="1" />
-                  <CheckBox fx:id="wantVersion" layoutX="10.0" layoutY="17.0" mnemonicParsing="false" GridPane.rowIndex="2" />
-                  <CheckBox fx:id="wantHelp" layoutX="10.0" layoutY="47.0" mnemonicParsing="false" GridPane.rowIndex="3" />
-                  <CheckBox layoutX="10.0" layoutY="77.0" mnemonicParsing="false" GridPane.rowIndex="4" />
-                  <Label text="Debug" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <Label text="Version" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <Label text="Help" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                  <Label text="Make pyramids" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                  <CheckBox layoutX="15.0" layoutY="119.0" mnemonicParsing="false" GridPane.rowIndex="5" />
-                  <CheckBox layoutX="15.0" layoutY="149.0" mnemonicParsing="false" GridPane.rowIndex="6" />
-                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                  <TextField GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                  <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="25.0" prefWidth="163.0" text="Common parameters" textAlignment="CENTER" GridPane.columnIndex="1" />
+                  <CheckBox fx:id="wantDebug" mnemonicParsing="false" selected="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Debug" textAlignment="RIGHT" GridPane.rowIndex="1" />
+                  <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="152.0" text="Common parameters" textAlignment="CENTER" GridPane.columnSpan="2" />
+                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="74.0" text="Max workers" GridPane.rowIndex="2" />
+                  <TextField fx:id="tileHeight" alignment="CENTER" layoutX="116.0" layoutY="63.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                     <GridPane.margin>
+                        <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
+                     </GridPane.margin>
+                  </TextField>
+                  <TextField fx:id="maxWorkers" alignment="CENTER" text="4" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <GridPane.margin>
+                        <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+                     </GridPane.margin>
+                  </TextField>
+                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="71.0" text="Tile height" GridPane.rowIndex="3" />
+                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="81.0" text="Tile width" GridPane.rowIndex="4" />
+                  <TextField fx:id="tileWidth" alignment="CENTER" layoutX="116.0" layoutY="89.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                     <GridPane.margin>
+                        <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+                     </GridPane.margin>
+                  </TextField>
+                  <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="5" />
                </children>
                <padding>
                   <Insets bottom="10.0" left="5.0" right="5.0" top="10.0" />
@@ -62,10 +82,11 @@
                   <Insets top="20.0" />
                </VBox.margin>
             </GridPane>
+
             <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
                <children>
                   <Label text="Extra Arguments" />
-                  <TextArea fx:id="extraParams" prefHeight="200.0" prefWidth="200.0" text="--help&#10;--debug">
+                  <TextArea fx:id="extraParams" prefHeight="200.0" prefWidth="200.0">
                      <VBox.margin>
                         <Insets left="5.0" right="5.0" />
                      </VBox.margin>
@@ -209,7 +230,7 @@
                         <Insets bottom="10.0" />
                      </VBox.margin>
                   </Label>
-                  <TextArea fx:id="logBox" editable="false" pickOnBounds="false" text="Log output will be appear here." VBox.vgrow="ALWAYS">
+                  <TextArea fx:id="logBox" editable="false" pickOnBounds="false" text="" VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets bottom="20.0" left="20.0" right="20.0" top="2.0" />
                      </VBox.margin>

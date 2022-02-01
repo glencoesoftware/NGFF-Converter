@@ -15,6 +15,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,24 +28,27 @@ public class PrimaryController {
     public VBox logVBox;
     public StackPane stackPanel;
     public TextField statusBox;
+    public TextArea extraParams;
     public TextArea logBox;
     public TextField outputDirectory;
-    public TextArea systemLog;
     public CheckBox wantDebug;
-    public CheckBox wantVersion;
-    public CheckBox wantHelp;
+    public CheckBox wantOverwrite;
     public ListView<IOPackage> inputFileList;
     public Button addFileButton;
     public Button removeFileButton;
     public Button clearFileButton;
     public Button clearFinishedButton;
     public Label versionDisplay;
+    public TextField maxWorkers;
+    public TextField tileWidth;
+    public TextField tileHeight;
 
     public Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
 
     @FXML
     public void initialize(){
-        supportedExtensions.add("zarr");
+        // Todo: Support zarr to OME.TIFF
+        // supportedExtensions.add("zarr");
         inputFileList.setCellFactory(list -> new FileCell());
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
@@ -58,6 +62,7 @@ public class PrimaryController {
         removeFileButton.setGraphic(removeIcon);
         clearFileButton.setGraphic(clearIcon);
         clearFinishedButton.setGraphic(finishedIcon);
+        extraParams.setTooltip(new Tooltip("Extra arguments (one per line)"));
         addFileButton.setTooltip(new Tooltip("Add files"));
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
         clearFileButton.setTooltip(new Tooltip("Remove all files"));
@@ -159,25 +164,36 @@ public class PrimaryController {
                 outBase = outputDirectory.getText();
             }
             File outFile = new File(outBase, outPath + ".zarr");
-            fileList.add(new IOPackage(file, outFile));
+            fileList.add(new IOPackage(file, outFile, wantOverwrite.isSelected()));
         }
     }
 
     @FXML
-    private void listClickHandler(MouseEvent event) {
+    private void listClickHandler(MouseEvent event) throws IOException {
         if (event.getButton().equals(MouseButton.PRIMARY)) {
             if (event.getClickCount() == 2) {
                 final IOPackage target = inputFileList.getSelectionModel().getSelectedItem();
                 if (target != null) {
-                    // Todo: UI for editing file path
-                    System.out.println(target.fileIn);
-                    target.setFileIn(target.fileOut);
-                    inputFileList.refresh();
+                    // Todo: Full UI for editing file path
+                    Stage stage = (Stage) inputFileList.getScene().getWindow();
+                    FileChooser outputFileChooser = new FileChooser();
+                    outputFileChooser.setInitialDirectory(target.fileOut.getParentFile());
+                    outputFileChooser.setInitialFileName(target.fileOut.getName());
+                    outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Zarr file",".zarr"));
+                    outputFileChooser.setTitle("Choose output file for " + target.fileIn.getName());
+                    File newOutput = outputFileChooser.showSaveDialog(stage);
+                    if (newOutput != null) {
+                        target.fileOut = newOutput;
+                        // Reset status
+                        target.status = "ready";
+                        inputFileList.refresh();
+                    };
+                    }
+
                 }
             }
         }
 
-    }
 
     @FXML
     private void clearFinished() {
@@ -192,7 +208,23 @@ public class PrimaryController {
     private void testRun() {
         // I am a testing function to forcibly change file list item state
         inputFileList.getItems().forEach((item) -> {
-            item.status = "working";
+            item.status = "ready";
+        });
+        inputFileList.refresh();
+    }
+
+    @FXML
+    private void toggleOverwrite() {
+        boolean overwrite = wantOverwrite.isSelected();
+        System.out.println(overwrite);
+        List<String> doNotChange = Arrays.asList("success", "fail", "running");
+        inputFileList.getItems().forEach((item) -> {
+            if (doNotChange.contains(item.status)) { return; };
+            if ((!overwrite) && item.fileOut.exists()) {
+                item.status = "error";
+            } else {
+                item.status = "ready";
+            }
         });
         inputFileList.refresh();
     }
@@ -204,17 +236,24 @@ public class PrimaryController {
 
     @FXML
     private void runConvert() throws Exception {
-        logBox.setText("Beginning file conversion...\n");
-        List<String> extraArgs =  new ArrayList<String>();
+        logBox.appendText("\n\nBeginning file conversion...\n");
+        List<String> extraArgs =  new ArrayList<>();
         if (wantDebug.isSelected()) {
             extraArgs.add("--debug");
         }
-        if (wantHelp.isSelected()) {
-            extraArgs.add("--help");
+        if (wantOverwrite.isSelected()) {
+            extraArgs.add("--overwrite");
         }
-        if (wantVersion.isSelected()) {
-            extraArgs.add("--version");
-        }
+        String[] userArgs = extraParams.getText().split("\n");
+//        extraArgs.addAll(extraParams.getText().split("\n"));
+        Arrays.asList(userArgs).forEach((String userArg) -> {
+            if (userArg.equals("")) return;
+            if (!userArg.startsWith("--")) {
+                userArg = "--" + userArg;
+            }
+            extraArgs.add(userArg);
+        });
+//        extraArgs.add("--version");
         ConverterTask job = new ConverterTask(extraArgs, inputFileList, statusBox, logBox);
 
 

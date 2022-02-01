@@ -104,6 +104,10 @@ public class FileCell extends ListCell<IOPackage> {
                     monitor.setGraphic(progress);
                     progress.setTooltip(new Tooltip("Running"));
                 }
+                case "noOutput" -> {
+                    monitor.setGraphic(notOk);
+                    monitor.setTooltip(new Tooltip("Run completed with no output"));
+                }
             }
             nameIn.setTooltip(new Tooltip(fileIn.getAbsolutePath()));
             nameOut.setTooltip(new Tooltip(fileOut.getAbsolutePath()));

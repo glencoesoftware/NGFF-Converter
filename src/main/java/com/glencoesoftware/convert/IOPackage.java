@@ -7,10 +7,10 @@ public class IOPackage {
     public File fileOut;
     public String status;
 
-    public IOPackage(File in, File out) {
+    public IOPackage(File in, File out, boolean overwrite) {
         fileIn = in;
         fileOut = out;
-        if (fileOut.exists()) {
+        if (fileOut.exists() && !overwrite) {
             status = "error";
         } else {
             status = "ready";

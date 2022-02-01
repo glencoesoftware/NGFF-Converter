@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class ConverterTask extends Task<Integer> {
@@ -36,8 +37,8 @@ class ConverterTask extends Task<Integer> {
         for (IOPackage job : inputFileList.getItems()) {
             File in = job.fileIn;
             File out = job.fileOut;
-            if (!job.status.equals("ready")) {
-                Platform.runLater(inputFileList::refresh);
+            if (job.status.equals("success") || job.status.equals("error")) {
+//                Platform.runLater(inputFileList::refresh);
                 continue;
             }
 
@@ -53,17 +54,23 @@ class ConverterTask extends Task<Integer> {
 
             params.add(0, out.getAbsolutePath());
             params.add(0, in.getAbsolutePath());
-            int result = runner.execute(params.toArray(new String[args.size()]));
+            String[] fullParams = params.toArray(new String[args.size()]);
             Platform.runLater(() -> {
-                statusBox.setText("Completed task " + out);
-                if (result == 0) {
-
+                logBox.appendText("Executing with args " + Arrays.toString(fullParams) + "\n");
+            });
+            int result = runner.execute(fullParams);
+            Platform.runLater(() -> {
+                if (result == 0 && out.exists()) {
                     job.status = "success";
-                    statusBox.setText("Successfully created" + out.getName());
+                    logBox.appendText("Successfully created" + out.getName() + "\n");
+                } else if (result == 0) {
+                    job.status = "noOutput";
+                    logBox.appendText("Job completed without output" + out.getName() + "\n");
                 } else {
                     job.status = "fail";
-                    statusBox.setText("Failed with Exit Code " + result);
+                    logBox.appendText("Failed with Exit Code " + result + "\n");
                 }
+                logBox.appendText("Completed task " + out.getName() + "\n\n");
                 inputFileList.refresh();
             });
             if (result == 0) { count++; };
