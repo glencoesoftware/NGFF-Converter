@@ -209,7 +209,7 @@
                         <Insets bottom="10.0" />
                      </VBox.margin>
                   </Label>
-                  <TextArea fx:id="logBox" editable="false" pickOnBounds="false" text="This is the contents" wrapText="true" VBox.vgrow="ALWAYS">
+                  <TextArea fx:id="logBox" editable="false" pickOnBounds="false" text="Log output will be appear here." VBox.vgrow="ALWAYS">
                      <VBox.margin>
                         <Insets bottom="20.0" left="20.0" right="20.0" top="2.0" />
                      </VBox.margin>

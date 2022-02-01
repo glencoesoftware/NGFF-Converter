@@ -15,6 +15,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,6 +65,10 @@ public class PrimaryController {
         String version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
         versionDisplay.setText(versionDisplay.getText() + version);
+        ConsoleStream console = new ConsoleStream(logBox);
+        PrintStream printStream = new PrintStream(console, true);
+        System.setOut(printStream);
+        System.setErr(printStream);
     }
 
     @FXML
@@ -199,6 +204,7 @@ public class PrimaryController {
 
     @FXML
     private void runConvert() throws Exception {
+        logBox.setText("Beginning file conversion...\n");
         List<String> extraArgs =  new ArrayList<String>();
         if (wantDebug.isSelected()) {
             extraArgs.add("--debug");
@@ -216,8 +222,6 @@ public class PrimaryController {
         th.setDaemon(true);
         th.start();
         // Todo: Freeze/unfreeze UI settings.
-        System.out.println("Thread setup complete");
-
     }
 
 

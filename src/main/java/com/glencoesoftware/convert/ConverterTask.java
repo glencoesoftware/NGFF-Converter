@@ -9,6 +9,8 @@ import javafx.scene.control.TextField;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,14 +29,15 @@ class ConverterTask extends Task<Integer> {
 
     @Override protected Integer call() throws Exception {
         CommandLine runner = new CommandLine(new Converter());
+        PrintWriter writer = new PrintWriter(new StringWriter());
+        runner.setOut(writer);
+        runner.setErr(writer);
         int count = 0;
         for (IOPackage job : inputFileList.getItems()) {
             File in = job.fileIn;
             File out = job.fileOut;
             if (!job.status.equals("ready")) {
-                Platform.runLater(() -> {
-                    inputFileList.refresh();
-                });
+                Platform.runLater(inputFileList::refresh);
                 continue;
             }
 
@@ -66,8 +69,12 @@ class ConverterTask extends Task<Integer> {
             if (result == 0) { count++; };
         }
         int finalCount = count;
+        String finalStatus = String.format("Completed conversion of %s files.", finalCount);
         Platform.runLater(() -> {
-            statusBox.setText(String.format("Completed conversion of %s files.", finalCount));
+            statusBox.setText(finalStatus);
+        });
+        Platform.runLater(() -> {
+            logBox.appendText(finalStatus + "\n");
         });
         return 0;
     }
