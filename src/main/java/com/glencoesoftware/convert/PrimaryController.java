@@ -12,6 +12,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
@@ -244,12 +245,33 @@ public class PrimaryController {
         if (wantOverwrite.isSelected()) {
             extraArgs.add("--overwrite");
         }
+        if (StringUtils.isNumeric(maxWorkers.getText())) {
+            extraArgs.add("--max_workers=" + maxWorkers.getText());
+        } else {
+            logBox.appendText("Parameter 'Max Workers' is not a valid number.");
+        }
+        if (StringUtils.isNumeric(tileWidth.getText())) {
+            extraArgs.add("--tile_width=" + tileWidth.getText());
+        } else {
+            logBox.appendText("Parameter 'Tile width' is not a valid number.");
+        }
+        if (StringUtils.isNumeric(tileHeight.getText())) {
+            extraArgs.add("--tile_height=" + tileHeight.getText());
+        } else {
+            logBox.appendText("Parameter 'Tile height' is not a valid number.");
+        }
+
         String[] userArgs = extraParams.getText().split("\n");
 //        extraArgs.addAll(extraParams.getText().split("\n"));
         Arrays.asList(userArgs).forEach((String userArg) -> {
             if (userArg.equals("")) return;
+            // Fix missing '--'
             if (!userArg.startsWith("--")) {
                 userArg = "--" + userArg;
+            }
+            // Fix common typo using space instead of equals
+            if (userArg.chars().filter(num -> num == ' ').count() == 1) {
+                    userArg = userArg.replace(' ', '=');
             }
             extraArgs.add(userArg);
         });
