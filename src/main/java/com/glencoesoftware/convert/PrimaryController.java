@@ -248,25 +248,25 @@ public class PrimaryController {
         if (StringUtils.isNumeric(maxWorkers.getText())) {
             extraArgs.add("--max_workers=" + maxWorkers.getText());
         } else {
-            logBox.appendText("Parameter 'Max Workers' is not a valid number.");
+            logBox.appendText("Parameter 'Max Workers' is not a valid number\n.");
         }
         if (StringUtils.isNumeric(tileWidth.getText())) {
             extraArgs.add("--tile_width=" + tileWidth.getText());
         } else {
-            logBox.appendText("Parameter 'Tile width' is not a valid number.");
+            logBox.appendText("Parameter 'Tile width' is not a valid number\n.");
         }
         if (StringUtils.isNumeric(tileHeight.getText())) {
             extraArgs.add("--tile_height=" + tileHeight.getText());
         } else {
-            logBox.appendText("Parameter 'Tile height' is not a valid number.");
+            logBox.appendText("Parameter 'Tile height' is not a valid number\n.");
         }
 
         String[] userArgs = extraParams.getText().split("\n");
-//        extraArgs.addAll(extraParams.getText().split("\n"));
+
         Arrays.asList(userArgs).forEach((String userArg) -> {
             if (userArg.equals("")) return;
             // Fix missing '--'
-            if (!userArg.startsWith("--")) {
+            if (!userArg.startsWith("-")) {
                 userArg = "--" + userArg;
             }
             // Fix common typo using space instead of equals
@@ -275,14 +275,13 @@ public class PrimaryController {
             }
             extraArgs.add(userArg);
         });
-//        extraArgs.add("--version");
+
         ConverterTask job = new ConverterTask(extraArgs, inputFileList, statusBox, logBox);
-
-
         Thread th = new Thread(job);
         th.setDaemon(true);
         th.start();
         // Todo: Freeze/unfreeze UI settings.
+        // Todo: Terminator
     }
 
 
