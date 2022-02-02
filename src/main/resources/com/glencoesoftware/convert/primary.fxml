@@ -5,236 +5,202 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<HBox fx:id="mainPanel" minWidth="800.0" prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: #EEEEEE;"
-      xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.glencoesoftware.convert.PrimaryController">
-   <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0" HBox.hgrow="ALWAYS">
-      <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="36.0" prefWidth="160.0" text="NGFF Converter GUI"
-             textAlignment="CENTER">
+<HBox fx:id="mainPanel" minWidth="800.0" prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
+   <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0" HBox.hgrow="NEVER">
+      <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="36.0" prefWidth="160.0" text="NGFF Converter GUI" textAlignment="CENTER">
          <font>
-            <Font name="System Bold" size="16.0"/>
+            <Font name="System Bold" size="16.0" />
          </font>
       </Label>
-      <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0"
-             prefHeight="0.0" prefWidth="160.0" text="Version " textAlignment="CENTER">
+      <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="0.0" prefWidth="160.0" text="Version " textAlignment="CENTER">
          <font>
-            <Font size="10.0"/>
+            <Font size="10.0" />
          </font>
       </Label>
-      <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0"
-              text="Run conversions">
+      <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions">
          <VBox.margin>
-            <Insets left="8.0" right="8.0" top="25.0"/>
+            <Insets left="8.0" right="8.0" top="25.0" />
          </VBox.margin>
          <font>
-            <Font size="16.0"/>
+            <Font size="16.0" />
          </font>
       </Button>
       <GridPane minHeight="152.0" prefHeight="152.0" VBox.vgrow="NEVER">
          <columnConstraints>
-            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0"
-                               prefWidth="72.0"/>
-            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0"
-                               prefWidth="78.0"/>
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="72.0" />
+            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="78.0" />
          </columnConstraints>
          <rowConstraints>
-            <RowConstraints/>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+            <RowConstraints />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <padding>
-            <Insets bottom="10.0" left="5.0" right="5.0" top="10.0"/>
+            <Insets bottom="10.0" left="5.0" right="5.0" top="10.0" />
          </padding>
          <VBox.margin>
-            <Insets top="15.0"/>
+            <Insets top="15.0" />
          </VBox.margin>
-         <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0"
-                text="Log level" textAlignment="RIGHT" GridPane.rowIndex="1"/>
-         <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false"
-                   onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-         <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="152.0"
-                text="Common parameters" textAlignment="CENTER" GridPane.columnSpan="2"/>
-         <TextField fx:id="tileHeight" alignment="CENTER" layoutX="116.0" layoutY="63.0" text="1024"
-                    GridPane.columnIndex="1" GridPane.rowIndex="2">
+         <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" GridPane.rowIndex="1" />
+         <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+         <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="152.0" text="Common parameters" textAlignment="CENTER" GridPane.columnSpan="2" />
+         <TextField fx:id="tileHeight" alignment="CENTER" layoutX="116.0" layoutY="63.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="2">
             <GridPane.margin>
-               <Insets bottom="2.0" left="10.0" right="10.0" top="2.0"/>
+               <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
             </GridPane.margin>
          </TextField>
-         <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="71.0" text="Tile height"
-                GridPane.rowIndex="2"/>
-         <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="81.0" text="Tile width"
-                GridPane.rowIndex="3"/>
-         <TextField fx:id="tileWidth" alignment="CENTER" layoutX="116.0" layoutY="89.0" text="1024"
-                    GridPane.columnIndex="1" GridPane.rowIndex="3">
+         <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="71.0" text="Tile height" GridPane.rowIndex="2" />
+         <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="81.0" text="Tile width" GridPane.rowIndex="3" />
+         <TextField fx:id="tileWidth" alignment="CENTER" layoutX="116.0" layoutY="89.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="3">
             <GridPane.margin>
-               <Insets bottom="5.0" left="10.0" right="10.0" top="5.0"/>
+               <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
             </GridPane.margin>
          </TextField>
-         <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0"
-                text="Overwrite" GridPane.rowIndex="4"/>
+         <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="4" />
          <ChoiceBox fx:id="logLevel" GridPane.columnIndex="1" GridPane.rowIndex="1">
             <GridPane.margin>
-               <Insets bottom="5.0" left="10.0" right="10.0" top="5.0"/>
+               <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
             </GridPane.margin>
          </ChoiceBox>
       </GridPane>
 
       <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
-         <Label text="Extra Arguments"/>
+         <Label text="Extra Arguments" />
          <TextArea fx:id="extraParams" prefHeight="200.0" prefWidth="200.0">
             <VBox.margin>
-               <Insets left="5.0" right="5.0"/>
+               <Insets left="5.0" right="5.0" />
             </VBox.margin>
          </TextArea>
       </VBox>
-      <Button alignment="CENTER" mnemonicParsing="false" onAction="#displayLog"
-              prefHeight="25.0" prefWidth="142.0" text="Show/Hide Log" textAlignment="CENTER">
+      <Button alignment="CENTER" mnemonicParsing="false" onAction="#displayLog" prefHeight="25.0" prefWidth="142.0" text="Show/Hide Log" textAlignment="CENTER">
          <VBox.margin>
-            <Insets bottom="5.0" left="10.0" right="10.0" top="25.0"/>
+            <Insets bottom="5.0" left="10.0" right="10.0" top="25.0" />
          </VBox.margin>
       </Button>
-      <Button alignment="CENTER" layoutX="20.0" layoutY="465.0" mnemonicParsing="false" onAction="#displayAbout"
-              prefHeight="25.0" prefWidth="142.0" text="About" textAlignment="CENTER">
+      <Button alignment="CENTER" layoutX="20.0" layoutY="465.0" mnemonicParsing="false" onAction="#displayAbout" prefHeight="25.0" prefWidth="142.0" text="About" textAlignment="CENTER">
          <VBox.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0"/>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
          </VBox.margin>
       </Button>
    </VBox>
    <StackPane fx:id="stackPanel" HBox.hgrow="ALWAYS">
       <VBox alignment="CENTER" spacing="5.0" StackPane.alignment="CENTER">
          <padding>
-            <Insets left="20.0" right="20.0"/>
+            <Insets left="20.0" right="20.0" />
          </padding>
          <StackPane.margin>
-            <Insets top="10.0"/>
+            <Insets top="10.0" />
          </StackPane.margin>
          <HBox alignment="CENTER" prefHeight="31.0" prefWidth="600.0" VBox.vgrow="NEVER">
-            <Label text="Output Folder" textOverrun="LEADING_ELLIPSIS">
+            <Label text="Output Folder" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="NEVER">
                <padding>
-                  <Insets right="10.0"/>
+                  <Insets right="10.0" />
                </padding>
             </Label>
-            <TextField fx:id="outputDirectory" prefHeight="69.0" prefWidth="405.0"
-                       promptText="Choose an output directory" text="&lt;Same as input&gt;"
-                       HBox.hgrow="ALWAYS">
+            <TextField fx:id="outputDirectory" promptText="Choose an output directory" text="&lt;Same as input&gt;" HBox.hgrow="ALWAYS">
                <HBox.margin>
-                  <Insets right="5.0"/>
+                  <Insets right="5.0" />
                </HBox.margin>
             </TextField>
-            <Button fx:id="chooseDirButton" mnemonicParsing="false" onAction="#chooseOutputDirectory"
-                    text="Choose"/>
-            <Button fx:id="clearDirButton" graphicTextGap="2.0" mnemonicParsing="false"
-                    onAction="#resetOutputDirectory" text="Clear" textAlignment="CENTER">
+            <Button fx:id="chooseDirButton" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose" HBox.hgrow="NEVER" />
+            <Button fx:id="clearDirButton" graphicTextGap="2.0" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Clear" textAlignment="CENTER" HBox.hgrow="NEVER">
                <HBox.margin>
-                  <Insets left="3.0" right="3.0"/>
+                  <Insets left="3.0" right="3.0" />
                </HBox.margin>
             </Button>
          </HBox>
          <VBox VBox.vgrow="ALWAYS">
             <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
                <VBox.margin>
-                  <Insets bottom="10.0" top="10.0"/>
+                  <Insets bottom="10.0" top="10.0" />
                </VBox.margin>
                <VBox alignment="TOP_CENTER" prefHeight="287.0" prefWidth="25.0" HBox.hgrow="NEVER">
                   <HBox.margin>
-                     <Insets right="3.0"/>
+                     <Insets right="3.0" />
                   </HBox.margin>
-                  <Button fx:id="addFileButton" minHeight="25.0" minWidth="25.0" mnemonicParsing="false"
-                          onAction="#addFiles" prefHeight="25.0" prefWidth="25.0">
+                  <Button fx:id="addFileButton" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#addFiles" prefHeight="25.0" prefWidth="25.0">
                      <font>
-                        <Font name="System Bold" size="12.0"/>
+                        <Font name="System Bold" size="12.0" />
                      </font>
                      <VBox.margin>
-                        <Insets bottom="2.0" top="25.0"/>
+                        <Insets bottom="2.0" top="25.0" />
                      </VBox.margin>
                   </Button>
-                  <Button fx:id="removeFileButton" layoutX="12.0" layoutY="12.0" minHeight="25.0"
-                          minWidth="25.0" mnemonicParsing="false" onAction="#removeFile"
-                          prefHeight="25.0" prefWidth="25.0">
+                  <Button fx:id="removeFileButton" layoutX="12.0" layoutY="12.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#removeFile" prefHeight="25.0" prefWidth="25.0">
                      <font>
-                        <Font name="System Bold" size="12.0"/>
+                        <Font name="System Bold" size="12.0" />
                      </font>
                      <VBox.margin>
-                        <Insets bottom="2.0" top="2.0"/>
+                        <Insets bottom="2.0" top="2.0" />
                      </VBox.margin>
                   </Button>
-                  <Button fx:id="clearFileButton" layoutX="12.0" layoutY="39.0" minHeight="25.0"
-                          minWidth="25.0" mnemonicParsing="false" onAction="#clearFiles"
-                          prefHeight="25.0" prefWidth="25.0">
+                  <Button fx:id="clearFileButton" layoutX="12.0" layoutY="39.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#clearFiles" prefHeight="25.0" prefWidth="25.0">
                      <font>
-                        <Font name="System Bold" size="12.0"/>
+                        <Font name="System Bold" size="12.0" />
                      </font>
                      <VBox.margin>
-                        <Insets bottom="2.0" top="2.0"/>
+                        <Insets bottom="2.0" top="2.0" />
                      </VBox.margin>
                   </Button>
-                  <Button fx:id="clearFinishedButton" layoutX="10.0" layoutY="93.0" minHeight="25.0"
-                          minWidth="25.0" mnemonicParsing="false" onAction="#clearFinished"
-                          prefHeight="25.0" prefWidth="25.0">
+                  <Button fx:id="clearFinishedButton" layoutX="10.0" layoutY="93.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#clearFinished" prefHeight="25.0" prefWidth="25.0">
                      <font>
-                        <Font name="System Bold" size="12.0"/>
+                        <Font name="System Bold" size="12.0" />
                      </font>
                      <VBox.margin>
-                        <Insets bottom="2.0" top="2.0"/>
+                        <Insets bottom="2.0" top="2.0" />
                      </VBox.margin>
                   </Button>
                </VBox>
                <VBox prefHeight="303.0" prefWidth="572.0" HBox.hgrow="ALWAYS">
                   <HBox alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="578.0" VBox.vgrow="NEVER">
-                     <Region layoutX="424.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0"/>
-                     <Label alignment="CENTER" minWidth="68.0" prefHeight="17.0" prefWidth="68.0"
-                            text="Input" textAlignment="CENTER" HBox.hgrow="NEVER">
+                     <Region layoutX="424.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
+                     <Label alignment="CENTER" minWidth="68.0" prefHeight="17.0" prefWidth="68.0" text="Input" textAlignment="CENTER" HBox.hgrow="NEVER">
                         <HBox.margin>
-                           <Insets/>
+                           <Insets />
                         </HBox.margin>
                      </Label>
-                     <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS"/>
-                     <Region layoutX="228.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0"/>
-                     <Label alignment="CENTER" minWidth="68.0" prefHeight="17.0" prefWidth="68.0"
-                            text="Output" textAlignment="CENTER" HBox.hgrow="ALWAYS"/>
-                     <Region layoutX="56.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0"/>
+                     <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                     <Region layoutX="228.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
+                     <Label alignment="CENTER" minWidth="68.0" prefHeight="17.0" prefWidth="68.0" text="Output" textAlignment="CENTER" HBox.hgrow="ALWAYS" />
+                     <Region layoutX="56.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
                   </HBox>
-                  <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop"
-                            onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler"
-                            style="-fx-selection-bar: #DDDDDD;" VBox.vgrow="ALWAYS">
+                  <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" style="-fx-selection-bar: #DDDDDD;" VBox.vgrow="ALWAYS">
                      <padding>
-                        <Insets bottom="2.0" left="5.0" right="5.0" top="2.0"/>
+                        <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
                      </padding>
                      <VBox.margin>
-                        <Insets/>
+                        <Insets />
                      </VBox.margin>
                   </ListView>
-                  <TextField fx:id="statusBox" editable="false" focusTraversable="false"
-                             mouseTransparent="true" text="Add files to begin" VBox.vgrow="NEVER">
+                  <TextField fx:id="statusBox" editable="false" focusTraversable="false" mouseTransparent="true" text="Add files to begin" VBox.vgrow="NEVER">
                      <opaqueInsets>
-                        <Insets/>
+                        <Insets />
                      </opaqueInsets>
                      <VBox.margin>
-                        <Insets top="10.0"/>
+                        <Insets top="10.0" />
                      </VBox.margin>
                   </TextField>
                </VBox>
             </HBox>
          </VBox>
       </VBox>
-      <VBox fx:id="logVBox" alignment="CENTER" pickOnBounds="false" prefHeight="200.0" prefWidth="100.0"
-            style="-fx-background-color: #EEEEEE;" visible="false">
+      <VBox fx:id="logVBox" alignment="CENTER" pickOnBounds="false" prefHeight="200.0" prefWidth="100.0" style="-fx-background-color: #EEEEEE;" visible="false">
          <Label pickOnBounds="false" text="Execution Logs">
             <font>
-               <Font name="System Bold" size="14.0"/>
+               <Font name="System Bold" size="14.0" />
             </font>
             <VBox.margin>
-               <Insets bottom="10.0"/>
+               <Insets bottom="10.0" />
             </VBox.margin>
          </Label>
          <TextArea fx:id="logBox" editable="false" pickOnBounds="false" VBox.vgrow="ALWAYS">
             <VBox.margin>
-               <Insets bottom="20.0" left="20.0" right="20.0" top="2.0"/>
+               <Insets bottom="20.0" left="20.0" right="20.0" top="2.0" />
             </VBox.margin>
             <font>
-               <Font name="Courier New" size="12.0"/>
+               <Font name="Courier New" size="12.0" />
             </font>
          </TextArea>
       </VBox>
