@@ -20,12 +20,16 @@ class ConverterTask extends Task<Integer> {
     private final ListView<IOPackage> inputFileList;
     private final TextArea logBox;
     private final TextField statusBox;
+    private final PrimaryController parent;
+    public boolean interrupted;
 
-    public ConverterTask(List<String> args, ListView<IOPackage> inputFileList, TextField statusBox, TextArea logBox) {
+    public ConverterTask(List<String> args, PrimaryController parent) {
+        this.parent = parent;
         this.args = args;
-        this.inputFileList = inputFileList;
-        this.statusBox = statusBox;
-        this.logBox = logBox;
+        this.inputFileList = parent.inputFileList;
+        this.statusBox = parent.statusBox;
+        this.logBox = parent.logBox;
+        this.interrupted = false;
     }
 
     @Override protected Integer call() throws Exception {
@@ -37,7 +41,7 @@ class ConverterTask extends Task<Integer> {
         for (IOPackage job : inputFileList.getItems()) {
             File in = job.fileIn;
             File out = job.fileOut;
-            if (job.status.equals("success") || job.status.equals("error")) {
+            if (this.interrupted || job.status.equals("success") || job.status.equals("error")) {
                 continue;
             }
 
@@ -95,10 +99,11 @@ class ConverterTask extends Task<Integer> {
         int finalCount = count;
         String finalStatus = String.format("Completed conversion of %s files.", finalCount);
         Platform.runLater(() -> {
-            statusBox.setText(finalStatus);
         });
         Platform.runLater(() -> {
+            statusBox.setText(finalStatus);
             logBox.appendText(finalStatus + "\n");
+            parent.runCompleted();
         });
         return 0;
     }
