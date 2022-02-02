@@ -89,6 +89,13 @@ public class PrimaryController {
         clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
         logLevel.setItems(FXCollections.observableArrayList("Debug", "Info", "Warn", "Error", "Trace", "All"));
         logLevel.setValue("Warn");
+        logLevel.setTooltip(new Tooltip("Level of detail to show on the log tab"));
+        wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
+        outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
+                "Applies to new files added to the list."));
+        Tooltip tileToolTip = new Tooltip("Dimensions of zarr tiles");
+        tileWidth.setTooltip(tileToolTip);
+        tileHeight.setTooltip(tileToolTip);
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
         versionDisplay.setText(versionDisplay.getText() + version);
@@ -235,16 +242,6 @@ public class PrimaryController {
                 .stream()
                 .filter((item) -> (!item.status.equals("success")))
                 .collect(Collectors.toCollection(FXCollections::observableArrayList)));
-    }
-
-
-    @FXML
-    private void testRun() {
-        // I am a testing function to forcibly change file list item state
-        inputFileList.getItems().forEach((item) -> {
-            item.status = "ready";
-        });
-        inputFileList.refresh();
     }
 
     @FXML
