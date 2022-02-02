@@ -26,7 +26,7 @@
                <font>
                   <Font size="16.0" />
                </font></Button>
-            <GridPane minHeight="169.0">
+            <GridPane minHeight="152.0" prefHeight="152.0" VBox.vgrow="NEVER">
               <columnConstraints>
                  <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="72.0" />
                 <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="78.0" />
@@ -34,34 +34,27 @@
               <rowConstraints>
                 <RowConstraints />
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
                   <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" GridPane.rowIndex="1" />
-                  <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                   <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="152.0" text="Common parameters" textAlignment="CENTER" GridPane.columnSpan="2" />
-                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="74.0" text="Max workers" GridPane.rowIndex="2" />
-                  <TextField fx:id="tileHeight" alignment="CENTER" layoutX="116.0" layoutY="63.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                  <TextField fx:id="tileHeight" alignment="CENTER" layoutX="116.0" layoutY="63.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <GridPane.margin>
                         <Insets bottom="2.0" left="10.0" right="10.0" top="2.0" />
                      </GridPane.margin>
                   </TextField>
-                  <TextField fx:id="maxWorkers" alignment="CENTER" text="4" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="71.0" text="Tile height" GridPane.rowIndex="2" />
+                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="81.0" text="Tile width" GridPane.rowIndex="3" />
+                  <TextField fx:id="tileWidth" alignment="CENTER" layoutX="116.0" layoutY="89.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="3">
                      <GridPane.margin>
                         <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
                      </GridPane.margin>
                   </TextField>
-                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="71.0" text="Tile height" GridPane.rowIndex="3" />
-                  <Label alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="81.0" text="Tile width" GridPane.rowIndex="4" />
-                  <TextField fx:id="tileWidth" alignment="CENTER" layoutX="116.0" layoutY="89.0" text="1024" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                     <GridPane.margin>
-                        <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
-                     </GridPane.margin>
-                  </TextField>
-                  <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="5" />
+                  <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="4" />
                   <ChoiceBox fx:id="logLevel" GridPane.columnIndex="1" GridPane.rowIndex="1">
                      <GridPane.margin>
                         <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
@@ -72,7 +65,7 @@
                   <Insets bottom="10.0" left="5.0" right="5.0" top="10.0" />
                </padding>
                <VBox.margin>
-                  <Insets top="20.0" />
+                  <Insets top="15.0" />
                </VBox.margin>
             </GridPane>
 
@@ -88,8 +81,13 @@
             </VBox>
             <Button fx:id="paneSwapButton" alignment="CENTER" mnemonicParsing="false" onAction="#displayLog" prefHeight="25.0" prefWidth="142.0" text="Show/Hide Log" textAlignment="CENTER">
                <VBox.margin>
-                  <Insets bottom="20.0" left="10.0" right="10.0" top="25.0" />
+                  <Insets bottom="5.0" left="10.0" right="10.0" top="25.0" />
                </VBox.margin></Button>
+            <Button alignment="CENTER" layoutX="20.0" layoutY="465.0" mnemonicParsing="false" onAction="#displayAbout" prefHeight="25.0" prefWidth="142.0" text="About" textAlignment="CENTER">
+               <VBox.margin>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+               </VBox.margin>
+            </Button>
          </children>
       </VBox>
       <StackPane fx:id="stackPanel" HBox.hgrow="ALWAYS">

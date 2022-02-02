@@ -1,7 +1,10 @@
 package com.glencoesoftware.convert;
 
+import com.glencoesoftware.bioformats2raw.Converter;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -13,6 +16,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
@@ -48,7 +52,6 @@ public class PrimaryController {
     public Button chooseDirButton;
     public Button clearDirButton;
     public Label versionDisplay;
-    public TextField maxWorkers;
     public TextField tileWidth;
     public TextField tileHeight;
     public Button runButton;
@@ -60,6 +63,7 @@ public class PrimaryController {
     private ArrayList<Control> fileControlButtons;
 
     public Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
+    public String version;
 
     @FXML
     public void initialize(){
@@ -85,7 +89,7 @@ public class PrimaryController {
         clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
         logLevel.setItems(FXCollections.observableArrayList("Debug", "Info", "Warn", "Error", "Trace", "All"));
         logLevel.setValue("Warn");
-        String version = getClass().getPackage().getImplementationVersion();
+        version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
         versionDisplay.setText(versionDisplay.getText() + version);
         ConsoleStream console = new ConsoleStream(logBox);
@@ -263,6 +267,24 @@ public class PrimaryController {
         logVBox.setVisible(!logVBox.isVisible());
     }
 
+    @FXML
+    private void displayAbout() throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        fxmlLoader.getNamespace().put("guiVer", version);
+        fxmlLoader.getNamespace().put("b2rVer", Converter.class.getPackage().getImplementationVersion());
+        fxmlLoader.getNamespace().put("bfVer", ImageReader.class.getPackage().getImplementationVersion());
+        fxmlLoader.getNamespace().put("bfVer", ImageReader.class.getPackage().getImplementationVersion());
+        fxmlLoader.setLocation(App.class.getResource("AboutDialog.fxml"));
+        Scene scene = new Scene(fxmlLoader.load());
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        stage.setAlwaysOnTop(true);
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initOwner(inputFileList.getScene().getWindow());
+        stage.setResizable(false);
+        stage.show();
+    }
+
     public void runCompleted() {
         runButton.setText("Run conversions");
         isRunning = false;
@@ -297,11 +319,6 @@ public class PrimaryController {
         extraArgs.add("--log-level=" + logLevel.getValue().toUpperCase());
         if (wantOverwrite.isSelected()) {
             extraArgs.add("--overwrite");
-        }
-        if (StringUtils.isNumeric(maxWorkers.getText())) {
-            extraArgs.add("--max_workers=" + maxWorkers.getText());
-        } else {
-            logBox.appendText("Parameter 'Max Workers' is not a valid number\n.");
         }
         if (StringUtils.isNumeric(tileWidth.getText())) {
             extraArgs.add("--tile_width=" + tileWidth.getText());
