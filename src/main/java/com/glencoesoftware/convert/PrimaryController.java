@@ -273,7 +273,6 @@ public class PrimaryController {
         fxmlLoader.getNamespace().put("guiVer", version);
         fxmlLoader.getNamespace().put("b2rVer", Converter.class.getPackage().getImplementationVersion());
         fxmlLoader.getNamespace().put("bfVer", ImageReader.class.getPackage().getImplementationVersion());
-        fxmlLoader.getNamespace().put("bfVer", ImageReader.class.getPackage().getImplementationVersion());
         fxmlLoader.setLocation(App.class.getResource("AboutDialog.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
