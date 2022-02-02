@@ -17,7 +17,7 @@
          </VBox.margin></ImageView>
       <Label text="NGFF Converter GUI">
          <font>
-            <Font name="System Bold" size="14.0" />
+            <Font name="System Bold" size="18.0" />
          </font>
          <VBox.margin>
             <Insets bottom="10.0" />
@@ -28,8 +28,8 @@
          </VBox.margin>
       </Label>
       <Label text="${'Converter GUI - ' + guiVer}" />
-      <Label text="${'Bioformats2Raw - ' + b2rVer}" />
-      <Label text="${'Bioformats - ' + bfVer}" />
+      <Label text="${'BioFormats2Raw - ' + b2rVer}" />
+      <Label text="${'BioFormats - ' + bfVer}" />
       <Label text="Copyright © 2022 Glencoe Software">
          <VBox.margin>
             <Insets top="10.0" />

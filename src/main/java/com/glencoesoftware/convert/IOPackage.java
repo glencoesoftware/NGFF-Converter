@@ -16,12 +16,4 @@ public class IOPackage {
             status = "ready";
         }
     }
-
-    public void setFileIn(File newFile) {
-        fileIn = newFile;
-    }
-
-    public void setFileOut(File newFile) {
-        fileOut = newFile;
-    }
 }

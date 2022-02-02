@@ -4,7 +4,6 @@ package com.glencoesoftware.convert;
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 // We want to capture stdout from Picocli into a JavaFX text area.
@@ -24,12 +23,12 @@ public class ConsoleStream extends OutputStream
     }
 
     @Override
-        public void write(final int i) throws IOException {
+        public void write(final int i) {
         this.buffer += String.valueOf((char) i);
     }
 
     @Override
-    public void flush() throws IOException {
+    public void flush() {
         Platform.runLater(() -> {
             output.appendText(this.buffer);
             this.buffer = "";

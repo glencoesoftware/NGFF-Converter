@@ -32,7 +32,7 @@ class ConverterTask extends Task<Integer> {
         this.interrupted = false;
     }
 
-    @Override protected Integer call() throws Exception {
+    @Override protected Integer call() {
         CommandLine runner = new CommandLine(new Converter());
         PrintWriter writer = new PrintWriter(new StringWriter());
         runner.setOut(writer);
@@ -57,9 +57,7 @@ class ConverterTask extends Task<Integer> {
             params.add(0, out.getAbsolutePath());
             params.add(0, in.getAbsolutePath());
             String[] fullParams = params.toArray(new String[args.size()]);
-            Platform.runLater(() -> {
-                logBox.appendText("Executing with args " + Arrays.toString(fullParams) + "\n");
-            });
+            Platform.runLater(() -> logBox.appendText("Executing with args " + Arrays.toString(fullParams) + "\n"));
 
             boolean argsValid;
             // Validate args
@@ -67,7 +65,7 @@ class ConverterTask extends Task<Integer> {
                 runner.parseArgs(fullParams);
                 argsValid = true;
             } catch(Exception e) {
-                Platform.runLater(() -> {logBox.appendText(e + "\n");});
+                Platform.runLater(() -> logBox.appendText(e + "\n"));
                 argsValid = false;
             }
 
@@ -94,7 +92,7 @@ class ConverterTask extends Task<Integer> {
                 }
                 inputFileList.refresh();
             });
-            if (result == 0) { count++; };
+            if (result == 0) { count++; }
         }
         int finalCount = count;
         String finalStatus = String.format("Completed conversion of %s files.", finalCount);

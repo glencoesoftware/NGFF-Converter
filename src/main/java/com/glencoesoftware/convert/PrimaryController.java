@@ -214,7 +214,7 @@ public class PrimaryController {
                     if (target.status.equals("success")) {
                         Desktop.getDesktop().open(target.fileOut.getParentFile());
                         return;
-                    };
+                    }
                     // Todo: Full UI for editing file path
                     Stage stage = (Stage) inputFileList.getScene().getWindow();
                     FileChooser outputFileChooser = new FileChooser();
@@ -228,7 +228,7 @@ public class PrimaryController {
                         // Reset status
                         target.status = "ready";
                         inputFileList.refresh();
-                    };
+                    }
                     }
 
                 }
@@ -249,7 +249,7 @@ public class PrimaryController {
         boolean overwrite = wantOverwrite.isSelected();
         List<String> doNotChange = Arrays.asList("success", "fail", "running");
         inputFileList.getItems().forEach((item) -> {
-            if (doNotChange.contains(item.status)) { return; };
+            if (doNotChange.contains(item.status)) { return; }
             if ((!overwrite) && item.fileOut.exists()) {
                 item.status = "error";
             } else {
@@ -305,7 +305,7 @@ public class PrimaryController {
             // Jobs are already running, need to stop.
             runCancel();
             return;
-        };
+        }
         fileControlButtons.forEach((control -> control.setDisable(true)));
         runButton.setText("Stop conversions");
         isRunning = true;
