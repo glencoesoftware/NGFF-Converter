@@ -3,7 +3,7 @@ package com.glencoesoftware.convert;
 import java.io.File;
 
 public class IOPackage {
-    public File fileIn;
+    public final File fileIn;
     public File fileOut;
     public String status;
 

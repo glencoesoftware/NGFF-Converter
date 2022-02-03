@@ -32,7 +32,8 @@ class ConverterTask extends Task<Integer> {
         this.interrupted = false;
     }
 
-    @Override protected Integer call() {
+    @Override
+    protected Integer call() {
         CommandLine runner = new CommandLine(new Converter());
         PrintWriter writer = new PrintWriter(new StringWriter());
         runner.setOut(writer);
@@ -59,50 +60,53 @@ class ConverterTask extends Task<Integer> {
             String[] fullParams = params.toArray(new String[args.size()]);
             Platform.runLater(() -> logBox.appendText("Executing with args " + Arrays.toString(fullParams) + "\n"));
 
-            boolean argsValid;
-            // Validate args
-            try {
-                runner.parseArgs(fullParams);
-                argsValid = true;
-            } catch(Exception e) {
-                Platform.runLater(() -> logBox.appendText(e + "\n"));
-                argsValid = false;
-            }
-
-            final int result;
-            if (argsValid) {
-                result = runner.execute(fullParams);
-            } else {
-                result = 9;
-            }
+            runner.setExecutionExceptionHandler(new RunnerExecutionExceptionHandler());
+            runner.setParameterExceptionHandler(new RunnerParameterExceptionHandler());
+            int result = runner.execute(fullParams);
 
             Platform.runLater(() -> {
-                if (result == 0 && out.exists()) {
+                if (this.interrupted && result != 0) {
+                    job.status = "fail";
+                    logBox.appendText("User aborted job: " + out.getName() + "\n\n");
+                } else if (result == 0 && out.exists()) {
                     job.status = "success";
-                    logBox.appendText("Successfully created " + out.getName() + "\n\n");
+                    logBox.appendText("Successfully created: " + out.getName() + "\n\n");
                 } else if (result == 0) {
                     job.status = "noOutput";
-                    logBox.appendText("Job completed without output " + out.getName() + "\n\n");
+                    logBox.appendText("Job completed but no output detected: " + out.getName() + "\n\n");
                 } else if (result == 9) {
                     job.status = "fail";
-                    logBox.appendText("Input arguments were invalid for " + out.getName() + "\n\n");
+                    logBox.appendText("Input arguments were invalid for: " + out.getName() + "\n\n");
                 } else {
                     job.status = "fail";
-                    logBox.appendText("Failed with Exit Code " + result + "\n\n");
+                    logBox.appendText("Failed with Exit Code " + result +  " : " + out.getName() + "\n\n");
                 }
                 inputFileList.refresh();
             });
             if (result == 0) { count++; }
         }
-        int finalCount = count;
-        String finalStatus = String.format("Completed conversion of %s files.", finalCount);
-        Platform.runLater(() -> {
-        });
+        String finalStatus = String.format("Completed conversion of %s files.", count);
         Platform.runLater(() -> {
             statusBox.setText(finalStatus);
             logBox.appendText(finalStatus + "\n");
             parent.runCompleted();
         });
         return 0;
+    }
+
+    private class RunnerExecutionExceptionHandler implements CommandLine.IExecutionExceptionHandler {
+        @Override
+        public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult parsed)  {
+            Platform.runLater(() -> logBox.appendText(ex + "\n"));
+            return commandLine.getExecutionResult();
+        }
+    }
+
+    private class RunnerParameterExceptionHandler implements CommandLine.IParameterExceptionHandler {
+        @Override
+        public int handleParseException(CommandLine.ParameterException ex, String[] args) {
+            Platform.runLater(() -> logBox.appendText(ex + "\n"));
+            return 9;
+        }
     }
 }

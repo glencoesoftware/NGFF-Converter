@@ -10,7 +10,6 @@ mainClassName = 'com.glencoesoftware.convert.Launcher'
 
 repositories {
     mavenLocal()
-    jcenter()
     mavenCentral()
 
     maven {

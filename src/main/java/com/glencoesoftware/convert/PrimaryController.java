@@ -32,6 +32,8 @@ import java.util.Queue;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.Integer.parseInt;
+
 
 public class PrimaryController {
 
@@ -62,7 +64,7 @@ public class PrimaryController {
     private ConverterTask currentJob;
     private ArrayList<Control> fileControlButtons;
 
-    public Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
+    public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
 
     @FXML
@@ -316,12 +318,12 @@ public class PrimaryController {
         if (wantOverwrite.isSelected()) {
             extraArgs.add("--overwrite");
         }
-        if (StringUtils.isNumeric(tileWidth.getText())) {
+        if (StringUtils.isNumeric(tileWidth.getText()) && parseInt(tileWidth.getText()) > 0) {
             extraArgs.add("--tile_width=" + tileWidth.getText());
         } else {
             logBox.appendText("Parameter 'Tile width' is not a valid number\n.");
         }
-        if (StringUtils.isNumeric(tileHeight.getText())) {
+        if (StringUtils.isNumeric(tileHeight.getText()) && parseInt(tileWidth.getText()) > 0) {
             extraArgs.add("--tile_height=" + tileHeight.getText());
         } else {
             logBox.appendText("Parameter 'Tile height' is not a valid number\n.");
