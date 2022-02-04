@@ -20,7 +20,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.awt.*;
@@ -31,8 +30,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.lang.Integer.parseInt;
 
 
 public class PrimaryController {
@@ -54,8 +51,6 @@ public class PrimaryController {
     public Button chooseDirButton;
     public Button clearDirButton;
     public Label versionDisplay;
-    public TextField tileWidth;
-    public TextField tileHeight;
     public Button runButton;
     public ChoiceBox<String> logLevel;
 
@@ -95,9 +90,6 @@ public class PrimaryController {
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
                 "Applies to new files added to the list."));
-        Tooltip tileToolTip = new Tooltip("Dimensions of zarr tiles");
-        tileWidth.setTooltip(tileToolTip);
-        tileHeight.setTooltip(tileToolTip);
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
         versionDisplay.setText(versionDisplay.getText() + version);
@@ -141,7 +133,6 @@ public class PrimaryController {
         outputDirectoryChooser.setTitle("Choose output directory");
         File newDir = outputDirectoryChooser.showDialog(stage);
         if (newDir != null) {
-            // Todo: Add zarr if not given by user
             outputDirectory.setText(newDir.getAbsolutePath());
         }
 
@@ -219,7 +210,6 @@ public class PrimaryController {
                         return;
                     }
                     // Todo: Full UI for editing file path
-                    // Todo: Remove tile size options
                     Stage stage = (Stage) inputFileList.getScene().getWindow();
                     FileChooser outputFileChooser = new FileChooser();
                     outputFileChooser.setInitialDirectory(target.fileOut.getParentFile());
@@ -228,6 +218,9 @@ public class PrimaryController {
                     outputFileChooser.setTitle("Choose output file for " + target.fileIn.getName());
                     File newOutput = outputFileChooser.showSaveDialog(stage);
                     if (newOutput != null) {
+                        if (!newOutput.getName().endsWith(".zarr")) {
+                            newOutput = new File(newOutput.getAbsolutePath() + ".zarr");
+                        }
                         target.fileOut = newOutput;
                         // Reset status
                         target.status = "ready";
@@ -320,17 +313,6 @@ public class PrimaryController {
         if (wantOverwrite.isSelected()) {
             extraArgs.add("--overwrite");
         }
-        if (StringUtils.isNumeric(tileWidth.getText()) && parseInt(tileWidth.getText()) > 0) {
-            extraArgs.add("--tile_width=" + tileWidth.getText());
-        } else {
-            logBox.appendText("Parameter 'Tile width' is not a valid number\n.");
-        }
-        if (StringUtils.isNumeric(tileHeight.getText()) && parseInt(tileWidth.getText()) > 0) {
-            extraArgs.add("--tile_height=" + tileHeight.getText());
-        } else {
-            logBox.appendText("Parameter 'Tile height' is not a valid number\n.");
-        }
-
         String[] userArgs = extraParams.getText().split("\n");
 
         Arrays.asList(userArgs).forEach((String userArg) -> {
