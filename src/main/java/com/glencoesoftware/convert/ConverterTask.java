@@ -34,12 +34,16 @@ class ConverterTask extends Task<Integer> {
 
     @Override
     protected Integer call() {
-        CommandLine runner = new CommandLine(new Converter());
         PrintWriter writer = new PrintWriter(new StringWriter());
-        runner.setOut(writer);
-        runner.setErr(writer);
+        RunnerParameterExceptionHandler paramHandler = new RunnerParameterExceptionHandler();
+        RunnerExecutionExceptionHandler runHandler = new RunnerExecutionExceptionHandler();
         int count = 0;
         for (IOPackage job : inputFileList.getItems()) {
+            CommandLine runner = new CommandLine(new Converter());
+            runner.setOut(writer);
+            runner.setErr(writer);
+            runner.setParameterExceptionHandler(paramHandler);
+            runner.setExecutionExceptionHandler(runHandler);
             File in = job.fileIn;
             File out = job.fileOut;
             if (this.interrupted || job.status.equals("success") || job.status.equals("error")) {
@@ -60,8 +64,6 @@ class ConverterTask extends Task<Integer> {
             String[] fullParams = params.toArray(new String[args.size()]);
             Platform.runLater(() -> logBox.appendText("Executing with args " + Arrays.toString(fullParams) + "\n"));
 
-            runner.setExecutionExceptionHandler(new RunnerExecutionExceptionHandler());
-            runner.setParameterExceptionHandler(new RunnerParameterExceptionHandler());
             int result = runner.execute(fullParams);
 
             Platform.runLater(() -> {
