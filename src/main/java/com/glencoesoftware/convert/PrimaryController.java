@@ -141,6 +141,7 @@ public class PrimaryController {
         outputDirectoryChooser.setTitle("Choose output directory");
         File newDir = outputDirectoryChooser.showDialog(stage);
         if (newDir != null) {
+            // Todo: Add zarr if not given by user
             outputDirectory.setText(newDir.getAbsolutePath());
         }
 
@@ -218,6 +219,7 @@ public class PrimaryController {
                         return;
                     }
                     // Todo: Full UI for editing file path
+                    // Todo: Remove tile size options
                     Stage stage = (Stage) inputFileList.getScene().getWindow();
                     FileChooser outputFileChooser = new FileChooser();
                     outputFileChooser.setInitialDirectory(target.fileOut.getParentFile());

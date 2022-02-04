@@ -11,13 +11,16 @@
          <font>
             <Font name="System Bold" size="16.0" />
          </font>
+         <VBox.margin>
+            <Insets top="5.0" />
+         </VBox.margin>
       </Label>
       <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="0.0" prefWidth="160.0" text="Version " textAlignment="CENTER">
          <font>
             <Font size="10.0" />
          </font>
       </Label>
-      <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions">
+      <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions" VBox.vgrow="NEVER">
          <VBox.margin>
             <Insets left="8.0" right="8.0" top="25.0" />
          </VBox.margin>
@@ -174,7 +177,7 @@
                         <Insets />
                      </VBox.margin>
                   </ListView>
-                  <TextField fx:id="statusBox" editable="false" focusTraversable="false" mouseTransparent="true" text="Add files to begin" VBox.vgrow="NEVER">
+                  <TextField fx:id="statusBox" editable="false" focusTraversable="false" mouseTransparent="true" style="-fx-background-color: null; -fx-border-color: lightgrey;" text="Add files to begin" VBox.vgrow="NEVER">
                      <opaqueInsets>
                         <Insets />
                      </opaqueInsets>

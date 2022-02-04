@@ -6,6 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -48,6 +49,9 @@ public class FileCell extends ListCell<IOPackage> {
         notOk.setIconSize(20);
         success.setIconSize(20);
         fail.setIconSize(20);
+        success.setIconColor(Paint.valueOf("GREEN"));
+        notOk.setIconColor(Paint.valueOf("ORANGE"));
+        fail.setIconColor(Paint.valueOf("RED"));
         monitor = new Label();
         progress = new ProgressIndicator();
         progress.setPrefSize(20, 20);
