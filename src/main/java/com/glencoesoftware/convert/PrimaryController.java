@@ -108,7 +108,7 @@ public class PrimaryController {
         FileChooser addFileChooser = new FileChooser();
         addFileChooser.setTitle("Select files to load...");
         List<File> newFiles = addFileChooser.showOpenMultipleDialog(stage);
-        if (newFiles.size() > 0) {
+        if (newFiles != null && newFiles.size() > 0) {
             addFilesToList(newFiles);
         }
     }
