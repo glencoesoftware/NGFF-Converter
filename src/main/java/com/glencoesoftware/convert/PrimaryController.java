@@ -179,7 +179,7 @@ public class PrimaryController {
                 fileQueue.addAll(Arrays.asList(Objects.requireNonNull(file.listFiles())));
                 continue;
             }
-            if (!supportedExtensions.contains(extension)) {
+            if (!supportedExtensions.contains(extension.toLowerCase())) {
                 // Not a supported image file
                 continue;
             }
