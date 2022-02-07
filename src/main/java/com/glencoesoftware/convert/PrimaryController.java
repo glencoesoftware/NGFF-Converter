@@ -99,7 +99,7 @@ public class PrimaryController {
         System.setErr(printStream);
         // Array of controls we want to lock during a run.
         fileControlButtons = new ArrayList<>(Arrays.asList(addFileButton, removeFileButton, clearFileButton,
-                clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton ));
+                clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel ));
     }
 
     @FXML

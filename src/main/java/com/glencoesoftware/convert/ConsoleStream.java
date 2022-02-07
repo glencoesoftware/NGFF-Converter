@@ -3,6 +3,7 @@ package com.glencoesoftware.convert;
 
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.OutputStream;
 
@@ -15,6 +16,7 @@ public class ConsoleStream extends OutputStream
 {
     private final TextArea output;
     private String buffer;
+    private final int lineLimit = 500;
 
     public ConsoleStream(TextArea logBox)
     {
@@ -32,6 +34,11 @@ public class ConsoleStream extends OutputStream
         Platform.runLater(() -> {
             output.appendText(this.buffer);
             this.buffer = "";
+            int numLines = output.getText().split("\n").length;
+            if (numLines > this.lineLimit) {
+                int idx = StringUtils.ordinalIndexOf(output.getText(), "\n", numLines - this.lineLimit);
+                output.setText(output.getText(idx + 1, output.getLength()));
+            }
         });
     }
 
