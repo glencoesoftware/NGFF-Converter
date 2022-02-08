@@ -33,10 +33,6 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-application {
-    mainModule = 'com.glencoesoftware.convert'
-    mainClass = 'com.glencoesoftware.convert.Launcher'
-}
 
 javafx {
     version = '17.0.1'
