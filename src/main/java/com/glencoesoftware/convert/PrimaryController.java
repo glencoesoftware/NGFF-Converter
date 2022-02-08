@@ -62,6 +62,10 @@ public class PrimaryController {
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
 
+    public enum jobStatus {
+        READY, ERROR, COMPLETED, FAILED, RUNNING, NOOUTPUT
+    }
+
     @FXML
     public void initialize(){
         // Todo: Support zarr to OME.TIFF
@@ -205,7 +209,7 @@ public class PrimaryController {
                 if (isRunning) { return; }
                 final IOPackage target = inputFileList.getSelectionModel().getSelectedItem();
                 if (target != null) {
-                    if (target.status.equals("success")) {
+                    if (target.status == jobStatus.COMPLETED) {
                         Desktop.getDesktop().open(target.fileOut.getParentFile());
                         return;
                     }
@@ -223,7 +227,7 @@ public class PrimaryController {
                         }
                         target.fileOut = newOutput;
                         // Reset status
-                        target.status = "ready";
+                        target.status = jobStatus.READY;
                         inputFileList.refresh();
                     }
                     }
@@ -237,20 +241,20 @@ public class PrimaryController {
     private void clearFinished() {
         inputFileList.setItems(inputFileList.getItems()
                 .stream()
-                .filter((item) -> (!item.status.equals("success")))
+                .filter((item) -> (item.status != jobStatus.COMPLETED))
                 .collect(Collectors.toCollection(FXCollections::observableArrayList)));
     }
 
     @FXML
     private void toggleOverwrite() {
         boolean overwrite = wantOverwrite.isSelected();
-        List<String> doNotChange = Arrays.asList("success", "fail", "running");
+        List<jobStatus> doNotChange = Arrays.asList(jobStatus.COMPLETED, jobStatus.FAILED, jobStatus.RUNNING);
         inputFileList.getItems().forEach((item) -> {
             if (doNotChange.contains(item.status)) { return; }
             if ((!overwrite) && item.fileOut.exists()) {
-                item.status = "error";
+                item.status = jobStatus.ERROR;
             } else {
-                item.status = "ready";
+                item.status = jobStatus.READY;
             }
         });
         inputFileList.refresh();
@@ -289,8 +293,8 @@ public class PrimaryController {
         runnerThread.interrupt();
         runnerThread.join();
         inputFileList.getItems().forEach((job) -> {
-            if (job.status.equals("running")) {
-                job.status = "fail";
+            if (job.status == jobStatus.RUNNING) {
+                job.status = jobStatus.FAILED;
             }});
         inputFileList.refresh();
         runCompleted();

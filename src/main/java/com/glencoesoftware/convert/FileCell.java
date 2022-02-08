@@ -88,30 +88,31 @@ public class FileCell extends ListCell<IOPackage> {
             nameOut.setText(fileOut.getName());
             pathOut.setText(outPath);
             switch (pack.status) {
-                case "ready" -> {
+                case READY -> {
                     monitor.setGraphic(ok);
                     monitor.setTooltip(new Tooltip("Ready to run"));
                 }
-                case "success" -> {
+                case COMPLETED -> {
                     monitor.setGraphic(success);
                     monitor.setTooltip(new Tooltip("Conversion successful"));
                 }
-                case "fail" -> {
+                case FAILED -> {
                     monitor.setGraphic(fail);
                     monitor.setTooltip(new Tooltip("Conversion failed"));
                 }
-                case "error" -> {
+                case ERROR -> {
                     monitor.setGraphic(notOk);
                     monitor.setTooltip(new Tooltip("Output file already exists"));
                 }
-                case "running" -> {
+                case RUNNING -> {
                     monitor.setGraphic(progress);
                     progress.setTooltip(new Tooltip("Running"));
                 }
-                case "noOutput" -> {
+                case NOOUTPUT -> {
                     monitor.setGraphic(notOk);
                     monitor.setTooltip(new Tooltip("Run completed with no output"));
                 }
+                default -> throw new IllegalStateException("Unexpected value: " + pack.status);
             }
             nameIn.setTooltip(new Tooltip(fileIn.getAbsolutePath()));
             nameOut.setTooltip(new Tooltip(fileOut.getAbsolutePath()));

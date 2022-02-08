@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.glencoesoftware.convert.PrimaryController.jobStatus.*;
+
 class ConverterTask extends Task<Integer> {
     private final List<String> args;
     private final ListView<IOPackage> inputFileList;
@@ -46,11 +48,11 @@ class ConverterTask extends Task<Integer> {
             runner.setExecutionExceptionHandler(runHandler);
             File in = job.fileIn;
             File out = job.fileOut;
-            if (this.interrupted || job.status.equals("success") || job.status.equals("error")) {
+            if (this.interrupted || job.status == COMPLETED || job.status == ERROR) {
                 continue;
             }
 
-            job.status = "running";
+            job.status = RUNNING;
             Platform.runLater(() -> {
                 statusBox.setText("Working on " + in.getName());
                 logBox.appendText("Working on " + in.getName() + "\n");
@@ -68,19 +70,19 @@ class ConverterTask extends Task<Integer> {
 
             Platform.runLater(() -> {
                 if (this.interrupted && result != 0) {
-                    job.status = "fail";
+                    job.status = FAILED;
                     logBox.appendText("User aborted job: " + out.getName() + "\n\n");
                 } else if (result == 0 && out.exists()) {
-                    job.status = "success";
+                    job.status = COMPLETED;
                     logBox.appendText("Successfully created: " + out.getName() + "\n\n");
                 } else if (result == 0) {
-                    job.status = "noOutput";
+                    job.status = NOOUTPUT;
                     logBox.appendText("Job completed but no output detected: " + out.getName() + "\n\n");
                 } else if (result == 9) {
-                    job.status = "fail";
+                    job.status = FAILED;
                     logBox.appendText("Input arguments were invalid for: " + out.getName() + "\n\n");
                 } else {
-                    job.status = "fail";
+                    job.status = FAILED;
                     logBox.appendText("Failed with Exit Code " + result +  " : " + out.getName() + "\n\n");
                 }
                 inputFileList.refresh();
