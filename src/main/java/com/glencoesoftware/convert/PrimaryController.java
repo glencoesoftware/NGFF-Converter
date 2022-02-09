@@ -88,7 +88,8 @@ public class PrimaryController {
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
         clearFileButton.setTooltip(new Tooltip("Remove all files"));
         clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
-        logLevel.setItems(FXCollections.observableArrayList("Debug", "Info", "Warn", "Error", "Trace", "All"));
+        logLevel.setItems(FXCollections.observableArrayList("Debug", "Info", "Warn", "Error", "Trace",
+                "All", "Off"));
         logLevel.setValue("Warn");
         logLevel.setTooltip(new Tooltip("Level of detail to show on the log tab"));
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
