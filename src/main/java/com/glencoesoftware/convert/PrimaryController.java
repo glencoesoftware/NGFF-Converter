@@ -327,7 +327,7 @@ public class PrimaryController {
                 userArg = "--" + userArg;
             }
             // Fix common typo using space instead of equals
-            if (userArg.chars().filter(num -> num == ' ').count() == 1) {
+            if (!userArg.contains("=") && userArg.chars().filter(num -> num == ' ').count() == 1) {
                     userArg = userArg.replace(' ', '=');
             }
             extraArgs.add(userArg);
