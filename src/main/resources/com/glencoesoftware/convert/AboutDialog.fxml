@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+      prefHeight="288.0" prefWidth="230.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
+   <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+      <VBox.margin>
+         <Insets bottom="10.0"/>
+      </VBox.margin>
+      <Image url="@glencoe-logo.png"/>
+   </ImageView>
+   <Label text="NGFF Converter GUI">
+      <font>
+         <Font name="System Bold" size="18.0"/>
+      </font>
+      <VBox.margin>
+         <Insets bottom="10.0"/>
+      </VBox.margin>
+   </Label>
+   <Label text="Components:">
+      <VBox.margin>
+         <Insets bottom="5.0"/>
+      </VBox.margin>
+   </Label>
+   <Label text="${'Converter GUI - ' + guiVer}"/>
+   <Label text="${'BioFormats2Raw - ' + b2rVer}"/>
+   <Label text="${'BioFormats - ' + bfVer}"/>
+   <Label text="Copyright © 2022 Glencoe Software">
+      <VBox.margin>
+         <Insets top="10.0"/>
+      </VBox.margin>
+      <font>
+         <Font name="System Italic" size="12.0"/>
+      </font>
+   </Label>
+</VBox>
