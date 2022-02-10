@@ -77,7 +77,7 @@ runtime {
         } else if(currentOs.macOsX) {
             copy {
                 from "lib/libblosc.dylib"
-                into("$buildDir/jpackage/$applicationName/app")
+                into("$buildDir/jpackage/${applicationName}.app/contents/app")
             }
         }
     }
