@@ -4,7 +4,7 @@ plugins {
     id 'org.beryx.runtime' version '1.12.5'
 }
 
-version = '0.1.0'
+version = '1.0.0'
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
 applicationName = 'NGFF Converter GUI'
