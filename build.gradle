@@ -66,8 +66,6 @@ jar {
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
 
-// Uncomment and adjust the code below if you want to generate images for multiple platforms.
-// (You need to also uncomment the line 'targetPlatformName = ...' in the jpackage block.)
     targetPlatform("lin") {
         jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_linux_hotspot_17.0.2_8.tar.gz")
     }
@@ -89,8 +87,6 @@ runtime {
         noConsole = true
     }
     jpackage {
-        // Uncomment and adjust the following line if your runtime task is configured to generate images for multiple platforms
-        targetPlatformName = "win"
 
         imageName = applicationName
 
@@ -103,12 +99,15 @@ runtime {
         installerOptions += ['--description', "Converts image files to NGFF .zarr"]
 
         if(currentOs.windows) {
+            targetPlatformName = "win"
             installerOptions += ['--win-dir-chooser', '--win-menu', '--win-shortcut']
         }
         else if (currentOs.linux) {
+            targetPlatformName = "lin"
             installerOptions += ['--linux-package-name', applicationName,'--linux-shortcut']
         }
         else if (currentOs.macOsX) {
+            targetPlatformName = "mac"
             installerOptions += ['--mac-package-name', applicationName]
         }
     }
