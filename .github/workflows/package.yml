@@ -26,18 +26,16 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         arguments: jpackage
-    - uses: actions/upload-artifact@v2
-      with:
-        path: build/distributions/*.zip
-        retention-days: 1
     - if: ${{ matrix.os == 'macos-10.15' }}
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.pkg
+        retention-days: 3
     - if: ${{ matrix.os == 'windows-2019' }}
       uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.msi
+        retention-days: 3
     strategy:
       matrix:
         os: [ macos-10.15, windows-2019 ]
