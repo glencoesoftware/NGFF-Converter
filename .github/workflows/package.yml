@@ -10,6 +10,7 @@ name: Gradle Create Release
 env:
   APP_NAME: NGFF-Converter-GUI
   APP_VERSION: 1.0.0
+  APP_SAVEAS: ${{APP_NAME}}-${{APP_VERSION}}
 
 on:
   push:
@@ -36,14 +37,14 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.pkg
-        name: ${{APP_NAME}}-${{APP_VERSION}}-MacOS.pkg
+        name: ${{env.APP_SAVEAS}}-MacOS.pkg
         retention-days: 3
     - if: ${{ matrix.os == 'windows-2019' }}
       name: Upload Windows msi
       uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.msi
-        name: ${{APP_NAME}}-${{APP_VERSION}}-win.msi
+        name: ${{env.APP_SAVEAS}}-win.msi
         retention-days: 3
     strategy:
       matrix:
