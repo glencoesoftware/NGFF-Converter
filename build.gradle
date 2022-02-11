@@ -77,7 +77,10 @@ runtime {
         } else if(currentOs.macOsX) {
             copy {
                 from "lib/libblosc.dylib"
-                into("$buildDir/jpackage/${applicationName}.app/contents/app")
+                into("$buildDir/jpackage/${applicationName}.app/Contents/runtime/Contents/Home/lib")
+            }
+            exec {
+                commandLine 'install_name_tool', '-add_rpath', '@loader_path/../runtime/Contents/MacOS/libblosc.dylib', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/NGFF Converter GUI"
             }
         }
     }
