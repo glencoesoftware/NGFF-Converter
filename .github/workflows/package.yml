@@ -36,14 +36,14 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.pkg
-        name: ${APP_NAME}-${APP_VERSION}-MacOS.pkg
+        name: ${{APP_NAME}}-${{APP_VERSION}}-MacOS.pkg
         retention-days: 3
     - if: ${{ matrix.os == 'windows-2019' }}
       name: Upload Windows msi
       uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.msi
-        name: ${APP_NAME}-${APP_VERSION}-win.msi
+        name: ${{APP_NAME}}-${{APP_VERSION}}-win.msi
         retention-days: 3
     strategy:
       matrix:
