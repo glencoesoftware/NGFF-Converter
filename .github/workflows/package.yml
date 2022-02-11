@@ -39,7 +39,7 @@ jobs:
         name: ${{env.MAC_SAVEAS}}
         retention-days: 3
       env:
-        MAC_SAVEAS: ${{APP_NAME}}-${{APP_VERSION}}-MacOS.pkg
+        MAC_SAVEAS: ${{env.APP_NAME}}-${{env.APP_VERSION}}-MacOS.pkg
     - if: ${{ matrix.os == 'windows-2019' }}
       name: Upload Windows msi
       uses: actions/upload-artifact@v2
@@ -48,7 +48,7 @@ jobs:
         name: ${{env.WIN_SAVEAS}}
         retention-days: 3
       env:
-        WIN_SAVEAS: ${{APP_NAME}}-${{APP_VERSION}}-win.msi
+        WIN_SAVEAS: ${{env.APP_NAME}}-${{env.APP_VERSION}}-win.msi
     strategy:
       matrix:
         os: [ macos-latest, windows-latest ]
