@@ -16,31 +16,31 @@ jobs:
     name: Package
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v2
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: jpackage
-      - uses: actions/upload-artifact@v2
-        with:
-          path: build/distributions/*.zip
-          retention-days: 1
-      - if: ${{ matrix.os == 'macos-10.15' }}
-        uses: actions/upload-artifact@v1
-        with:
-          path: ./build/jpackage/*.pkg
-      - if: ${{ matrix.os == 'windows-2019' }}
-        uses: actions/upload-artifact@v2
-        with:
-          path: ./build/jpackage/*.msi
-      strategy:
-        matrix:
-          os: [ macos-10.15, windows-2019 ]
+    - uses: actions/checkout@v2
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Build with Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: jpackage
+    - uses: actions/upload-artifact@v2
+      with:
+        path: build/distributions/*.zip
+        retention-days: 1
+    - if: ${{ matrix.os == 'macos-10.15' }}
+      uses: actions/upload-artifact@v1
+      with:
+        path: ./build/jpackage/*.pkg
+    - if: ${{ matrix.os == 'windows-2019' }}
+      uses: actions/upload-artifact@v2
+      with:
+        path: ./build/jpackage/*.msi
+    strategy:
+      matrix:
+        os: [ macos-10.15, windows-2019 ]
 #  upload:
 #    name: Create Release
 #    needs: build
