@@ -1,0 +1,79 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: Gradle Create Release
+
+on:
+  push:
+    branches: [ packaging ]
+
+jobs:
+  build:
+    name: Package
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: jpackage
+      - uses: actions/upload-artifact@v2
+        with:
+          path: build/distributions/*.zip
+          retention-days: 1
+      - if: ${{ matrix.os == 'macos-10.15' }}
+        uses: actions/upload-artifact@v1
+        with:
+          path: ./build/jpackage/*.pkg
+      - if: ${{ matrix.os == 'windows-2019' }}
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./build/jpackage/*.msi
+      strategy:
+        matrix:
+          os: [ macos-10.15, windows-2019 ]
+#  upload:
+#    name: Create Release
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        id: create_release
+#        uses: actions/create-release@v1
+#        with:
+#          draft: true
+#          prerelease: true
+#          release_name: ${{ github.ref }}
+#          tag_name: ${{ github.ref }}
+#      - uses: actions/download-artifact@v1
+#        with:
+#          name: ./*.pkg
+#      - uses: actions/download-artifact@v1
+#        with:
+#          name: ./*.msi
+#      - env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        uses: actions/upload-release-asset@v1
+#        with:
+#          asset_content_type: application/pkg
+#          asset_path: /home/runner/work/davidstirling/bfconvert-gui2/*.pkg
+#          upload_url: ${{ steps.create_release.outputs.upload_url }}
+#      - env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        uses: actions/upload-release-asset@v1
+#        with:
+#          asset_content_type: application/msi
+#          asset_path: /home/runner/work/davidstirling/bfconvert-gui2/*.msi
+#          upload_url: ${{ steps.create_release.outputs.upload_url }}
+
