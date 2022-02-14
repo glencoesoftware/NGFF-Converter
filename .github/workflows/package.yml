@@ -60,8 +60,14 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download installers
+      - name: Download Windows installer
         uses: actions/download-artifact@v2
+        with:
+          name: *.msi
+      - name: Download MacOS installer
+        uses: actions/download-artifact@v2
+        with:
+          name: *.pkg
       - name: Display downloaded files
         run: ls -R
       - name: Create release draft
