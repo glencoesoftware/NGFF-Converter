@@ -79,6 +79,9 @@ runtime {
                 from "lib/libblosc.dylib"
                 into("$buildDir/jpackage/${applicationName}.app/Contents/lib")
             }
+            exec {
+                commandLine 'install_name_tool', '-add_rpath', '"@loader_path/../lib"', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/${applicationName}"
+            }
         }
     }
 
