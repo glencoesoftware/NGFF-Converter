@@ -62,14 +62,15 @@ jobs:
     steps:
       - name: Download installers
         uses: actions/download-artifact@v2
-        with:
-          path: .
+      - name: Display downloaded files
+        run: ls -R
       - name: Create release draft
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            /home/runner/work/bfconvert-gui2/bfconvert-gui2/*.msi
-            /home/runner/work/bfconvert-gui2/bfconvert-gui2/*.pkg
+            *.msi
+            *.pkg
           draft: true
           name: Test release
+          fail_on_unmatched_files: true
 
