@@ -27,6 +27,9 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+    - if: ${{ matrix.os == 'macos-latest' }}
+      name: Install bundler
+      run: brew install dylibbundler
     - name: Run jpackage with Gradle
       uses: gradle/gradle-build-action@v2
       with:

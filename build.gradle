@@ -7,7 +7,7 @@ plugins {
 version = '1.0.0'
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
-applicationName = 'NGFF Converter GUI'
+applicationName = 'NGFF-Converter-GUI'
 
 repositories {
     mavenLocal()
@@ -83,6 +83,10 @@ runtime {
             // Tell the app where to find it
             exec {
                 commandLine 'install_name_tool', '-add_rpath', '@executable_path/../lib', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/${applicationName}"
+            }
+            // Fix the permissions
+            exec {
+                commandLine 'dylibbundler', '-cd', '-of', '-b', '-x', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/${applicationName}", '-d', "$buildDir/jpackage/${applicationName}.app/Contents/lib", '-p', '@executable_path/../lib', '-s', "$buildDir/../lib"
             }
         }
     }
