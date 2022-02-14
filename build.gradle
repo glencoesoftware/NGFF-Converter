@@ -75,12 +75,14 @@ runtime {
                 into("$buildDir/jpackage/$applicationName/app")
             }
         } else if(currentOs.macOsX) {
+            // Add blosc to the image
             copy {
                 from "lib/libblosc.dylib"
                 into("$buildDir/jpackage/${applicationName}.app/Contents/lib")
             }
+            // Tell the app where to find it
             exec {
-                commandLine 'install_name_tool', '-add_rpath', '"@loader_path/../lib"', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/${applicationName}"
+                commandLine 'install_name_tool', '-add_rpath', '@executable_path/../lib', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/${applicationName}"
             }
         }
     }
