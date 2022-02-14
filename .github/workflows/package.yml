@@ -63,11 +63,11 @@ jobs:
       - name: Download Windows installer
         uses: actions/download-artifact@v2
         with:
-          name: ./*.msi
+          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-win.msi
       - name: Download MacOS installer
         uses: actions/download-artifact@v2
         with:
-          name: ./*.pkg
+          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-MacOS.pkg
       - name: Display downloaded files
         run: ls -R
       - name: Create release draft
