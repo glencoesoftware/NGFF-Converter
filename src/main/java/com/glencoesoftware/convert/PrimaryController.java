@@ -24,6 +24,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
@@ -269,9 +270,35 @@ public class PrimaryController {
     @FXML
     private void displayAbout() throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader();
+        File props;
+        String bfVer;
+        String b2rVer;
+        // Fat jar packaging overwrites our class version names.
+        String appPath = System.getProperty("jpackage.app-path");
+        if (appPath != null) {
+            // Figure out if we're running from a build
+            String sysName = System.getProperty("os.name");
+            if (sysName.startsWith("Mac")) {
+                props = new File(appPath + "/../../lib/versions.properties");
+            } else {
+                props = new File(appPath + "app/versions.properties");
+            }
+        } else {
+            props = null;
+        }
+        if (props != null) {
+            // Extract package versions from .properties file stored in build
+            Properties properties = new Properties();
+            properties.load(new FileInputStream(props.getCanonicalPath()));
+            bfVer = properties.getProperty("BioformatsVersion");
+            b2rVer = properties.getProperty("Bioformats2RawVersion");
+        } else {
+            bfVer = ImageReader.class.getPackage().getImplementationVersion();
+            b2rVer = Converter.class.getPackage().getImplementationVersion();
+        }
         fxmlLoader.getNamespace().put("guiVer", version);
-        fxmlLoader.getNamespace().put("b2rVer", Converter.class.getPackage().getImplementationVersion());
-        fxmlLoader.getNamespace().put("bfVer", ImageReader.class.getPackage().getImplementationVersion());
+        fxmlLoader.getNamespace().put("b2rVer", b2rVer);
+        fxmlLoader.getNamespace().put("bfVer", bfVer);
         fxmlLoader.setLocation(App.class.getResource("AboutDialog.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
