@@ -281,7 +281,7 @@ public class PrimaryController {
             if (sysName.startsWith("Mac")) {
                 props = new File(appPath + "/../../lib/versions.properties");
             } else {
-                props = new File(appPath + "app/versions.properties");
+                props = new File(appPath + "/../app/versions.properties");
             }
         } else {
             props = null;
