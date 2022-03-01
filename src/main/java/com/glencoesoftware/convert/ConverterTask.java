@@ -3,9 +3,9 @@ package com.glencoesoftware.convert;
 import com.glencoesoftware.bioformats2raw.Converter;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -21,7 +21,7 @@ class ConverterTask extends Task<Integer> {
     private final List<String> args;
     private final ListView<IOPackage> inputFileList;
     private final TextArea logBox;
-    private final TextField statusBox;
+    private final Label statusBox;
     private final PrimaryController parent;
     public boolean interrupted;
 

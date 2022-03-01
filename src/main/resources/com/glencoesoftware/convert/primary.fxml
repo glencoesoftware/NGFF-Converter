@@ -1,100 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ChoiceBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<HBox fx:id="mainPanel" minWidth="800.0" prefHeight="500.0" prefWidth="800.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
-   <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0" HBox.hgrow="NEVER">
-      <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="36.0" prefWidth="160.0" text="NGFF Converter GUI" textAlignment="CENTER">
-         <font>
-            <Font name="System Bold" size="16.0" />
-         </font>
-         <VBox.margin>
-            <Insets top="5.0" />
-         </VBox.margin>
-      </Label>
-      <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="0.0" prefWidth="160.0" text="Version " textAlignment="CENTER">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Label>
-      <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions" VBox.vgrow="NEVER">
-         <VBox.margin>
-            <Insets left="8.0" right="8.0" top="25.0" />
-         </VBox.margin>
-         <font>
-            <Font size="16.0" />
-         </font>
-      </Button>
-      <GridPane minHeight="61.0" prefHeight="72.0" prefWidth="160.0" VBox.vgrow="NEVER">
-         <columnConstraints>
-            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="72.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="78.0" />
-         </columnConstraints>
-         <rowConstraints>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-         </rowConstraints>
-         <padding>
-            <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
-         </padding>
-         <VBox.margin>
-            <Insets bottom="10.0" top="10.0" />
-         </VBox.margin>
-         <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" />
-         <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-         <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="1" />
-         <ChoiceBox fx:id="logLevel" GridPane.columnIndex="1">
-            <GridPane.margin>
-               <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
-            </GridPane.margin>
-         </ChoiceBox>
-      </GridPane>
-
-      <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
-         <Label text="Extra Arguments" />
-         <TextArea fx:id="extraParams" VBox.vgrow="ALWAYS">
-            <VBox.margin>
-               <Insets left="5.0" right="5.0" />
-            </VBox.margin>
-         </TextArea>
-         <VBox.margin>
-            <Insets />
-         </VBox.margin>
-      </VBox>
-      <Button alignment="CENTER" mnemonicParsing="false" onAction="#displayLog" prefHeight="25.0" prefWidth="142.0" text="Show/Hide Log" textAlignment="CENTER">
-         <VBox.margin>
-            <Insets bottom="5.0" left="10.0" right="10.0" top="25.0" />
-         </VBox.margin>
-      </Button>
-      <Button alignment="CENTER" layoutX="20.0" layoutY="465.0" mnemonicParsing="false" onAction="#displayAbout" prefHeight="25.0" prefWidth="142.0" text="About" textAlignment="CENTER">
-         <VBox.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
-         </VBox.margin>
-      </Button>
-   </VBox>
-   <StackPane fx:id="stackPanel" HBox.hgrow="ALWAYS">
-      <VBox alignment="CENTER" spacing="5.0" StackPane.alignment="CENTER">
+<BorderPane prefHeight="500.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
+   <bottom>
+      <ToolBar prefHeight="24.0" prefWidth="800.0" style="-fx-background-color: #EEEEEE; -fx-border-color: #CCCCCC;" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets top="10.0" />
+         </BorderPane.margin>
+         <Label fx:id="statusBox" text="Add files to begin" />
+      </ToolBar>
+   </bottom>
+   <top>
+      <MenuBar BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="10.0" />
+         </BorderPane.margin>
+         <Menu mnemonicParsing="false" text="File">
+            <MenuItem mnemonicParsing="false" text="Run Conversions" />
+            <CheckMenuItem fx:id="overwriteMenuItem" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite Files" />
+            <MenuItem mnemonicParsing="false" text="Choose Output Directory" />
+            <MenuItem mnemonicParsing="false" text="Reset Output Directory" />
+            <MenuItem mnemonicParsing="false" text="Exit" />
+         </Menu>
+         <Menu mnemonicParsing="false" text="Edit">
+            <MenuItem mnemonicParsing="false" text="Add Files" />
+            <MenuItem mnemonicParsing="false" text="Remove Selected" />
+            <MenuItem mnemonicParsing="false" text="Clear Finished" />
+            <MenuItem mnemonicParsing="false" text="Clear All" />
+         </Menu>
+         <Menu mnemonicParsing="false" text="View">
+            <Menu fx:id="logLevelMenu" mnemonicParsing="false" text="Log Level" />
+            <MenuItem mnemonicParsing="false" text="Show Logs" />
+         </Menu>
+         <Menu mnemonicParsing="false" text="Help">
+            <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />
+         </Menu>
+      </MenuBar>
+   </top>
+   <center>
+      <VBox alignment="CENTER" spacing="5.0">
          <padding>
             <Insets left="20.0" right="20.0" />
          </padding>
-         <StackPane.margin>
-            <Insets top="10.0" />
-         </StackPane.margin>
          <HBox alignment="CENTER" prefHeight="31.0" prefWidth="600.0" VBox.vgrow="NEVER">
             <Label text="Output Folder" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="NEVER">
                <padding>
@@ -118,43 +69,6 @@
                <VBox.margin>
                   <Insets bottom="10.0" top="10.0" />
                </VBox.margin>
-               <VBox alignment="TOP_CENTER" prefHeight="287.0" prefWidth="25.0" HBox.hgrow="NEVER">
-                  <HBox.margin>
-                     <Insets right="3.0" />
-                  </HBox.margin>
-                  <Button fx:id="addFileButton" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#addFiles" prefHeight="25.0" prefWidth="25.0">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets bottom="2.0" top="25.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button fx:id="removeFileButton" layoutX="12.0" layoutY="12.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#removeFile" prefHeight="25.0" prefWidth="25.0">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets bottom="2.0" top="2.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button fx:id="clearFileButton" layoutX="12.0" layoutY="39.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#clearFiles" prefHeight="25.0" prefWidth="25.0">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets bottom="2.0" top="2.0" />
-                     </VBox.margin>
-                  </Button>
-                  <Button fx:id="clearFinishedButton" layoutX="10.0" layoutY="93.0" minHeight="25.0" minWidth="25.0" mnemonicParsing="false" onAction="#clearFinished" prefHeight="25.0" prefWidth="25.0">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                     <VBox.margin>
-                        <Insets bottom="2.0" top="2.0" />
-                     </VBox.margin>
-                  </Button>
-               </VBox>
                <VBox prefHeight="303.0" prefWidth="572.0" HBox.hgrow="ALWAYS">
                   <HBox alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="578.0" VBox.vgrow="NEVER">
                      <Region layoutX="424.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
@@ -176,19 +90,85 @@
                         <Insets />
                      </VBox.margin>
                   </ListView>
-                  <TextField fx:id="statusBox" editable="false" focusTraversable="false" mouseTransparent="true" style="-fx-background-color: null; -fx-border-color: lightgrey;" text="Add files to begin" VBox.vgrow="NEVER">
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <VBox.margin>
-                        <Insets top="10.0" />
-                     </VBox.margin>
-                  </TextField>
                </VBox>
+            </HBox>
+            <HBox alignment="CENTER" spacing="10.0">
+               <Button fx:id="addFileButton" mnemonicParsing="false" onAction="#addFiles" text="Add files" />
+               <Button fx:id="removeFileButton" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
+               <Button fx:id="clearFileButton" mnemonicParsing="false" onAction="#clearFiles" text="Remove All" />
+               <Button fx:id="clearFinishedButton" mnemonicParsing="false" onAction="#clearFinished" text="Clear Completed" />
             </HBox>
          </VBox>
       </VBox>
-      <VBox fx:id="logVBox" alignment="CENTER" pickOnBounds="false" prefHeight="200.0" prefWidth="100.0" style="-fx-background-color: #EEEEEE;" visible="false">
+   </center>
+   <left>
+      <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0" BorderPane.alignment="CENTER">
+         <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="36.0" prefWidth="160.0" text="NGFF Converter GUI" textAlignment="CENTER">
+            <font>
+               <Font name="System Bold" size="16.0" />
+            </font>
+            <VBox.margin>
+               <Insets />
+            </VBox.margin>
+         </Label>
+         <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="0.0" prefWidth="160.0" text="Version " textAlignment="CENTER">
+            <font>
+               <Font size="10.0" />
+            </font>
+         </Label>
+         <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions" VBox.vgrow="NEVER">
+            <VBox.margin>
+               <Insets left="8.0" right="8.0" top="25.0" />
+            </VBox.margin>
+            <font>
+               <Font size="16.0" />
+            </font>
+         </Button>
+         <GridPane minHeight="61.0" prefHeight="72.0" prefWidth="160.0" VBox.vgrow="NEVER">
+            <columnConstraints>
+               <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="72.0" />
+               <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="78.0" />
+            </columnConstraints>
+            <rowConstraints>
+               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <padding>
+               <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+            <VBox.margin>
+               <Insets bottom="10.0" top="10.0" />
+            </VBox.margin>
+            <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" />
+            <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="1" />
+            <ChoiceBox fx:id="logLevel" onAction="#updateLogLevel" GridPane.columnIndex="1">
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+               </GridPane.margin>
+            </ChoiceBox>
+         </GridPane>
+   
+                  <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
+            <Label text="Extra Arguments" />
+            <TextArea fx:id="extraParams" VBox.vgrow="ALWAYS">
+               <VBox.margin>
+                  <Insets left="5.0" right="5.0" />
+               </VBox.margin>
+            </TextArea>
+            <VBox.margin>
+               <Insets />
+            </VBox.margin>
+         </VBox>
+         <Button alignment="CENTER" mnemonicParsing="false" onAction="#displayLog" prefHeight="25.0" prefWidth="142.0" text="Show/Hide Log" textAlignment="CENTER">
+            <VBox.margin>
+               <Insets bottom="5.0" left="10.0" right="10.0" top="25.0" />
+            </VBox.margin>
+         </Button>
+      </VBox>
+   </left>
+   <right>
+      <VBox fx:id="logVBox" alignment="CENTER" pickOnBounds="false" prefHeight="451.0" prefWidth="6.0" style="-fx-background-color: #EEEEEE;" visible="false" BorderPane.alignment="CENTER">
          <Label pickOnBounds="false" text="Execution Logs">
             <font>
                <Font name="System Bold" size="14.0" />
@@ -206,5 +186,5 @@
             </font>
          </TextArea>
       </VBox>
-   </StackPane>
-</HBox>
+   </right>
+</BorderPane>

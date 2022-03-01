@@ -2,17 +2,17 @@ package com.glencoesoftware.convert;
 
 import com.glencoesoftware.bioformats2raw.Converter;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -36,10 +36,8 @@ import java.util.stream.Collectors;
 public class PrimaryController {
 
     @FXML
-    public HBox mainPanel;
     public VBox logVBox;
-    public StackPane stackPanel;
-    public TextField statusBox;
+    public Label statusBox;
     public TextArea extraParams;
     public TextArea logBox;
     public TextField outputDirectory;
@@ -54,6 +52,9 @@ public class PrimaryController {
     public Label versionDisplay;
     public Button runButton;
     public ChoiceBox<String> logLevel;
+    public ToggleGroup logLevelGroup;
+    public Menu logLevelMenu;
+    public CheckMenuItem overwriteMenuItem;
 
     private boolean isRunning = false;
     private Thread runnerThread;
@@ -89,9 +90,20 @@ public class PrimaryController {
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
         clearFileButton.setTooltip(new Tooltip("Remove all files"));
         clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
-        logLevel.setItems(FXCollections.observableArrayList("Debug", "Info", "Warn", "Error", "Trace",
-                "All", "Off"));
+        ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
+                "Trace", "All", "Off");
+        logLevel.setItems(logModes);
         logLevel.setValue("Warn");
+        logLevelGroup = new ToggleGroup();
+        logModes.forEach(mode -> {
+            RadioMenuItem item = new RadioMenuItem(mode);
+            item.setToggleGroup(logLevelGroup);
+            item.setOnAction(event -> logLevel.setValue(mode));
+            if (Objects.equals(mode, "Warn")) {
+                item.setSelected(true);
+            }
+            logLevelMenu.getItems().add(item);
+        });
         logLevel.setTooltip(new Tooltip("Level of detail to show on the log tab"));
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
@@ -250,6 +262,7 @@ public class PrimaryController {
     @FXML
     private void toggleOverwrite() {
         boolean overwrite = wantOverwrite.isSelected();
+        overwriteMenuItem.setSelected(overwrite);
         List<jobStatus> doNotChange = Arrays.asList(jobStatus.COMPLETED, jobStatus.FAILED, jobStatus.RUNNING);
         inputFileList.getItems().forEach((item) -> {
             if (doNotChange.contains(item.status)) { return; }
@@ -260,6 +273,20 @@ public class PrimaryController {
             }
         });
         inputFileList.refresh();
+    }
+
+    @FXML
+    private void overwriteMenu() {
+        wantOverwrite.setSelected(!wantOverwrite.isSelected());
+        toggleOverwrite();
+    }
+
+    @FXML
+    private void updateLogLevel() {
+        if (logLevelGroup == null) return;
+        String val = logLevel.getValue();
+        int idx = logLevel.getItems().indexOf(val);
+        logLevelGroup.selectToggle(logLevelGroup.getToggles().get(idx));
     }
 
     @FXML
