@@ -47,10 +47,13 @@
             <Insets left="5.0" right="10.0" />
          </padding>
          <HBox alignment="CENTER" prefHeight="31.0" prefWidth="600.0" VBox.vgrow="NEVER">
-            <Label text="Output Folder" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="NEVER">
+            <Label alignment="CENTER_RIGHT" text="Output Folder" textAlignment="RIGHT" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="NEVER">
                <padding>
-                  <Insets right="10.0" />
+                  <Insets right="5.0" />
                </padding>
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
             </Label>
             <TextField fx:id="outputDirectory" promptText="Choose an output directory" text="&lt;Same as input&gt;" HBox.hgrow="ALWAYS">
                <HBox.margin>
@@ -82,14 +85,20 @@
                      <Label alignment="CENTER" minWidth="68.0" prefHeight="17.0" prefWidth="68.0" text="Output" textAlignment="CENTER" HBox.hgrow="ALWAYS" />
                      <Region layoutX="56.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
                   </HBox>
-                  <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" style="-fx-selection-bar: #DDDDDD;" VBox.vgrow="ALWAYS">
-                     <padding>
-                        <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
-                     </padding>
-                     <VBox.margin>
-                        <Insets />
-                     </VBox.margin>
-                  </ListView>
+                  <StackPane prefHeight="150.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+                     <children>
+                        <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" style="-fx-selection-bar: #DDDDDD;">
+                           <padding>
+                              <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
+                           </padding>
+                        </ListView>
+                        <Label fx:id="fileListHelpText" mouseTransparent="true" pickOnBounds="false" text="Drop files or folders here to add jobs" textFill="#8a8a8a">
+                           <font>
+                              <Font name="System Bold" size="26.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </StackPane>
                </VBox>
             </HBox>
             <HBox alignment="CENTER" spacing="10.0">
@@ -102,8 +111,8 @@
       </VBox>
    </center>
    <left>
-      <VBox minWidth="160.0" prefHeight="598.0" prefWidth="160.0" BorderPane.alignment="CENTER">
-         <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="36.0" prefWidth="160.0" text="NGFF Converter GUI" textAlignment="CENTER" VBox.vgrow="NEVER">
+      <VBox alignment="CENTER" minWidth="160.0" prefHeight="598.0" prefWidth="160.0" BorderPane.alignment="CENTER">
+         <Label alignment="CENTER" contentDisplay="CENTER" text="NGFF Converter GUI" textAlignment="CENTER" VBox.vgrow="NEVER">
             <font>
                <Font name="System Bold" size="16.0" />
             </font>
@@ -111,7 +120,7 @@
                <Insets />
             </VBox.margin>
          </Label>
-         <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="0.0" prefWidth="160.0" text="Version " textAlignment="CENTER" VBox.vgrow="NEVER">
+         <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" text="Version " textAlignment="CENTER" VBox.vgrow="NEVER">
             <font>
                <Font size="10.0" />
             </font>

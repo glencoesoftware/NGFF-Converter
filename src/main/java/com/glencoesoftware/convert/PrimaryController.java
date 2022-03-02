@@ -40,6 +40,7 @@ public class PrimaryController {
     public TextField outputDirectory;
     public CheckBox wantOverwrite;
     public ListView<IOPackage> inputFileList;
+    public Label fileListHelpText;
     public Button addFileButton;
     public Button removeFileButton;
     public Button clearFileButton;
@@ -149,11 +150,15 @@ public class PrimaryController {
         if (selectedIdx != -1) {
             inputFileList.getItems().remove(selectedIdx);
         }
+        if (inputFileList.getItems().size() == 0) {
+            fileListHelpText.setVisible(true);
+        }
     }
 
     @FXML
     private void clearFiles() {
         inputFileList.getItems().clear();
+        fileListHelpText.setVisible(true);
     }
 
     @FXML
@@ -226,6 +231,9 @@ public class PrimaryController {
             count++;
         }
         statusBox.setText("Found and added " + count + " supported file(s)");
+        if (fileList.size() > 0) {
+            fileListHelpText.setVisible(false);
+        }
     }
 
     @FXML
