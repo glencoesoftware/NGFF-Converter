@@ -225,7 +225,7 @@ public class PrimaryController {
             fileList.add(new IOPackage(file, outFile, wantOverwrite.isSelected()));
             count++;
         }
-        statusBox.setText("Found and added " + count + " supported files");
+        statusBox.setText("Found and added " + count + " supported file(s)");
     }
 
     @FXML
