@@ -13,7 +13,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
-import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -36,10 +35,8 @@ import java.util.stream.Collectors;
 public class PrimaryController {
 
     @FXML
-    public VBox logVBox;
     public Label statusBox;
     public TextArea extraParams;
-    public TextArea logBox;
     public TextField outputDirectory;
     public CheckBox wantOverwrite;
     public ListView<IOPackage> inputFileList;
@@ -56,10 +53,13 @@ public class PrimaryController {
     public Menu logLevelMenu;
     public CheckMenuItem overwriteMenuItem;
 
+    private Stage consoleWindow;
+    public TextArea logBox;
     private boolean isRunning = false;
     private Thread runnerThread;
     private ConverterTask currentJob;
     private ArrayList<Control> fileControlButtons;
+    public ConsoleStream consoleStream;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
@@ -69,7 +69,7 @@ public class PrimaryController {
     }
 
     @FXML
-    public void initialize(){
+    public void initialize() throws IOException {
         // Todo: Support zarr to OME.TIFF
         // supportedExtensions.add("zarr");
         inputFileList.setCellFactory(list -> new FileCell());
@@ -111,13 +111,25 @@ public class PrimaryController {
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
         versionDisplay.setText(versionDisplay.getText() + version);
-        ConsoleStream console = new ConsoleStream(logBox);
-        PrintStream printStream = new PrintStream(console, true);
-        System.setOut(printStream);
-        System.setErr(printStream);
+        createLogControl();
+
         // Array of controls we want to lock during a run.
         fileControlButtons = new ArrayList<>(Arrays.asList(addFileButton, removeFileButton, clearFileButton,
                 clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel ));
+    }
+
+    private void createLogControl() throws IOException {
+        FXMLLoader logLoader = new FXMLLoader();
+        logLoader.setLocation(getClass().getResource("LogWindow.fxml"));
+        Scene scene = new Scene(logLoader.load());
+        LogController logControl = logLoader.getController();
+        consoleWindow = new Stage();
+        consoleWindow.setScene(scene);
+        logBox = logControl.logBox;
+        consoleStream = new ConsoleStream(logBox);
+        PrintStream printStream = new PrintStream(consoleStream, true);
+        System.setOut(printStream);
+        System.setErr(printStream);
     }
 
     @FXML
@@ -291,7 +303,10 @@ public class PrimaryController {
 
     @FXML
     private void displayLog() {
-        logVBox.setVisible(!logVBox.isVisible());
+        if (consoleWindow.getOwner() == null) {
+            consoleWindow.initOwner(addFileButton.getScene().getWindow());
+        }
+        consoleWindow.show();
     }
 
     @FXML
@@ -341,6 +356,8 @@ public class PrimaryController {
         runButton.setText("Run conversions");
         isRunning = false;
         fileControlButtons.forEach((control -> control.setDisable(false)));
+        // Print anything left in the console buffer.
+        consoleStream.forceFlush();
     }
 
     public void runCancel() throws InterruptedException {

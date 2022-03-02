@@ -20,21 +20,21 @@
             <Insets bottom="10.0" />
          </BorderPane.margin>
          <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" text="Run Conversions" />
+            <MenuItem mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
             <CheckMenuItem fx:id="overwriteMenuItem" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite Files" />
-            <MenuItem mnemonicParsing="false" text="Choose Output Directory" />
-            <MenuItem mnemonicParsing="false" text="Reset Output Directory" />
+            <MenuItem mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
+            <MenuItem mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
             <MenuItem mnemonicParsing="false" text="Exit" />
          </Menu>
          <Menu mnemonicParsing="false" text="Edit">
-            <MenuItem mnemonicParsing="false" text="Add Files" />
-            <MenuItem mnemonicParsing="false" text="Remove Selected" />
-            <MenuItem mnemonicParsing="false" text="Clear Finished" />
-            <MenuItem mnemonicParsing="false" text="Clear All" />
+            <MenuItem mnemonicParsing="false" onAction="#addFiles" text="Add Files" />
+            <MenuItem mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
+            <MenuItem mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
+            <MenuItem mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />
          </Menu>
          <Menu mnemonicParsing="false" text="View">
             <Menu fx:id="logLevelMenu" mnemonicParsing="false" text="Log Level" />
-            <MenuItem mnemonicParsing="false" text="Show Logs" />
+            <MenuItem mnemonicParsing="false" onAction="#displayLog" text="Show Logs" />
          </Menu>
          <Menu mnemonicParsing="false" text="Help">
             <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />
@@ -118,7 +118,7 @@
          </Label>
          <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions" VBox.vgrow="NEVER">
             <VBox.margin>
-               <Insets left="8.0" right="8.0" top="25.0" />
+               <Insets left="8.0" right="8.0" top="15.0" />
             </VBox.margin>
             <font>
                <Font size="16.0" />
@@ -137,7 +137,7 @@
                <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
             </padding>
             <VBox.margin>
-               <Insets bottom="10.0" top="10.0" />
+               <Insets bottom="5.0" top="5.0" />
             </VBox.margin>
             <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" />
             <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -160,31 +160,6 @@
                <Insets />
             </VBox.margin>
          </VBox>
-         <Button alignment="CENTER" mnemonicParsing="false" onAction="#displayLog" prefHeight="25.0" prefWidth="142.0" text="Show/Hide Log" textAlignment="CENTER">
-            <VBox.margin>
-               <Insets bottom="5.0" left="10.0" right="10.0" top="25.0" />
-            </VBox.margin>
-         </Button>
       </VBox>
    </left>
-   <right>
-      <VBox fx:id="logVBox" alignment="CENTER" pickOnBounds="false" prefHeight="451.0" prefWidth="6.0" style="-fx-background-color: #EEEEEE;" visible="false" BorderPane.alignment="CENTER">
-         <Label pickOnBounds="false" text="Execution Logs">
-            <font>
-               <Font name="System Bold" size="14.0" />
-            </font>
-            <VBox.margin>
-               <Insets bottom="10.0" />
-            </VBox.margin>
-         </Label>
-         <TextArea fx:id="logBox" editable="false" pickOnBounds="false" VBox.vgrow="ALWAYS">
-            <VBox.margin>
-               <Insets bottom="20.0" left="20.0" right="20.0" top="2.0" />
-            </VBox.margin>
-            <font>
-               <Font name="Courier New" size="12.0" />
-            </font>
-         </TextArea>
-      </VBox>
-   </right>
 </BorderPane>
