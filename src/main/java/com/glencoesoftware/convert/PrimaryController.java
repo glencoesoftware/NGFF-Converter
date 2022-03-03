@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -62,6 +63,7 @@ public class PrimaryController {
     public MenuItem menuRemoveFile;
     public MenuItem menuClearFinished;
     public MenuItem menuClearAll;
+    public MenuBar menuBar;
 
     private Stage consoleWindow;
     public TextArea logBox;
@@ -84,6 +86,7 @@ public class PrimaryController {
     public void initialize() throws IOException {
         // Todo: Support zarr to OME.TIFF
         // supportedExtensions.add("zarr");
+        menuBar.setUseSystemMenuBar(true);
         inputFileList.setCellFactory(list -> new FileCell());
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
