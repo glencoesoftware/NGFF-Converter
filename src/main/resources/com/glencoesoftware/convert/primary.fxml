@@ -7,11 +7,11 @@
 
 <BorderPane prefHeight="500.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <bottom>
-      <ToolBar prefHeight="24.0" prefWidth="800.0" style="-fx-background-color: #EEEEEE; -fx-border-color: #CCCCCC;" BorderPane.alignment="CENTER">
+      <ToolBar prefHeight="24.0" prefWidth="800.0" style="-fx-background-color: #EEEEEE; -fx-border-color: #CCCCCC;" BorderPane.alignment="CENTER_LEFT">
          <BorderPane.margin>
             <Insets top="10.0" />
          </BorderPane.margin>
-         <Label fx:id="statusBox" text="Add files to begin" />
+         <Label fx:id="statusBox" maxWidth="500.0" minWidth="600.0" prefHeight="17.0" prefWidth="600.0" text="Add files to begin" />
       </ToolBar>
    </bottom>
    <top>
@@ -20,20 +20,20 @@
             <Insets bottom="10.0" />
          </BorderPane.margin>
          <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
-            <CheckMenuItem fx:id="overwriteMenuItem" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite Files" />
-            <MenuItem mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
-            <MenuItem mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
-            <MenuItem mnemonicParsing="false" text="Exit" />
+            <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
+            <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite Files" />
+            <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
+            <MenuItem fx:id="menuResetDirectory" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
+            <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
          </Menu>
          <Menu mnemonicParsing="false" text="Edit">
-            <MenuItem mnemonicParsing="false" onAction="#addFiles" text="Add Files" />
-            <MenuItem mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
-            <MenuItem mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
-            <MenuItem mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />
+            <MenuItem fx:id="menuAddFiles" mnemonicParsing="false" onAction="#addFiles" text="Add Files" />
+            <MenuItem fx:id="menuRemoveFile" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
+            <MenuItem fx:id="menuClearFinished" mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
+            <MenuItem fx:id="menuClearAll" mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />
          </Menu>
          <Menu mnemonicParsing="false" text="View">
-            <Menu fx:id="logLevelMenu" mnemonicParsing="false" text="Log Level" />
+            <Menu fx:id="menuLogLevel" mnemonicParsing="false" text="Log Level" />
             <MenuItem mnemonicParsing="false" onAction="#displayLog" text="Show Logs" />
          </Menu>
          <Menu mnemonicParsing="false" text="Help">
@@ -86,18 +86,27 @@
                      <Region layoutX="56.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
                   </HBox>
                   <StackPane prefHeight="150.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-                     <children>
-                        <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onMouseClicked="#listClickHandler" style="-fx-selection-bar: #DDDDDD;">
-                           <padding>
-                              <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
-                           </padding>
-                        </ListView>
-                        <Label fx:id="fileListHelpText" mouseTransparent="true" pickOnBounds="false" text="Drop files or folders here to add jobs" textFill="#8a8a8a">
-                           <font>
-                              <Font name="System Bold" size="26.0" />
-                           </font>
-                        </Label>
-                     </children>
+                     <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onKeyPressed="#listKeyHandler" onMouseClicked="#listClickHandler" style="-fx-selection-bar: #DDDDDD;">
+                        <padding>
+                           <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
+                        </padding>
+                     </ListView>
+                     <Label fx:id="fileListHelpText" mouseTransparent="true" pickOnBounds="false" text="Drop files or folders here to add jobs" textFill="#8a8a8a">
+                        <font>
+                           <Font name="System Bold" size="26.0" />
+                        </font>
+                     </Label>
+                     <Separator fx:id="listSeparator" mouseTransparent="true" orientation="VERTICAL" pickOnBounds="false" visible="false">
+                        <opaqueInsets>
+                           <Insets />
+                        </opaqueInsets>
+                        <StackPane.margin>
+                           <Insets bottom="5.0" top="5.0" />
+                        </StackPane.margin>
+                        <padding>
+                           <Insets left="10.0" />
+                        </padding>
+                     </Separator>
                   </StackPane>
                </VBox>
             </HBox>
@@ -130,7 +139,7 @@
                <Insets left="8.0" right="8.0" top="15.0" />
             </VBox.margin>
             <font>
-               <Font size="16.0" />
+               <Font size="15.0" />
             </font>
          </Button>
          <GridPane minHeight="61.0" prefHeight="72.0" prefWidth="160.0" VBox.vgrow="NEVER">

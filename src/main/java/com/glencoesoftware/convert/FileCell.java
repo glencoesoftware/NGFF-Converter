@@ -1,14 +1,14 @@
 package com.glencoesoftware.convert;
 
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
@@ -16,9 +16,9 @@ import java.io.File;
 public class FileCell extends ListCell<IOPackage> {
     final HBox content;
     final Label nameIn;
-    final Text pathIn;
+    final Label pathIn;
     final Label nameOut;
-    final Text pathOut;
+    final Label pathOut;
     final Label monitor;
     final FontIcon ok;
     final FontIcon notOk;
@@ -31,16 +31,20 @@ public class FileCell extends ListCell<IOPackage> {
         Font nameFont = new Font(14);
         Font pathFont = new Font(10);
         nameIn = new Label();
-        pathIn = new Text();
+        pathIn = new Label();
         nameOut = new Label();
-        pathOut = new Text();
+        pathOut = new Label();
         pathIn.setFont(pathFont);
         nameIn.setFont(nameFont);
         pathOut.setFont(pathFont);
         nameOut.setFont(nameFont);
-        pathIn.setFill(Color.GRAY);
-        pathOut.setFill(Color.GRAY);
-        // Todo: Find a way to move these resources to a better location. Only need 1 of each.
+        pathIn.setTextFill(Color.GRAY);
+        pathOut.setTextFill(Color.GRAY);
+        nameIn.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
+        nameOut.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
+        pathIn.setTextOverrun(OverrunStyle.LEADING_ELLIPSIS);
+        pathOut.setTextOverrun(OverrunStyle.LEADING_ELLIPSIS);
+
         ok = new FontIcon("bi-play-circle");
         notOk = new FontIcon("bi-exclamation-circle");
         success = new FontIcon("bi-check-circle");
@@ -55,13 +59,16 @@ public class FileCell extends ListCell<IOPackage> {
         monitor = new Label();
         progress = new ProgressIndicator();
         progress.setPrefSize(20, 20);
+        progress.setMinSize(20, 20);
         VBox vBoxIn = new VBox(nameIn, pathIn);
-        vBoxIn.setMinWidth(200);
-        vBoxIn.setMaxWidth(200);
-        Separator sep = new Separator();
-        sep.setOrientation(Orientation.VERTICAL);
+        Region spacer = new Region();
+        spacer.setMinWidth(10);
         VBox vBoxOut = new VBox(nameOut, pathOut);
-        content = new HBox(monitor, vBoxIn, sep, vBoxOut);
+        content = new HBox(monitor, vBoxIn,spacer, vBoxOut);
+        HBox.setHgrow(vBoxIn, Priority.ALWAYS);
+        HBox.setHgrow(vBoxOut, Priority.ALWAYS);
+        content.setMinWidth(0);
+        content.setPrefWidth(1);
         content.setAlignment(Pos.CENTER_LEFT);
         content.setSpacing(10);
     }
@@ -76,17 +83,9 @@ public class FileCell extends ListCell<IOPackage> {
             File fileIn = pack.fileIn;
             File fileOut = pack.fileOut;
             nameIn.setText(fileIn.getName());
-            String inPath = fileIn.getParent();
-            if (inPath.length() > 50) {
-                inPath = "..." + inPath.substring(inPath.length() - 45);
-            }
-            String outPath = fileOut.getParent();
-            if (outPath.length() > 50) {
-                outPath = "..." + outPath.substring(outPath.length() - 45);
-            }
-            pathIn.setText(inPath);
+            pathIn.setText(fileIn.getParent());
             nameOut.setText(fileOut.getName());
-            pathOut.setText(outPath);
+            pathOut.setText(fileOut.getParent());
             switch (pack.status) {
                 case READY -> {
                     monitor.setGraphic(ok);
