@@ -1,12 +1,15 @@
 plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.10'
+    id 'org.beryx.runtime' version '1.12.5'
 }
 
-group = 'com.glencoesoftware'
-version = '0.1-SNAPSHOT'
+version = '1.0.0'
+String bfversion = "6.8.0"
+String b2rversion = "0.4.0"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
+applicationName = 'NGFF-Converter-GUI'
 
 repositories {
     mavenLocal()
@@ -29,26 +32,21 @@ repositories {
 sourceCompatibility = 16
 targetCompatibility = 16
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
-
-
 javafx {
     version = '17.0.1'
-    modules = [ 'javafx.controls', 'javafx.fxml' ]
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
 dependencies {
-    implementation 'com.glencoesoftware:bioformats2raw:0.4.0'
-    implementation 'ome:formats-gpl:6.8.0'
+    implementation "com.glencoesoftware:bioformats2raw:${b2rversion}"
+    implementation "ome:formats-gpl:${bfversion}"
     implementation 'info.picocli:picocli:4.6.2'
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.0'
     implementation 'org.kordamp.ikonli:ikonli-bootstrapicons-pack:12.3.0'
-//    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
-//    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
-//    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
+    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
+    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
+    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
 }
 
 configurations.all {
@@ -57,19 +55,101 @@ configurations.all {
 
 jar {
     manifest {
-        attributes(
-            "Main-Class": mainClassName,
-            "Implementation-Version": version
-        )
+        attributes 'Implementation-Title': 'NGFF Converter GUI',
+                'Implementation-Version': version,
+                'Main-Class': mainClassName
     }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-distributions {
-    main {
-        contents {
-            from("$projectDir") {
-                include 'README.md'
-                include 'LICENSE.txt'
+runtime {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+
+    def currentOs = org.gradle.internal.os.OperatingSystem.current()
+
+    tasks.jpackageImage.doLast {
+        File propFile
+        if(currentOs.windows) {
+            propFile = new File("$buildDir/jpackage/$applicationName/app/versions.properties")
+            copy {
+                from "c-blosc/build/blosc/Release/blosc.dll"
+                into("$buildDir/jpackage/$applicationName/app")
+            }
+        } else if(currentOs.macOsX) {
+            propFile = new File("$buildDir/jpackage/${applicationName}.app/Contents/lib/versions.properties")
+            // Add blosc to the image
+            copy {
+                from "c-blosc/build/blosc/libblosc.dylib"
+                into("$buildDir/jpackage/${applicationName}.app/Contents/lib")
+            }
+            // Tell the app where to find it
+            exec {
+                commandLine 'install_name_tool', '-add_rpath', '@executable_path/../lib', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/${applicationName}"
+            }
+            // Fix the permissions
+            exec {
+                commandLine 'dylibbundler', '-cd', '-of', '-b', '-x', "$buildDir/jpackage/${applicationName}.app/Contents/MacOS/${applicationName}", '-d', "$buildDir/jpackage/${applicationName}.app/Contents/lib", '-p', '@executable_path/../lib', '-s', "$buildDir/../lib"
+            }
+        } else {
+            throw new Exception("Unsupported Operating System")
+        }
+        def props = new Properties()
+        String ver = String.valueOf(version)
+        props.setProperty("AppVersion", ver)
+        props.setProperty("BioformatsVersion", bfversion)
+        props.setProperty("Bioformats2RawVersion", b2rversion)
+        propFile.createNewFile()
+        props.store(new FileOutputStream(propFile), "Compiled file properties")
+    }
+
+
+    launcher {
+        noConsole = true
+    }
+    jpackage {
+
+        imageName = applicationName
+        installerName = applicationName
+
+        def imgType = currentOs.windows ? 'ico' : currentOs.macOsX ? 'icns' : 'png'
+        imageOptions += ['--icon', "src/main/resources/com/glencoesoftware/convert/main-icon.$imgType"]
+        installerOptions += ['--resource-dir', "src/main/resources"]
+        installerOptions += ['--vendor', 'Glencoe Software']
+        installerOptions += ['--app-version', version]
+        installerOptions += ['--description', "Converts image files to NGFF .zarr"]
+
+        if(currentOs.windows) {
+            targetPlatformName = "win"
+            installerType = "msi"
+            installerOptions += ['--win-dir-chooser', '--win-menu', '--win-shortcut']
+            targetPlatform("win") {
+                jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_windows_hotspot_17.0.2_8.zip")
+            }
+        }
+        else if (currentOs.linux) {
+            // Linux unused for now
+            targetPlatformName = "lin"
+            installerOptions += ['--linux-package-name', applicationName,'--linux-shortcut']
+            targetPlatform("lin") {
+                jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_linux_hotspot_17.0.2_8.tar.gz")
+            }
+        }
+        else if (currentOs.macOsX) {
+            targetPlatformName = "mac"
+            installerType = "pkg"
+            imageOptions += ['--java-options', '-Djava.library.path=../lib']
+            installerOptions += ['--mac-package-name', applicationName]
+            targetPlatform("mac") {
+                jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_mac_hotspot_17.0.2_8.tar.gz") {
+                    downloadDir = "$buildDir/myMac"
+                    archiveName = "my-mac-jdk"
+                    archiveExtension = "tar.gz"
+                    pathToHome = "jdk-17.0.2+8/Contents/Home"
+                    overwrite = true
+                }
             }
         }
     }

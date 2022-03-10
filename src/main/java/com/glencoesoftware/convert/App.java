@@ -4,8 +4,11 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * JavaFX App
@@ -18,6 +21,9 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("primary"), 800, 550);
         stage.setScene(scene);
+        stage.setTitle("NGFF Converter GUI");
+        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
+        stage.getIcons().add(icon);
         stage.show();
     }
 
