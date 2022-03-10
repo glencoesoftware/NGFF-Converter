@@ -1,19 +1,21 @@
 package com.glencoesoftware.convert;
 
 import com.glencoesoftware.bioformats2raw.Converter;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.input.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -36,15 +38,12 @@ import java.util.stream.Collectors;
 public class PrimaryController {
 
     @FXML
-    public HBox mainPanel;
-    public VBox logVBox;
-    public StackPane stackPanel;
-    public TextField statusBox;
+    public Label statusBox;
     public TextArea extraParams;
-    public TextArea logBox;
     public TextField outputDirectory;
     public CheckBox wantOverwrite;
     public ListView<IOPackage> inputFileList;
+    public Label fileListHelpText;
     public Button addFileButton;
     public Button removeFileButton;
     public Button clearFileButton;
@@ -54,11 +53,27 @@ public class PrimaryController {
     public Label versionDisplay;
     public Button runButton;
     public ChoiceBox<String> logLevel;
+    public Separator listSeparator;
+    public Menu menuLogLevel;
+    public CheckMenuItem menuOverwrite;
+    public MenuItem menuRun;
+    public MenuItem menuChooseDirectory;
+    public MenuItem menuResetDirectory;
+    public MenuItem menuAddFiles;
+    public MenuItem menuRemoveFile;
+    public MenuItem menuClearFinished;
+    public MenuItem menuClearAll;
+    public MenuBar menuBar;
 
+    private Stage consoleWindow;
+    public TextArea logBox;
     private boolean isRunning = false;
     private Thread runnerThread;
     private ConverterTask currentJob;
     private ArrayList<Control> fileControlButtons;
+    private ArrayList<MenuItem> menuControlButtons;
+    public ConsoleStream consoleStream;
+    public ToggleGroup logLevelGroup;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
@@ -68,9 +83,10 @@ public class PrimaryController {
     }
 
     @FXML
-    public void initialize(){
+    public void initialize() throws IOException {
         // Todo: Support zarr to OME.TIFF
         // supportedExtensions.add("zarr");
+        menuBar.setUseSystemMenuBar(true);
         inputFileList.setCellFactory(list -> new FileCell());
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
@@ -89,9 +105,20 @@ public class PrimaryController {
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
         clearFileButton.setTooltip(new Tooltip("Remove all files"));
         clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
-        logLevel.setItems(FXCollections.observableArrayList("Debug", "Info", "Warn", "Error", "Trace",
-                "All", "Off"));
+        ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
+                "Trace", "All", "Off");
+        logLevel.setItems(logModes);
         logLevel.setValue("Warn");
+        logLevelGroup = new ToggleGroup();
+        logModes.forEach(mode -> {
+            RadioMenuItem item = new RadioMenuItem(mode);
+            item.setToggleGroup(logLevelGroup);
+            item.setOnAction(event -> logLevel.setValue(mode));
+            if (Objects.equals(mode, "Warn")) {
+                item.setSelected(true);
+            }
+            menuLogLevel.getItems().add(item);
+        });
         logLevel.setTooltip(new Tooltip("Level of detail to show on the log tab"));
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
@@ -99,13 +126,27 @@ public class PrimaryController {
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
         versionDisplay.setText(versionDisplay.getText() + version);
-        ConsoleStream console = new ConsoleStream(logBox);
-        PrintStream printStream = new PrintStream(console, true);
+        createLogControl();
+
+        // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
+        fileControlButtons = new ArrayList<>(Arrays.asList(addFileButton, removeFileButton, clearFileButton,
+                clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel));
+        menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuAddFiles, menuRemoveFile,
+                menuClearFinished, menuClearAll, menuOverwrite, menuChooseDirectory, menuResetDirectory));
+    }
+
+    private void createLogControl() throws IOException {
+        FXMLLoader logLoader = new FXMLLoader();
+        logLoader.setLocation(getClass().getResource("LogWindow.fxml"));
+        Scene scene = new Scene(logLoader.load());
+        LogController logControl = logLoader.getController();
+        consoleWindow = new Stage();
+        consoleWindow.setScene(scene);
+        logBox = logControl.logBox;
+        consoleStream = new ConsoleStream(logBox);
+        PrintStream printStream = new PrintStream(consoleStream, true);
         System.setOut(printStream);
         System.setErr(printStream);
-        // Array of controls we want to lock during a run.
-        fileControlButtons = new ArrayList<>(Arrays.asList(addFileButton, removeFileButton, clearFileButton,
-                clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel ));
     }
 
     @FXML
@@ -125,11 +166,17 @@ public class PrimaryController {
         if (selectedIdx != -1) {
             inputFileList.getItems().remove(selectedIdx);
         }
+        if (inputFileList.getItems().size() == 0) {
+            fileListHelpText.setVisible(true);
+            listSeparator.setVisible(false);
+        }
     }
 
     @FXML
     private void clearFiles() {
         inputFileList.getItems().clear();
+        fileListHelpText.setVisible(true);
+        listSeparator.setVisible(false);
     }
 
     @FXML
@@ -201,7 +248,11 @@ public class PrimaryController {
             fileList.add(new IOPackage(file, outFile, wantOverwrite.isSelected()));
             count++;
         }
-        statusBox.setText("Found and added " + count + " supported files");
+        statusBox.setText("Found and added " + count + " supported file(s)");
+        if (fileList.size() > 0) {
+            fileListHelpText.setVisible(false);
+            listSeparator.setVisible(true);
+        }
     }
 
     @FXML
@@ -238,6 +289,12 @@ public class PrimaryController {
             }
         }
 
+    @FXML
+    private void listKeyHandler(KeyEvent event) {
+        if (!isRunning && event.getCode().equals(KeyCode.DELETE)) {
+            removeFile();
+        }
+    }
 
     @FXML
     private void clearFinished() {
@@ -250,6 +307,7 @@ public class PrimaryController {
     @FXML
     private void toggleOverwrite() {
         boolean overwrite = wantOverwrite.isSelected();
+        menuOverwrite.setSelected(overwrite);
         List<jobStatus> doNotChange = Arrays.asList(jobStatus.COMPLETED, jobStatus.FAILED, jobStatus.RUNNING);
         inputFileList.getItems().forEach((item) -> {
             if (doNotChange.contains(item.status)) { return; }
@@ -263,8 +321,25 @@ public class PrimaryController {
     }
 
     @FXML
+    private void overwriteMenu() {
+        wantOverwrite.setSelected(!wantOverwrite.isSelected());
+        toggleOverwrite();
+    }
+
+    @FXML
+    private void updateLogLevel() {
+        if (logLevelGroup == null) return;
+        String val = logLevel.getValue();
+        int idx = logLevel.getItems().indexOf(val);
+        logLevelGroup.selectToggle(logLevelGroup.getToggles().get(idx));
+    }
+
+    @FXML
     private void displayLog() {
-        logVBox.setVisible(!logVBox.isVisible());
+        if (consoleWindow.getOwner() == null) {
+            consoleWindow.initOwner(addFileButton.getScene().getWindow());
+        }
+        consoleWindow.show();
     }
 
     @FXML
@@ -311,9 +386,21 @@ public class PrimaryController {
     }
 
     public void runCompleted() {
-        runButton.setText("Run conversions");
+        runButton.setText("Run Conversions");
+        menuRun.setText("Run Conversions");
         isRunning = false;
         fileControlButtons.forEach((control -> control.setDisable(false)));
+        menuControlButtons.forEach((control -> control.setDisable(false)));
+        // Print anything left in the console buffer.
+        consoleStream.forceFlush();
+    }
+
+    @FXML
+    public void onExit() throws InterruptedException {
+        if (isRunning) {
+            runCancel();
+        }
+        Platform.exit();
     }
 
     public void runCancel() throws InterruptedException {
@@ -336,7 +423,9 @@ public class PrimaryController {
             return;
         }
         fileControlButtons.forEach((control -> control.setDisable(true)));
-        runButton.setText("Stop conversions");
+        menuControlButtons.forEach((control -> control.setDisable(true)));
+        runButton.setText("Stop Conversions");
+        menuRun.setText("Stop Conversions");
         isRunning = true;
 
         logBox.appendText("\n\nBeginning file conversion...\n");

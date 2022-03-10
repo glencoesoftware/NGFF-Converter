@@ -12,33 +12,58 @@ import java.io.OutputStream;
 // Instead, we'll capture lines into a temporary buffer and flush to console.
 // Would love to do this with a custom PrintWriter class, but that doesn't
 // seem to work with picocli, so we'll capture the raw stream instead.
+// Note that Trace-level logs can print thousands of lines in a single operation.
+// We only show the last 500 lines in the GUI.
 public class ConsoleStream extends OutputStream
 {
     private final TextArea output;
-    private String buffer;
+    private final StringBuilder buffer;
     private final int lineLimit = 500;
+    private boolean locked = false;
 
     public ConsoleStream(TextArea logBox)
     {
         this.output = logBox;
-        this.buffer = "";
+        this.buffer = new StringBuilder();
     }
 
     @Override
-        public void write(final int i) {
-        this.buffer += String.valueOf((char) i);
-    }
+        public void write(final int i) { buffer.append((char) i); }
 
     @Override
     public void flush() {
+        if (this.locked) {
+            // A UI update event already exists in the queue.
+            return;
+        } else {
+            this.locked = true;
+        }
         Platform.runLater(() -> {
-            output.appendText(this.buffer);
-            this.buffer = "";
-            int numLines = output.getText().split("\n").length;
-            if (numLines > this.lineLimit) {
-                int idx = StringUtils.ordinalIndexOf(output.getText(), "\n", numLines - this.lineLimit);
-                output.setText(output.getText(idx + 1, output.getLength()));
+            String newData = this.buffer.toString();
+            int newLines = newData.split("\n").length;
+            int existingLines = output.getText().split("\n").length;
+            if (newLines > this.lineLimit) {
+                int idx = StringUtils.ordinalIndexOf(newData, "\n", newLines - this.lineLimit);
+                output.deleteText(0, output.getText().length());
+                output.appendText(newData.substring(idx));
+            } else if (newLines + existingLines > this.lineLimit) {
+                int idx = StringUtils.ordinalIndexOf(output.getText(), "\n", existingLines - this.lineLimit);
+                output.deleteText(0, idx+1);
+                output.appendText(this.buffer.toString());
+            } else {
+                output.appendText(this.buffer.toString());
             }
+
+            this.buffer.setLength(0);
+            this.locked = false;
+        });
+    }
+
+    public void forceFlush() {
+        Platform.runLater(() -> {
+            output.appendText(this.buffer.toString());
+            this.buffer.setLength(0);
+            this.locked = false;
         });
     }
 
