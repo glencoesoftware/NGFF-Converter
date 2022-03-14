@@ -87,6 +87,10 @@ public class PrimaryController {
     public ToggleGroup logLevelGroup;
     public FileAppender<ILoggingEvent> fileAppender;
 
+    // We keep a record of whether the console has been displayed to the user before.
+    // If it hasn't we open it if a conversion fails.
+    public boolean logShown = false;
+
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
 
@@ -132,7 +136,7 @@ public class PrimaryController {
             }
             menuLogLevel.getItems().add(item);
         });
-        logLevel.setTooltip(new Tooltip("Level of detail to show on the log tab"));
+        logLevel.setTooltip(new Tooltip("Level of detail to show in the logs"));
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
                 "Applies to new files added to the list."));
@@ -385,11 +389,13 @@ public class PrimaryController {
     }
 
     @FXML
-    private void displayLog() {
+    public Runnable displayLog() {
         if (consoleWindow.getOwner() == null) {
             consoleWindow.initOwner(addFileButton.getScene().getWindow());
         }
         consoleWindow.show();
+        logShown = true;
+        return null;
     }
 
     @FXML

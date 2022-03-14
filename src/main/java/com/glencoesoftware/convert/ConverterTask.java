@@ -82,7 +82,9 @@ class ConverterTask extends Task<Integer> {
                 LOGGER.info("Failed with Exit Code " + result +  " : " + out.getName() + "\n");
             }
             Platform.runLater(inputFileList::refresh);
-            if (result == 0) { count++; }
+            if (result == 0) { count++; } else if (!this.parent.logShown) {
+                Platform.runLater(this.parent::displayLog);
+            }
         }
         String finalStatus = String.format("Completed conversion of %s files.", count);
         Platform.runLater(() -> {
