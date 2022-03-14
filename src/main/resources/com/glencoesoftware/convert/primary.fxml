@@ -11,7 +11,7 @@
          <BorderPane.margin>
             <Insets top="10.0" />
          </BorderPane.margin>
-         <Label fx:id="statusBox" maxWidth="500.0" minWidth="600.0" prefHeight="17.0" prefWidth="600.0" text="Add files to begin" />
+         <Label fx:id="statusBox" maxWidth="500.0" minWidth="600.0" prefHeight="17.0" prefWidth="600.0" text="Add files to begin" textOverrun="LEADING_ELLIPSIS" />
       </ToolBar>
    </bottom>
    <top>
@@ -21,7 +21,8 @@
          </BorderPane.margin>
          <Menu mnemonicParsing="false" text="File">
             <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
-            <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite Files" />
+            <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing Files" />
+            <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
             <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
             <MenuItem fx:id="menuResetDirectory" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
             <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
@@ -134,7 +135,7 @@
                <Font size="10.0" />
             </font>
          </Label>
-         <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run conversions" VBox.vgrow="NEVER">
+         <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run Conversions" VBox.vgrow="NEVER">
             <VBox.margin>
                <Insets left="8.0" right="8.0" top="15.0" />
             </VBox.margin>

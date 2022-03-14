@@ -10,15 +10,13 @@ import java.io.OutputStream;
 // We want to capture stdout from Picocli into a JavaFX text area.
 // We could write the stream directly, but this creates excessive GUI updates.
 // Instead, we'll capture lines into a temporary buffer and flush to console.
-// Would love to do this with a custom PrintWriter class, but that doesn't
-// seem to work with picocli, so we'll capture the raw stream instead.
 // Note that Trace-level logs can print thousands of lines in a single operation.
-// We only show the last 500 lines in the GUI.
+// We only show the last 1000 lines in the GUI.
 public class ConsoleStream extends OutputStream
 {
     private final TextArea output;
     private final StringBuilder buffer;
-    private final int lineLimit = 500;
+    private final int lineLimit = 1000;
     private boolean locked = false;
 
     public ConsoleStream(TextArea logBox)

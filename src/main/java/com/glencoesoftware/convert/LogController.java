@@ -2,23 +2,34 @@ package com.glencoesoftware.convert;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.Button;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.io.PrintStream;
-
 
 public class LogController {
 
     @FXML
     public TextArea logBox;
+    public ConsoleStream stream;
+    public Button logFileButton;
+    public PrimaryController parentController;
 
     @FXML
     public void initialize() {
-        ConsoleStream console = new ConsoleStream(logBox);
-        PrintStream printStream = new PrintStream(console, true);
-        System.setOut(printStream);
-        System.setErr(printStream);
+        stream = new ConsoleStream(logBox);
+        ConsoleStreamAppender.setStaticOutputStream(stream);
+    }
+
+    public void setParent(PrimaryController parent) {
+        parentController = parent;
+    }
+
+    public void onToggleLogging() {
+        if (parentController.fileAppender != null) {
+            parentController.wantLogToFile.setSelected(!parentController.wantLogToFile.isSelected());
+        }
+        parentController.toggleFileLogging();
     }
 
     @FXML

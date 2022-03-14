@@ -1,5 +1,10 @@
 package com.glencoesoftware.convert;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.bioformats2raw.Converter;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -23,12 +28,13 @@ import javafx.stage.Stage;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
@@ -36,6 +42,9 @@ import java.util.stream.Collectors;
 
 
 public class PrimaryController {
+
+    private static final ch.qos.logback.classic.Logger LOGGER =
+            (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(App.class);
 
     @FXML
     public Label statusBox;
@@ -56,6 +65,7 @@ public class PrimaryController {
     public Separator listSeparator;
     public Menu menuLogLevel;
     public CheckMenuItem menuOverwrite;
+    public CheckMenuItem wantLogToFile;
     public MenuItem menuRun;
     public MenuItem menuChooseDirectory;
     public MenuItem menuResetDirectory;
@@ -67,6 +77,7 @@ public class PrimaryController {
 
     private Stage consoleWindow;
     public TextArea logBox;
+    public Button logFileButton;
     private boolean isRunning = false;
     private Thread runnerThread;
     private ConverterTask currentJob;
@@ -74,6 +85,7 @@ public class PrimaryController {
     private ArrayList<MenuItem> menuControlButtons;
     public ConsoleStream consoleStream;
     public ToggleGroup logLevelGroup;
+    public FileAppender<ILoggingEvent> fileAppender;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
@@ -84,6 +96,7 @@ public class PrimaryController {
 
     @FXML
     public void initialize() throws IOException {
+        LOGGER.setLevel(Level.DEBUG);
         // Todo: Support zarr to OME.TIFF
         // supportedExtensions.add("zarr");
         menuBar.setUseSystemMenuBar(true);
@@ -143,10 +156,9 @@ public class PrimaryController {
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
         logBox = logControl.logBox;
-        consoleStream = new ConsoleStream(logBox);
-        PrintStream printStream = new PrintStream(consoleStream, true);
-        System.setOut(printStream);
-        System.setErr(printStream);
+        logFileButton = logControl.logFileButton;
+        consoleStream = logControl.stream;
+        logControl.setParent(this);
     }
 
     @FXML
@@ -305,6 +317,44 @@ public class PrimaryController {
     }
 
     @FXML
+    public void toggleFileLogging() {
+        if (fileAppender == null) {
+            Stage stage = (Stage) inputFileList.getScene().getWindow();
+            FileChooser outputFileChooser = new FileChooser();
+            outputFileChooser.setInitialFileName("ngff-converter.log");
+            outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Log file",".log"));
+            outputFileChooser.setTitle("Choose where to save logs");
+            File newOutput = outputFileChooser.showSaveDialog(stage);
+            if (newOutput != null) {
+                String logFile = newOutput.getAbsolutePath();
+                LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+                PatternLayoutEncoder ple = new PatternLayoutEncoder();
+                ple.setPattern("%date [%thread] %-5level %logger{36} - %msg%n");
+                ple.setContext(lc);
+                ple.start();
+                fileAppender = new FileAppender<>();
+                fileAppender.setFile(logFile);
+                fileAppender.setEncoder(ple);
+                fileAppender.setContext(lc);
+                fileAppender.start();
+                ch.qos.logback.classic.Logger rootLogger =
+                        (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+                rootLogger.addAppender(fileAppender);
+                logFileButton.setText("Stop logging to file");
+                wantLogToFile.setSelected(true);
+            } else {
+                wantLogToFile.setSelected(false);
+            }
+        } else if (wantLogToFile.isSelected()) {
+            fileAppender.start();
+            logFileButton.setText("Stop logging to file");
+        } else {
+            fileAppender.stop();
+            logFileButton.setText("Resume logging to file");
+        }
+    }
+
+    @FXML
     private void toggleOverwrite() {
         boolean overwrite = wantOverwrite.isSelected();
         menuOverwrite.setSelected(overwrite);
@@ -427,8 +477,7 @@ public class PrimaryController {
         runButton.setText("Stop Conversions");
         menuRun.setText("Stop Conversions");
         isRunning = true;
-
-        logBox.appendText("\n\nBeginning file conversion...\n");
+        LOGGER.info("Beginning file conversion...\n");
         List<String> extraArgs =  new ArrayList<>();
         extraArgs.add("--log-level=" + logLevel.getValue().toUpperCase());
         if (wantOverwrite.isSelected()) {

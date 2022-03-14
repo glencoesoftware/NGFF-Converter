@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ConsoleAppender" class="com.glencoesoftware.convert.ConsoleStreamAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss} %-5level %logger{15} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="ConsoleAppender" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
