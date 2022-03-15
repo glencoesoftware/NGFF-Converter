@@ -7,6 +7,7 @@ plugins {
 version = '1.0.0'
 String bfversion = "6.8.0"
 String b2rversion = "0.4.0"
+String r2oversion = "0.3.1-SNAPSHOT"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
 applicationName = 'NGFF-Converter-GUI'
@@ -38,6 +39,7 @@ javafx {
 }
 
 dependencies {
+    implementation "com.glencoesoftware:raw2ometiff:${r2oversion}"
     implementation "com.glencoesoftware:bioformats2raw:${b2rversion}"
     implementation "ome:formats-gpl:${bfversion}"
     implementation 'info.picocli:picocli:4.6.2'
@@ -59,7 +61,7 @@ configurations.all {
 jar {
     manifest {
         attributes 'Implementation-Title': 'NGFF Converter GUI',
-                'Implementation-Version': version,
+                'Implementation-Version': archiveVersion,
                 'Main-Class': mainClassName
     }
     from {
@@ -104,6 +106,7 @@ runtime {
         props.setProperty("AppVersion", ver)
         props.setProperty("BioformatsVersion", bfversion)
         props.setProperty("Bioformats2RawVersion", b2rversion)
+        props.setProperty("Raw2OMETiffVersion", r2oversion)
         propFile.createNewFile()
         props.store(new FileOutputStream(propFile), "Compiled file properties")
     }

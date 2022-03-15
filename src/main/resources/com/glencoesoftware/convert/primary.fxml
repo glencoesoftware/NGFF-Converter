@@ -21,7 +21,8 @@
          </BorderPane.margin>
          <Menu mnemonicParsing="false" text="File">
             <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
-            <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing Files" />
+            <Menu fx:id="menuOutputFormat" mnemonicParsing="false" text="Set output format" />
+            <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing files" />
             <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
             <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
             <MenuItem fx:id="menuResetDirectory" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
@@ -38,6 +39,8 @@
             <MenuItem mnemonicParsing="false" onAction="#displayLog" text="Show Logs" />
          </Menu>
          <Menu mnemonicParsing="false" text="Help">
+            <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="bioformats2raw help" />
+            <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="raw2ometiff help" />
             <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />
          </Menu>
       </MenuBar>
@@ -143,12 +146,13 @@
                <Font size="15.0" />
             </font>
          </Button>
-         <GridPane minHeight="61.0" prefHeight="72.0" prefWidth="160.0" VBox.vgrow="NEVER">
+         <GridPane prefWidth="160.0" VBox.vgrow="NEVER">
             <columnConstraints>
                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="72.0" />
                <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="78.0" />
             </columnConstraints>
             <rowConstraints>
+               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             </rowConstraints>
@@ -158,10 +162,16 @@
             <VBox.margin>
                <Insets bottom="5.0" top="5.0" />
             </VBox.margin>
-            <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" />
-            <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="1" />
-            <ChoiceBox fx:id="logLevel" onAction="#updateLogLevel" GridPane.columnIndex="1">
+            <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="15.0" layoutY="35.0" prefHeight="17.0" prefWidth="79.0" text="Convert to" textAlignment="RIGHT" />
+            <ChoiceBox fx:id="outputFormat" layoutX="101.0" layoutY="31.0" onAction="#updateFormat" GridPane.columnIndex="1">
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+               </GridPane.margin>
+            </ChoiceBox>
+            <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" GridPane.rowIndex="1" />
+            <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="2" />
+            <ChoiceBox fx:id="logLevel" onAction="#updateLogLevel" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
                </GridPane.margin>
