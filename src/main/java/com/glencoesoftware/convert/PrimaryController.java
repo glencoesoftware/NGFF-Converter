@@ -105,7 +105,19 @@ public class PrimaryController {
         READY, ERROR, COMPLETED, FAILED, RUNNING, NOOUTPUT
     }
 
-    public enum OutputMode {TIFF, NGFF}
+    public enum OutputMode {
+        TIFF("OME-TIFF", ".ome.tiff"),
+        NGFF("OME-NGFF", ".zarr");
+
+        OutputMode(String displayName, String extension) {
+            this.displayName = displayName;
+            this.extension = extension;
+        }
+        public String getDisplayName() { return this.displayName; }
+        public String getExtension() { return this.extension; }
+        private final String displayName;
+        private final String extension;
+    }
 
     @FXML
     public void initialize() throws IOException {
@@ -130,15 +142,17 @@ public class PrimaryController {
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
         clearFileButton.setTooltip(new Tooltip("Remove all files"));
         clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
-        ObservableList<String> outputModes = FXCollections.observableArrayList(OutputMode.NGFF.name(), OutputMode.TIFF.name());
+        ObservableList<String> outputModes = FXCollections.observableArrayList(
+                OutputMode.NGFF.getDisplayName(),
+                OutputMode.TIFF.getDisplayName());
         outputFormat.getItems().setAll(outputModes);
-        outputFormat.setValue(OutputMode.NGFF.name());
+        outputFormat.setValue(OutputMode.NGFF.getDisplayName());
         outputFormatGroup = new ToggleGroup();
         outputModes.forEach(mode -> {
             RadioMenuItem item = new RadioMenuItem(mode);
             item.setToggleGroup(outputFormatGroup);
             item.setOnAction(event -> outputFormat.setValue(mode));
-            if (Objects.equals(mode, OutputMode.NGFF.name())) {
+            if (Objects.equals(mode, OutputMode.NGFF.getDisplayName())) {
                 item.setSelected(true);
             }
             menuOutputFormat.getItems().add(item);
@@ -322,16 +336,13 @@ public class PrimaryController {
             } else {
                 outBase = outputDirectory.getText();
             }
-            String outputExtension;
             OutputMode outputMode;
-            if (outputFormat.getValue().equals(OutputMode.NGFF.name()) && !extension.equals("zarr")) {
-                outputExtension = ".zarr";
+            if (outputFormat.getValue().equals(OutputMode.NGFF.getDisplayName()) && !extension.equals("zarr")) {
                 outputMode = OutputMode.NGFF;
             } else {
-                outputExtension = ".ome.tif";
                 outputMode = OutputMode.TIFF;
             }
-            File outFile = new File(outBase, outPath + outputExtension);
+            File outFile = new File(outBase, outPath + outputMode.getExtension());
             fileList.add(new IOPackage(file, outFile, wantOverwrite.isSelected(), outputMode));
             count++;
         }
@@ -358,8 +369,10 @@ public class PrimaryController {
                     FileChooser outputFileChooser = new FileChooser();
                     outputFileChooser.setInitialDirectory(target.fileOut.getParentFile());
                     outputFileChooser.setInitialFileName(target.fileOut.getName());
-                    FileChooser.ExtensionFilter zarrFilter = new FileChooser.ExtensionFilter("Zarr file",".zarr");
-                    FileChooser.ExtensionFilter tiffFilter = new FileChooser.ExtensionFilter("OME TIFF file",".ome.tif");
+                    FileChooser.ExtensionFilter zarrFilter = new FileChooser.ExtensionFilter(
+                            "Zarr file",OutputMode.NGFF.getExtension());
+                    FileChooser.ExtensionFilter tiffFilter = new FileChooser.ExtensionFilter(
+                            "OME TIFF file",OutputMode.TIFF.getExtension());
                     outputFileChooser.getExtensionFilters().add(zarrFilter);
                     outputFileChooser.getExtensionFilters().add(tiffFilter);
                     if (target.outputMode == OutputMode.NGFF) {
@@ -374,7 +387,7 @@ public class PrimaryController {
                         if (!newOutput.getName().toLowerCase().endsWith(desiredExtension)) {
                             newOutput = new File(newOutput.getAbsolutePath() + desiredExtension);
                         }
-                        if (desiredExtension.equals(".zarr")){
+                        if (desiredExtension.equals(OutputMode.NGFF.getExtension())){
                             target.outputMode = OutputMode.NGFF;
                         } else {
                             target.outputMode = OutputMode.TIFF;
@@ -411,7 +424,8 @@ public class PrimaryController {
             Stage stage = (Stage) inputFileList.getScene().getWindow();
             FileChooser outputFileChooser = new FileChooser();
             outputFileChooser.setInitialFileName("ngff-converter.log");
-            outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Log file",".log"));
+            outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+                    "Log file",".log"));
             outputFileChooser.setTitle("Choose where to save logs");
             File newOutput = outputFileChooser.showSaveDialog(stage);
             if (newOutput != null) {
