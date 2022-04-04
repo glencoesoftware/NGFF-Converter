@@ -1,6 +1,12 @@
 package com.glencoesoftware.convert;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.bioformats2raw.Converter;
+import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,12 +29,14 @@ import javafx.stage.Stage;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import picocli.CommandLine;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
@@ -36,6 +44,9 @@ import java.util.stream.Collectors;
 
 
 public class PrimaryController {
+
+    private static final ch.qos.logback.classic.Logger LOGGER =
+            (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(App.class);
 
     @FXML
     public Label statusBox;
@@ -52,10 +63,13 @@ public class PrimaryController {
     public Button clearDirButton;
     public Label versionDisplay;
     public Button runButton;
+    public ChoiceBox<String> outputFormat;
     public ChoiceBox<String> logLevel;
     public Separator listSeparator;
     public Menu menuLogLevel;
+    public Menu menuOutputFormat;
     public CheckMenuItem menuOverwrite;
+    public CheckMenuItem wantLogToFile;
     public MenuItem menuRun;
     public MenuItem menuChooseDirectory;
     public MenuItem menuResetDirectory;
@@ -66,7 +80,10 @@ public class PrimaryController {
     public MenuBar menuBar;
 
     private Stage consoleWindow;
+    private Stage b2rHelpWindow;
+    private Stage r2oHelpWindow;
     public TextArea logBox;
+    public Button logFileButton;
     private boolean isRunning = false;
     private Thread runnerThread;
     private ConverterTask currentJob;
@@ -74,6 +91,12 @@ public class PrimaryController {
     private ArrayList<MenuItem> menuControlButtons;
     public ConsoleStream consoleStream;
     public ToggleGroup logLevelGroup;
+    public ToggleGroup outputFormatGroup;
+    public FileAppender<ILoggingEvent> fileAppender;
+
+    // We keep a record of whether the console has been displayed to the user before.
+    // If it hasn't we open it if a conversion fails.
+    public boolean logShown = false;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
@@ -82,10 +105,24 @@ public class PrimaryController {
         READY, ERROR, COMPLETED, FAILED, RUNNING, NOOUTPUT
     }
 
+    public enum OutputMode {
+        TIFF("OME-TIFF", ".ome.tiff"),
+        NGFF("OME-NGFF", ".zarr");
+
+        OutputMode(String displayName, String extension) {
+            this.displayName = displayName;
+            this.extension = extension;
+        }
+        public String getDisplayName() { return this.displayName; }
+        public String getExtension() { return this.extension; }
+        private final String displayName;
+        private final String extension;
+    }
+
     @FXML
     public void initialize() throws IOException {
-        // Todo: Support zarr to OME.TIFF
-        // supportedExtensions.add("zarr");
+        LOGGER.setLevel(Level.DEBUG);
+         supportedExtensions.add("zarr");
         menuBar.setUseSystemMenuBar(true);
         inputFileList.setCellFactory(list -> new FileCell());
         FontIcon addIcon = new FontIcon("bi-plus");
@@ -105,6 +142,21 @@ public class PrimaryController {
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
         clearFileButton.setTooltip(new Tooltip("Remove all files"));
         clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
+        ObservableList<String> outputModes = FXCollections.observableArrayList(
+                OutputMode.NGFF.getDisplayName(),
+                OutputMode.TIFF.getDisplayName());
+        outputFormat.getItems().setAll(outputModes);
+        outputFormat.setValue(OutputMode.NGFF.getDisplayName());
+        outputFormatGroup = new ToggleGroup();
+        outputModes.forEach(mode -> {
+            RadioMenuItem item = new RadioMenuItem(mode);
+            item.setToggleGroup(outputFormatGroup);
+            item.setOnAction(event -> outputFormat.setValue(mode));
+            if (Objects.equals(mode, OutputMode.NGFF.getDisplayName())) {
+                item.setSelected(true);
+            }
+            menuOutputFormat.getItems().add(item);
+        });
         ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
                 "Trace", "All", "Off");
         logLevel.setItems(logModes);
@@ -119,7 +171,8 @@ public class PrimaryController {
             }
             menuLogLevel.getItems().add(item);
         });
-        logLevel.setTooltip(new Tooltip("Level of detail to show on the log tab"));
+        outputFormat.setTooltip(new Tooltip("File format to convert to"));
+        logLevel.setTooltip(new Tooltip("Level of detail to show in the logs"));
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
                 "Applies to new files added to the list."));
@@ -130,8 +183,9 @@ public class PrimaryController {
 
         // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
         fileControlButtons = new ArrayList<>(Arrays.asList(addFileButton, removeFileButton, clearFileButton,
-                clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel));
-        menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuAddFiles, menuRemoveFile,
+                clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel,
+                outputFormat));
+        menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuOutputFormat, menuAddFiles, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuOverwrite, menuChooseDirectory, menuResetDirectory));
     }
 
@@ -143,10 +197,48 @@ public class PrimaryController {
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
         logBox = logControl.logBox;
-        consoleStream = new ConsoleStream(logBox);
-        PrintStream printStream = new PrintStream(consoleStream, true);
-        System.setOut(printStream);
-        System.setErr(printStream);
+        logFileButton = logControl.logFileButton;
+        consoleStream = logControl.stream;
+        logControl.setParent(this);
+    }
+
+    @FXML
+    private void b2rHelp() throws IOException {
+        if (b2rHelpWindow != null) {
+            b2rHelpWindow.show();
+        } else {
+            createHelpWindow("bioformats2raw");
+        }
+    }
+    @FXML
+    private void r2oHelp() throws IOException {
+        if (r2oHelpWindow != null) {
+            r2oHelpWindow.show();
+        } else {
+            createHelpWindow("raw2ometiff");
+        }
+    }
+
+    private void createHelpWindow(String command) throws IOException {
+        FXMLLoader helpLoader = new FXMLLoader();
+        helpLoader.setLocation(getClass().getResource("HelpWindow.fxml"));
+        Scene helpScene = new Scene(helpLoader.load());
+        Stage helpWindow = new Stage();
+        helpWindow.setScene(helpScene);
+        Label helpHeader = (Label) helpScene.lookup("#helpHeader");
+        TextArea helpContents = (TextArea) helpScene.lookup("#helpBox");
+        helpHeader.setText(helpHeader.getText() + command);
+        CommandLine cmd;
+        if (command.equals("bioformats2raw")) {
+            cmd = new CommandLine(new Converter());
+            b2rHelpWindow = helpWindow;
+        } else {
+            cmd = new CommandLine(new PyramidFromDirectoryWriter());
+            r2oHelpWindow = helpWindow;
+        }
+        helpContents.appendText(cmd.getUsageMessage());
+        helpWindow.show();
+        helpContents.setScrollTop(0);
     }
 
     @FXML
@@ -244,8 +336,14 @@ public class PrimaryController {
             } else {
                 outBase = outputDirectory.getText();
             }
-            File outFile = new File(outBase, outPath + ".zarr");
-            fileList.add(new IOPackage(file, outFile, wantOverwrite.isSelected()));
+            OutputMode outputMode;
+            if (outputFormat.getValue().equals(OutputMode.NGFF.getDisplayName()) && !extension.equals("zarr")) {
+                outputMode = OutputMode.NGFF;
+            } else {
+                outputMode = OutputMode.TIFF;
+            }
+            File outFile = new File(outBase, outPath + outputMode.getExtension());
+            fileList.add(new IOPackage(file, outFile, wantOverwrite.isSelected(), outputMode));
             count++;
         }
         statusBox.setText("Found and added " + count + " supported file(s)");
@@ -271,12 +369,28 @@ public class PrimaryController {
                     FileChooser outputFileChooser = new FileChooser();
                     outputFileChooser.setInitialDirectory(target.fileOut.getParentFile());
                     outputFileChooser.setInitialFileName(target.fileOut.getName());
-                    outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Zarr file",".zarr"));
+                    FileChooser.ExtensionFilter zarrFilter = new FileChooser.ExtensionFilter(
+                            "Zarr file",OutputMode.NGFF.getExtension());
+                    FileChooser.ExtensionFilter tiffFilter = new FileChooser.ExtensionFilter(
+                            "OME TIFF file",OutputMode.TIFF.getExtension());
+                    outputFileChooser.getExtensionFilters().add(zarrFilter);
+                    outputFileChooser.getExtensionFilters().add(tiffFilter);
+                    if (target.outputMode == OutputMode.NGFF) {
+                        outputFileChooser.setSelectedExtensionFilter(zarrFilter);
+                    } else {
+                        outputFileChooser.setSelectedExtensionFilter(tiffFilter);
+                    }
                     outputFileChooser.setTitle("Choose output file for " + target.fileIn.getName());
                     File newOutput = outputFileChooser.showSaveDialog(stage);
                     if (newOutput != null) {
-                        if (!newOutput.getName().endsWith(".zarr")) {
-                            newOutput = new File(newOutput.getAbsolutePath() + ".zarr");
+                        String desiredExtension = outputFileChooser.getSelectedExtensionFilter().getExtensions().get(0);
+                        if (!newOutput.getName().toLowerCase().endsWith(desiredExtension)) {
+                            newOutput = new File(newOutput.getAbsolutePath() + desiredExtension);
+                        }
+                        if (desiredExtension.equals(OutputMode.NGFF.getExtension())){
+                            target.outputMode = OutputMode.NGFF;
+                        } else {
+                            target.outputMode = OutputMode.TIFF;
                         }
                         target.fileOut = newOutput;
                         // Reset status
@@ -305,6 +419,45 @@ public class PrimaryController {
     }
 
     @FXML
+    public void toggleFileLogging() {
+        if (fileAppender == null) {
+            Stage stage = (Stage) inputFileList.getScene().getWindow();
+            FileChooser outputFileChooser = new FileChooser();
+            outputFileChooser.setInitialFileName("ngff-converter.log");
+            outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+                    "Log file",".log"));
+            outputFileChooser.setTitle("Choose where to save logs");
+            File newOutput = outputFileChooser.showSaveDialog(stage);
+            if (newOutput != null) {
+                String logFile = newOutput.getAbsolutePath();
+                LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+                PatternLayoutEncoder ple = new PatternLayoutEncoder();
+                ple.setPattern("%date [%thread] %-5level %logger{36} - %msg%n");
+                ple.setContext(lc);
+                ple.start();
+                fileAppender = new FileAppender<>();
+                fileAppender.setFile(logFile);
+                fileAppender.setEncoder(ple);
+                fileAppender.setContext(lc);
+                fileAppender.start();
+                ch.qos.logback.classic.Logger rootLogger =
+                        (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+                rootLogger.addAppender(fileAppender);
+                logFileButton.setText("Stop logging to file");
+                wantLogToFile.setSelected(true);
+            } else {
+                wantLogToFile.setSelected(false);
+            }
+        } else if (wantLogToFile.isSelected()) {
+            fileAppender.start();
+            logFileButton.setText("Stop logging to file");
+        } else {
+            fileAppender.stop();
+            logFileButton.setText("Resume logging to file");
+        }
+    }
+
+    @FXML
     private void toggleOverwrite() {
         boolean overwrite = wantOverwrite.isSelected();
         menuOverwrite.setSelected(overwrite);
@@ -327,6 +480,14 @@ public class PrimaryController {
     }
 
     @FXML
+    private void updateFormat() {
+        if (outputFormatGroup == null) return;
+        String val = outputFormat.getValue();
+        int idx = outputFormat.getItems().indexOf(val);
+        outputFormatGroup.selectToggle(outputFormatGroup.getToggles().get(idx));
+    }
+
+    @FXML
     private void updateLogLevel() {
         if (logLevelGroup == null) return;
         String val = logLevel.getValue();
@@ -335,11 +496,13 @@ public class PrimaryController {
     }
 
     @FXML
-    private void displayLog() {
+    public Runnable displayLog() {
         if (consoleWindow.getOwner() == null) {
             consoleWindow.initOwner(addFileButton.getScene().getWindow());
         }
         consoleWindow.show();
+        logShown = true;
+        return null;
     }
 
     @FXML
@@ -348,6 +511,7 @@ public class PrimaryController {
         File props;
         String bfVer;
         String b2rVer;
+        String r2oVer;
         // Fat jar packaging overwrites our class version names.
         String appPath = System.getProperty("jpackage.app-path");
         if (appPath != null) {
@@ -367,13 +531,16 @@ public class PrimaryController {
             properties.load(new FileInputStream(props.getCanonicalPath()));
             bfVer = properties.getProperty("BioformatsVersion");
             b2rVer = properties.getProperty("Bioformats2RawVersion");
+            r2oVer = properties.getProperty("Raw2OMETiffVersion");
         } else {
             bfVer = ImageReader.class.getPackage().getImplementationVersion();
             b2rVer = Converter.class.getPackage().getImplementationVersion();
+            r2oVer = PyramidFromDirectoryWriter.class.getPackage().getImplementationVersion();
         }
         fxmlLoader.getNamespace().put("guiVer", version);
         fxmlLoader.getNamespace().put("b2rVer", b2rVer);
         fxmlLoader.getNamespace().put("bfVer", bfVer);
+        fxmlLoader.getNamespace().put("r2oVer", r2oVer);
         fxmlLoader.setLocation(App.class.getResource("AboutDialog.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
@@ -427,8 +594,7 @@ public class PrimaryController {
         runButton.setText("Stop Conversions");
         menuRun.setText("Stop Conversions");
         isRunning = true;
-
-        logBox.appendText("\n\nBeginning file conversion...\n");
+        LOGGER.info("Beginning file conversion...\n");
         List<String> extraArgs =  new ArrayList<>();
         extraArgs.add("--log-level=" + logLevel.getValue().toUpperCase());
         if (wantOverwrite.isSelected()) {
