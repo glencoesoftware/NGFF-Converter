@@ -37,7 +37,7 @@ class ConverterTask extends Task<Integer> {
     }
 
     @Override
-    protected Integer call() throws IOException, InterruptedException {
+    protected Integer call() throws IOException {
         RunnerParameterExceptionHandler paramHandler = new RunnerParameterExceptionHandler();
         RunnerExecutionExceptionHandler runHandler = new RunnerExecutionExceptionHandler();
         int count = 0;
