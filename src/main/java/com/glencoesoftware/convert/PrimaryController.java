@@ -37,6 +37,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
@@ -61,6 +63,7 @@ public class PrimaryController {
     public Button clearFinishedButton;
     public Button chooseDirButton;
     public Button clearDirButton;
+    public Button showLogButton;
     public Label versionDisplay;
     public Button runButton;
     public ChoiceBox<String> outputFormat;
@@ -73,6 +76,7 @@ public class PrimaryController {
     public MenuItem menuRun;
     public MenuItem menuChooseDirectory;
     public MenuItem menuResetDirectory;
+    public MenuItem menuTempDirectory;
     public MenuItem menuAddFiles;
     public MenuItem menuRemoveFile;
     public MenuItem menuClearFinished;
@@ -93,6 +97,7 @@ public class PrimaryController {
     public ToggleGroup logLevelGroup;
     public ToggleGroup outputFormatGroup;
     public FileAppender<ILoggingEvent> fileAppender;
+    public File tempDirectory;
 
     // We keep a record of whether the console has been displayed to the user before.
     // If it hasn't we open it if a conversion fails.
@@ -129,14 +134,17 @@ public class PrimaryController {
         FontIcon removeIcon = new FontIcon("bi-dash");
         FontIcon clearIcon = new FontIcon("bi-x");
         FontIcon finishedIcon = new FontIcon("bi-check");
+        FontIcon logIcon = new FontIcon("bi-text-left");
         addIcon.setIconSize(20);
         removeIcon.setIconSize(20);
         clearIcon.setIconSize(20);
         finishedIcon.setIconSize(20);
+        logIcon.setIconSize(20);
         addFileButton.setGraphic(addIcon);
         removeFileButton.setGraphic(removeIcon);
         clearFileButton.setGraphic(clearIcon);
         clearFinishedButton.setGraphic(finishedIcon);
+        showLogButton.setGraphic(logIcon);
         extraParams.setTooltip(new Tooltip("Extra arguments (one per line)"));
         addFileButton.setTooltip(new Tooltip("Add files"));
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
@@ -186,7 +194,8 @@ public class PrimaryController {
                 clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel,
                 outputFormat));
         menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuOutputFormat, menuAddFiles, menuRemoveFile,
-                menuClearFinished, menuClearAll, menuOverwrite, menuChooseDirectory, menuResetDirectory));
+                menuClearFinished, menuClearAll, menuOverwrite, menuChooseDirectory, menuResetDirectory,
+                menuTempDirectory));
     }
 
     private void createLogControl() throws IOException {
@@ -280,7 +289,27 @@ public class PrimaryController {
         if (newDir != null) {
             outputDirectory.setText(newDir.getAbsolutePath());
         }
+    }
 
+    @FXML
+    private void chooseTemporaryDirectory(){
+        if (tempDirectory != null) {
+            tempDirectory = null;
+            menuTempDirectory.setText("Choose Temporary Directory");
+            statusBox.setText("Will use output folder as temporary directory for intermediates.");
+            LOGGER.info("Temporary intermediate files will be stored in the same folder as the final output.");
+            return;
+        }
+        Stage stage = (Stage) outputDirectory.getScene().getWindow();
+        DirectoryChooser outputDirectoryChooser = new DirectoryChooser();
+        outputDirectoryChooser.setTitle("Choose temporary directory for zarr intermediates");
+        File tempDir = outputDirectoryChooser.showDialog(stage);
+        if (tempDir != null) {
+            tempDirectory = tempDir;
+            menuTempDirectory.setText("Reset Temporary Directory");
+            statusBox.setText("User specified a temporary directory for intermediates.");
+            LOGGER.info("Zarr intermediates will be temporarily written to " + tempDir);
+        }
     }
 
     @FXML
@@ -497,10 +526,8 @@ public class PrimaryController {
 
     @FXML
     public Runnable displayLog() {
-        if (consoleWindow.getOwner() == null) {
-            consoleWindow.initOwner(addFileButton.getScene().getWindow());
-        }
         consoleWindow.show();
+        consoleWindow.toFront();
         logShown = true;
         return null;
     }
@@ -589,6 +616,44 @@ public class PrimaryController {
             runCancel();
             return;
         }
+
+        // Validate there is enough space to perform conversions.
+        HashMap<Path, Double> spaceMap = new HashMap<>();
+        inputFileList.getItems().stream().filter(job -> job.status != jobStatus.COMPLETED).forEach(job -> {
+            double estimatedSize = job.fileIn.length() * 1.3;
+            Path targetDrive = Paths.get(job.fileOut.getAbsolutePath()).getRoot();
+            double neededSpace = spaceMap.getOrDefault(targetDrive, 0.0);
+            spaceMap.put(targetDrive, neededSpace + estimatedSize);
+        });
+        for (Map.Entry<Path, Double> entry : spaceMap.entrySet()) {
+            Path drive = entry.getKey();
+            double neededSpace = entry.getValue();
+            double freeSpace = new File(drive.toString()).getFreeSpace();
+            if (freeSpace < neededSpace) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                        String.format("""
+                                Output files from conversion may be larger than available disk space on drive %s
+                                
+                                Required: ~%,dMB | Free: %,dMB\s
+                                
+                                Do you want to continue?""",
+                                drive,
+                                (long) neededSpace / 1048576,
+                                (long) freeSpace / 1048576),
+                        ButtonType.YES,
+                        ButtonType.NO);
+                alert.setTitle("NGFF Converter");
+                alert.setHeaderText("Possible storage space issue");
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.YES){
+                    LOGGER.info("User opted to continue despite disk space warning");
+                } else {
+                    LOGGER.error("User aborted conversions in response to disk space warning");
+                    return;
+                }}
+            }
+
         fileControlButtons.forEach((control -> control.setDisable(true)));
         menuControlButtons.forEach((control -> control.setDisable(true)));
         runButton.setText("Stop Conversions");

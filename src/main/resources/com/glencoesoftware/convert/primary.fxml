@@ -26,6 +26,7 @@
             <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
             <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
             <MenuItem fx:id="menuResetDirectory" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
+            <MenuItem fx:id="menuTempDirectory" mnemonicParsing="false" onAction="#chooseTemporaryDirectory" text="Choose Temporary Directory" />
             <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
          </Menu>
          <Menu mnemonicParsing="false" text="Edit">
@@ -119,13 +120,14 @@
                <Button fx:id="removeFileButton" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
                <Button fx:id="clearFileButton" mnemonicParsing="false" onAction="#clearFiles" text="Remove All" />
                <Button fx:id="clearFinishedButton" mnemonicParsing="false" onAction="#clearFinished" text="Clear Completed" />
+               <Button fx:id="showLogButton" layoutX="406.0" layoutY="10.0" mnemonicParsing="false" onAction="#displayLog" text="Show Logs" />
             </HBox>
          </VBox>
       </VBox>
    </center>
    <left>
       <VBox alignment="CENTER" minWidth="160.0" prefHeight="598.0" prefWidth="160.0" BorderPane.alignment="CENTER">
-         <Label alignment="CENTER" contentDisplay="CENTER" text="NGFF Converter GUI" textAlignment="CENTER" VBox.vgrow="NEVER">
+         <Label alignment="CENTER" contentDisplay="CENTER" text="NGFF Converter" textAlignment="CENTER" VBox.vgrow="NEVER">
             <font>
                <Font name="System Bold" size="16.0" />
             </font>

@@ -13,6 +13,7 @@ import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.glencoesoftware.convert.PrimaryController.jobStatus.*;
@@ -36,7 +37,7 @@ class ConverterTask extends Task<Integer> {
     }
 
     @Override
-    protected Integer call() throws IOException {
+    protected Integer call() throws IOException, InterruptedException {
         RunnerParameterExceptionHandler paramHandler = new RunnerParameterExceptionHandler();
         RunnerExecutionExceptionHandler runHandler = new RunnerExecutionExceptionHandler();
         int count = 0;
@@ -60,7 +61,13 @@ class ConverterTask extends Task<Integer> {
             ArrayList<String> params;
             if (job.outputMode == PrimaryController.OutputMode.TIFF) {
                 LOGGER.info("Will convert to NGFF first");
-                out = new File(System.getProperty("java.io.tmpdir") + UUID.randomUUID() + ".zarr");
+                String temporaryStorage;
+                if (parent.tempDirectory != null) {
+                    temporaryStorage = parent.tempDirectory.getAbsolutePath();
+                } else {
+                    temporaryStorage = job.fileOut.getParent();
+                }
+                out = new File(Paths.get(temporaryStorage, UUID.randomUUID() + ".zarr").toString());
                 Set<String> validArgs = runner.getCommandSpec().optionsMap().keySet();
                 List<String> argsToUse = args.stream().filter(
                         (arg) -> validArgs.contains(arg.split("=")[0])).toList();
