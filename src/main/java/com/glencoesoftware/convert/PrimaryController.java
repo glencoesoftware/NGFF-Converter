@@ -630,7 +630,7 @@ public class PrimaryController {
             double neededSpace = entry.getValue();
             double freeSpace = new File(drive.toString()).getFreeSpace();
             if (freeSpace < neededSpace) {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                Alert alert = new Alert(Alert.AlertType.WARNING,
                         String.format("""
                                 Output files from conversion may be larger than available disk space on drive %s
                                 
