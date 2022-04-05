@@ -8,7 +8,7 @@
 name: Gradle Create Release
 
 env:
-  APP_NAME: NGFF-Converter-GUI
+  APP_NAME: NGFF-Converter
   APP_VERSION: 1.0.0
 
 on:

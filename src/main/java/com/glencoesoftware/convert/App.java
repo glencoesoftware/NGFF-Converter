@@ -1,6 +1,7 @@
 package com.glencoesoftware.convert;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -21,9 +22,10 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("primary"), 800, 550);
         stage.setScene(scene);
-        stage.setTitle("NGFF Converter GUI");
+        stage.setTitle("NGFF Converter");
         Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
         stage.getIcons().add(icon);
+        stage.setOnCloseRequest(event -> Platform.exit());
         stage.show();
     }
 
