@@ -120,7 +120,7 @@ class ConverterTask extends Task<Integer> {
                 job.status = COMPLETED;
                 LOGGER.info("Successfully created: " + job.fileOut.getName() + "\n");
             } else if (result == 0) {
-                job.status = NOOUTPUT;
+                job.status = NO_OUTPUT;
                 LOGGER.warn("Job completed but no output detected: " + job.fileOut.getName() + "\n");
             } else if (result == 9) {
                 job.status = FAILED;
