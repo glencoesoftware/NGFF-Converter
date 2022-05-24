@@ -9,7 +9,7 @@ name: Gradle Create Release
 
 env:
   APP_NAME: NGFF-Converter
-  APP_VERSION: 1.0.1
+  APP_VERSION: 1.0.2
 
 on:
   push:
