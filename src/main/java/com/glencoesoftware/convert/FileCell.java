@@ -107,7 +107,7 @@ public class FileCell extends ListCell<IOPackage> {
                     monitor.setGraphic(progress);
                     progress.setTooltip(new Tooltip("Running"));
                 }
-                case NOOUTPUT -> {
+                case NO_OUTPUT -> {
                     monitor.setGraphic(notOk);
                     monitor.setTooltip(new Tooltip("Run completed with no output"));
                 }

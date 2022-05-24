@@ -34,6 +34,8 @@
             <MenuItem fx:id="menuRemoveFile" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
             <MenuItem fx:id="menuClearFinished" mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
             <MenuItem fx:id="menuClearAll" mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />
+            <MenuItem fx:id="menuSavePrefs" mnemonicParsing="false" onAction="#savePrefs" text="Save settings as defaults" />
+            <MenuItem fx:id="menuResetPrefs" mnemonicParsing="false" onAction="#resetPrefs" text="Clear saved settings" />
          </Menu>
          <Menu mnemonicParsing="false" text="View">
             <Menu fx:id="menuLogLevel" mnemonicParsing="false" text="Log Level" />

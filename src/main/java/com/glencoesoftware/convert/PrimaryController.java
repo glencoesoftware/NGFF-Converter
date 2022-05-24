@@ -42,6 +42,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 
@@ -81,6 +83,8 @@ public class PrimaryController {
     public MenuItem menuRemoveFile;
     public MenuItem menuClearFinished;
     public MenuItem menuClearAll;
+    public MenuItem menuSavePrefs;
+    public MenuItem menuResetPrefs;
     public MenuBar menuBar;
 
     private Stage consoleWindow;
@@ -106,9 +110,13 @@ public class PrimaryController {
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
 
-    public enum jobStatus {
-        READY, ERROR, COMPLETED, FAILED, RUNNING, NOOUTPUT
-    }
+    public final String defaultOutputText = "<Same as input>";
+
+    public enum jobStatus {READY, ERROR, COMPLETED, FAILED, RUNNING, NO_OUTPUT}
+
+    public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, ARGS};
+
+    private final Preferences userPreferences = Preferences.userRoot();
 
     public enum OutputMode {
         TIFF("OME-TIFF", ".ome.tiff"),
@@ -145,6 +153,7 @@ public class PrimaryController {
         clearFileButton.setGraphic(clearIcon);
         clearFinishedButton.setGraphic(finishedIcon);
         showLogButton.setGraphic(logIcon);
+        extraParams.setText(userPreferences.get(prefName.ARGS.name(), ""));
         extraParams.setTooltip(new Tooltip("Extra arguments (one per line)"));
         addFileButton.setTooltip(new Tooltip("Add files"));
         removeFileButton.setTooltip(new Tooltip("Remove selected file"));
@@ -154,7 +163,7 @@ public class PrimaryController {
                 OutputMode.NGFF.getDisplayName(),
                 OutputMode.TIFF.getDisplayName());
         outputFormat.getItems().setAll(outputModes);
-        outputFormat.setValue(OutputMode.NGFF.getDisplayName());
+        outputFormat.setValue(userPreferences.get(prefName.FORMAT.name(), OutputMode.NGFF.getDisplayName()));
         outputFormatGroup = new ToggleGroup();
         outputModes.forEach(mode -> {
             RadioMenuItem item = new RadioMenuItem(mode);
@@ -168,7 +177,7 @@ public class PrimaryController {
         ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
                 "Trace", "All", "Off");
         logLevel.setItems(logModes);
-        logLevel.setValue("Warn");
+        logLevel.setValue(userPreferences.get(prefName.LOG_LEVEL.name(), "Warn"));
         logLevelGroup = new ToggleGroup();
         logModes.forEach(mode -> {
             RadioMenuItem item = new RadioMenuItem(mode);
@@ -181,7 +190,9 @@ public class PrimaryController {
         });
         outputFormat.setTooltip(new Tooltip("File format to convert to"));
         logLevel.setTooltip(new Tooltip("Level of detail to show in the logs"));
+        wantOverwrite.setSelected(userPreferences.getBoolean(prefName.OVERWRITE.name(), false));
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
+        outputDirectory.setText(userPreferences.get(prefName.OUTPUT_FOLDER.name(), defaultOutputText));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
                 "Applies to new files added to the list."));
         version = getClass().getPackage().getImplementationVersion();
@@ -194,8 +205,8 @@ public class PrimaryController {
                 clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel,
                 outputFormat));
         menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuOutputFormat, menuAddFiles, menuRemoveFile,
-                menuClearFinished, menuClearAll, menuOverwrite, menuChooseDirectory, menuResetDirectory,
-                menuTempDirectory));
+                menuClearFinished, menuClearAll, menuSavePrefs, menuResetPrefs, menuOverwrite, menuChooseDirectory,
+                menuResetDirectory, menuTempDirectory));
     }
 
     private void createLogControl() throws IOException {
@@ -314,7 +325,7 @@ public class PrimaryController {
 
     @FXML
     private void resetOutputDirectory() {
-        outputDirectory.setText("<Same as input>");
+        outputDirectory.setText(defaultOutputText);
     }
 
     @FXML
@@ -360,7 +371,7 @@ public class PrimaryController {
             String filePath = file.getAbsolutePath();
             String outPath = FilenameUtils.getBaseName(filePath);
             String outBase;
-            if (outputDirectory.getText().equals("<Same as input>")) {
+            if (outputDirectory.getText().equals(defaultOutputText)) {
                 outBase = file.getParent();
             } else {
                 outBase = outputDirectory.getText();
@@ -523,6 +534,25 @@ public class PrimaryController {
         int idx = logLevel.getItems().indexOf(val);
         logLevelGroup.selectToggle(logLevelGroup.getToggles().get(idx));
     }
+
+
+    @FXML
+    private void resetPrefs() throws BackingStoreException {
+        userPreferences.clear();
+        userPreferences.flush();
+        statusBox.setText("Cleared saved default settings.");
+    }
+
+    @FXML
+    private void savePrefs() throws BackingStoreException {
+        userPreferences.put(prefName.FORMAT.name(), outputFormat.getValue());
+        userPreferences.put(prefName.LOG_LEVEL.name(), logLevel.getValue());
+        userPreferences.putBoolean(prefName.OVERWRITE.name(), wantOverwrite.isSelected());
+        userPreferences.put(prefName.OUTPUT_FOLDER.name(), outputDirectory.getText());
+        userPreferences.put(prefName.ARGS.name(), extraParams.getText());
+        userPreferences.flush();
+        statusBox.setText("Saved current settings as defaults.");
+    };
 
     @FXML
     public Runnable displayLog() {
