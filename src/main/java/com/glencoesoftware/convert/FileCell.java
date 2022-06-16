@@ -106,6 +106,14 @@ public class FileCell extends ListCell<IOPackage> {
                 case RUNNING -> {
                     monitor.setGraphic(progress);
                     progress.setTooltip(new Tooltip("Running"));
+                    if (pack.progress != null) {
+                        progress.setProgress(pack.progress);
+                        // JavaFX is annoying, the % text label only exists when in finite mode and, even if made
+                        // invisible via CSS, still takes up space. To solve this we adjust padding.
+                        progress.setStyle("-fx-padding: 0 0 -32 0;");
+                    } else {
+                        progress.setStyle("");
+                    }
                 }
                 case NO_OUTPUT -> {
                     monitor.setGraphic(notOk);

@@ -7,11 +7,13 @@ public class IOPackage {
     public File fileOut;
     public PrimaryController.jobStatus status;
     public PrimaryController.OutputMode outputMode;
+    public Double progress;
 
     public IOPackage(File in, File out, boolean overwrite, PrimaryController.OutputMode mode) {
         outputMode = mode;
         fileIn = in;
         fileOut = out;
+        progress = null;
         if (fileOut.exists() && !overwrite) {
             status = PrimaryController.jobStatus.ERROR;
         } else {

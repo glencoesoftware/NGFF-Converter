@@ -23,6 +23,7 @@
             <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
             <Menu fx:id="menuOutputFormat" mnemonicParsing="false" text="Set output format" />
             <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing files" />
+            <CheckMenuItem fx:id="menuSplit" mnemonicParsing="false" onAction="#splitMenu" text="Split series into single files" />
             <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
             <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
             <MenuItem fx:id="menuResetDirectory" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
@@ -150,12 +151,13 @@
                <Font size="15.0" />
             </font>
          </Button>
-         <GridPane minHeight="105.0" prefHeight="105.0" prefWidth="160.0" VBox.vgrow="NEVER">
+         <GridPane minHeight="105.0" prefHeight="120.0" prefWidth="160.0" VBox.vgrow="NEVER">
             <columnConstraints>
                <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="60.0" />
                <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="96.0" />
             </columnConstraints>
             <rowConstraints>
+               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
@@ -180,6 +182,8 @@
                   <Insets bottom="5.0" left="5.0" right="2.0" top="5.0" />
                </GridPane.margin>
             </ChoiceBox>
+            <Label alignment="CENTER_RIGHT" layoutX="12.0" layoutY="72.0" prefHeight="17.0" prefWidth="81.0" text="Split series" GridPane.rowIndex="3" />
+            <CheckBox fx:id="wantSplit" layoutX="112.0" layoutY="72.0" mnemonicParsing="false" onAction="#toggleSplit" GridPane.columnIndex="1" GridPane.rowIndex="3" />
          </GridPane>
    
                   <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS">

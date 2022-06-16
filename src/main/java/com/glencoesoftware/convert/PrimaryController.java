@@ -57,6 +57,7 @@ public class PrimaryController {
     public TextArea extraParams;
     public TextField outputDirectory;
     public CheckBox wantOverwrite;
+    public CheckBox wantSplit;
     public ListView<IOPackage> inputFileList;
     public Label fileListHelpText;
     public Button addFileButton;
@@ -74,6 +75,7 @@ public class PrimaryController {
     public Menu menuLogLevel;
     public Menu menuOutputFormat;
     public CheckMenuItem menuOverwrite;
+    public CheckMenuItem menuSplit;
     public CheckMenuItem wantLogToFile;
     public MenuItem menuRun;
     public MenuItem menuChooseDirectory;
@@ -114,7 +116,7 @@ public class PrimaryController {
 
     public enum jobStatus {READY, ERROR, COMPLETED, FAILED, RUNNING, NO_OUTPUT}
 
-    public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, ARGS};
+    public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, SPLIT, ARGS}
 
     private final Preferences userPreferences = Preferences.userRoot();
 
@@ -164,6 +166,10 @@ public class PrimaryController {
                 OutputMode.TIFF.getDisplayName());
         outputFormat.getItems().setAll(outputModes);
         outputFormat.setValue(userPreferences.get(prefName.FORMAT.name(), OutputMode.NGFF.getDisplayName()));
+        if (outputFormat.getValue().equals(OutputMode.NGFF.getDisplayName())) {
+            wantSplit.setDisable(true);
+            menuSplit.setDisable(true);
+        }
         outputFormatGroup = new ToggleGroup();
         outputModes.forEach(mode -> {
             RadioMenuItem item = new RadioMenuItem(mode);
@@ -192,6 +198,8 @@ public class PrimaryController {
         logLevel.setTooltip(new Tooltip("Level of detail to show in the logs"));
         wantOverwrite.setSelected(userPreferences.getBoolean(prefName.OVERWRITE.name(), false));
         wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
+        wantSplit.setSelected(userPreferences.getBoolean(prefName.SPLIT.name(), false));
+        wantSplit.setTooltip(new Tooltip("Save each series as an individual .tif file (OME-TIFF mode only)"));
         outputDirectory.setText(userPreferences.get(prefName.OUTPUT_FOLDER.name(), defaultOutputText));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
                 "Applies to new files added to the list."));
@@ -203,10 +211,10 @@ public class PrimaryController {
         // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
         fileControlButtons = new ArrayList<>(Arrays.asList(addFileButton, removeFileButton, clearFileButton,
                 clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel,
-                outputFormat));
+                outputFormat, wantSplit));
         menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuOutputFormat, menuAddFiles, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuSavePrefs, menuResetPrefs, menuOverwrite, menuChooseDirectory,
-                menuResetDirectory, menuTempDirectory));
+                menuResetDirectory, menuTempDirectory, menuSplit));
     }
 
     private void createLogControl() throws IOException {
@@ -520,9 +528,39 @@ public class PrimaryController {
     }
 
     @FXML
+    private void toggleSplit() {
+        boolean split = wantSplit.isSelected();
+        menuSplit.setSelected(split);
+
+        List<jobStatus> doNotChange = Arrays.asList(jobStatus.COMPLETED, jobStatus.FAILED, jobStatus.RUNNING);
+        inputFileList.getItems().forEach((item) -> {
+            if (doNotChange.contains(item.status)) { return; }
+            if ((!split) && item.fileOut.exists()) {
+                item.status = jobStatus.ERROR;
+            } else {
+                item.status = jobStatus.READY;
+            }
+        });
+        inputFileList.refresh();
+    }
+
+    @FXML
+    private void splitMenu() {
+        wantSplit.setSelected(!wantSplit.isSelected());
+        toggleOverwrite();
+    }
+
+    @FXML
     private void updateFormat() {
         if (outputFormatGroup == null) return;
         String val = outputFormat.getValue();
+        if (Objects.equals(val, OutputMode.NGFF.getDisplayName())) {
+            wantSplit.setDisable(true);
+            menuSplit.setDisable(true);
+        } else {
+            wantSplit.setDisable(false);
+            menuSplit.setDisable(false);
+        }
         int idx = outputFormat.getItems().indexOf(val);
         outputFormatGroup.selectToggle(outputFormatGroup.getToggles().get(idx));
     }
@@ -548,11 +586,12 @@ public class PrimaryController {
         userPreferences.put(prefName.FORMAT.name(), outputFormat.getValue());
         userPreferences.put(prefName.LOG_LEVEL.name(), logLevel.getValue());
         userPreferences.putBoolean(prefName.OVERWRITE.name(), wantOverwrite.isSelected());
+        userPreferences.putBoolean(prefName.SPLIT.name(), wantSplit.isSelected());
         userPreferences.put(prefName.OUTPUT_FOLDER.name(), outputDirectory.getText());
         userPreferences.put(prefName.ARGS.name(), extraParams.getText());
         userPreferences.flush();
         statusBox.setText("Saved current settings as defaults.");
-    };
+    }
 
     @FXML
     public Runnable displayLog() {

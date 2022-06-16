@@ -21,6 +21,7 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("primary"), 800, 550);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("style.css")).toExternalForm());
         stage.setScene(scene);
         stage.setTitle("NGFF Converter");
         Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
