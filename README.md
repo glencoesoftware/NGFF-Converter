@@ -1,4 +1,4 @@
-# bfconvert-gui2
+# NGFF-Converter
 
 Build and run:
 
