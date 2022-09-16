@@ -5,8 +5,8 @@ Build and run:
     ./gradlew clean build
     cd build/distributions
     unzip *.zip
-    cd bfconvert-gui2-0.1-SNAPSHOT
-    ./bin/bfconvert-gui2
+    cd NGFF-Converter-0.1-SNAPSHOT
+    ./bin/NGFF-Converter
 
 
 Project skeleton created using a combination of:
