@@ -80,14 +80,14 @@ runtime {
         if(currentOs.windows) {
             propFile = new File("$buildDir/jpackage/$applicationName/app/versions.properties")
             copy {
-                from "c-blosc/build/blosc/Release/blosc.dll"
+                from "blosc.dll"
                 into("$buildDir/jpackage/$applicationName/app")
             }
         } else if(currentOs.macOsX) {
             propFile = new File("$buildDir/jpackage/${applicationName}.app/Contents/lib/versions.properties")
             // Add blosc to the image
             copy {
-                from "c-blosc/build/blosc/libblosc.dylib"
+                from "libblosc.dylib"
                 into("$buildDir/jpackage/${applicationName}.app/Contents/lib")
             }
             // Tell the app where to find it
