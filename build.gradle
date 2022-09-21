@@ -79,6 +79,7 @@ runtime {
         File propFile
         if(currentOs.windows) {
             propFile = new File("$buildDir/jpackage/$applicationName/app/versions.properties")
+            assert file("blosc.dll").exists()
             copy {
                 from "blosc.dll"
                 into("$buildDir/jpackage/$applicationName/app")
@@ -86,6 +87,7 @@ runtime {
         } else if(currentOs.macOsX) {
             propFile = new File("$buildDir/jpackage/${applicationName}.app/Contents/lib/versions.properties")
             // Add blosc to the image
+            assert file("libblosc.dylib").exists()
             copy {
                 from "libblosc.dylib"
                 into("$buildDir/jpackage/${applicationName}.app/Contents/lib")
