@@ -7,10 +7,6 @@
 
 name: Java CI with Gradle
 
-env:
-  APP_NAME: NGFF-Converter
-  APP_VERSION: 1.0.3
-
 on:
   push:
     branches:
@@ -56,33 +52,23 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.pkg
-        name: ${{env.mac_saveas}}
         retention-days: 3
-      env:
-        mac_saveas: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-macos.pkg
     - if: ${{ matrix.os == 'windows-latest' }}
       name: Upload Windows MSI
       uses: actions/upload-artifact@v2
       with:
         path: ./build/jpackage/*.msi
-        name: ${{env.win_saveas}}
         retention-days: 3
-      env:
-        win_saveas: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-win.msi
   upload:
     name: Create release
     needs: build
     runs-on: ubuntu-latest
     if: startswith(github.ref, 'refs/tags/')
     steps:
-      - name: Download Windows installer
+      - name: Download artifacts
         uses: actions/download-artifact@v2
-        with:
-          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-win.msi
-      - name: Download macOS installer
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-macos.pkg
+      - name: List artifacts
+        run: ls -R
       - name: Create release draft
         uses: softprops/action-gh-release@v1
         with:
@@ -90,5 +76,4 @@ jobs:
             *.msi
             *.pkg
           draft: true
-          name: ${{env.APP_NAME}} - ${{env.APP_VERSION}}
           fail_on_unmatched_files: true
