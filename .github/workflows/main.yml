@@ -59,7 +59,7 @@ jobs:
         name: ${{env.mac_saveas}}
         retention-days: 3
       env:
-        mac_saveas: ${{env.APP_NAME}}-${{env.APP_VERSION}}-macos.pkg
+        mac_saveas: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-macos.pkg
     - if: ${{ matrix.os == 'windows-latest' }}
       name: Upload Windows MSI
       uses: actions/upload-artifact@v2
@@ -68,7 +68,7 @@ jobs:
         name: ${{env.win_saveas}}
         retention-days: 3
       env:
-        win_saveas: ${{env.APP_NAME}}-${{env.APP_VERSION}}-win.msi
+        win_saveas: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-win.msi
   upload:
     name: Create release
     needs: build
@@ -78,11 +78,11 @@ jobs:
       - name: Download Windows installer
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-win.msi
+          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-win.msi
       - name: Download macOS installer
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-macos.pkg
+          name: ${{env.APP_NAME}}-${{env.APP_VERSION}}-unsigned-macos.pkg
       - name: Create release draft
         uses: softprops/action-gh-release@v1
         with:
