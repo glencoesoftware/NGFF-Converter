@@ -140,7 +140,12 @@ runtime {
         else if (currentOs.macOsX) {
             installerType = "pkg"
             imageOptions += ['--java-options', '-Djava.library.path=../lib']
-            installerOptions += ['--mac-package-name', applicationName]
+            installerOptions += [
+                '--mac-package-name', applicationName,
+                '--mac-sign',
+                '--mac-signing-key-user-name', System.env.MAC_SIGNING_KEY_USER_NAME,
+                '--mac-signing-keychain', System.env.KEYCHAIN_PATH
+            ]
         }
     }
 }
