@@ -4,7 +4,7 @@ plugins {
     id 'org.beryx.runtime' version '1.12.5'
 }
 
-version = '1.0.3'
+version = '1.0.4'
 String bfversion = "6.8.0"
 String b2rversion = "0.4.0"
 String r2oversion = "0.3.1-rc1"
@@ -79,15 +79,17 @@ runtime {
         File propFile
         if(currentOs.windows) {
             propFile = new File("$buildDir/jpackage/$applicationName/app/versions.properties")
+            assert file("blosc.dll").exists()
             copy {
-                from "c-blosc/build/blosc/Release/blosc.dll"
+                from "blosc.dll"
                 into("$buildDir/jpackage/$applicationName/app")
             }
         } else if(currentOs.macOsX) {
             propFile = new File("$buildDir/jpackage/${applicationName}.app/Contents/lib/versions.properties")
             // Add blosc to the image
+            assert file("libblosc.dylib").exists()
             copy {
-                from "c-blosc/build/blosc/libblosc.dylib"
+                from "libblosc.dylib"
                 into("$buildDir/jpackage/${applicationName}.app/Contents/lib")
             }
             // Tell the app where to find it
@@ -128,35 +130,17 @@ runtime {
         installerOptions += ['--description', "Converts image files to NGFF .zarr"]
 
         if(currentOs.windows) {
-            targetPlatformName = "win"
             installerType = "msi"
             installerOptions += ['--win-dir-chooser', '--win-menu', '--win-shortcut']
-            targetPlatform("win") {
-                jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_windows_hotspot_17.0.2_8.zip")
-            }
         }
         else if (currentOs.linux) {
             // Linux unused for now
-            targetPlatformName = "lin"
             installerOptions += ['--linux-package-name', applicationName,'--linux-shortcut']
-            targetPlatform("lin") {
-                jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_linux_hotspot_17.0.2_8.tar.gz")
-            }
         }
         else if (currentOs.macOsX) {
-            targetPlatformName = "mac"
             installerType = "pkg"
             imageOptions += ['--java-options', '-Djava.library.path=../lib']
             installerOptions += ['--mac-package-name', applicationName]
-            targetPlatform("mac") {
-                jdkHome = jdkDownload("https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.2%2B8/OpenJDK17U-jdk_x64_mac_hotspot_17.0.2_8.tar.gz") {
-                    downloadDir = "$buildDir/myMac"
-                    archiveName = "my-mac-jdk"
-                    archiveExtension = "tar.gz"
-                    pathToHome = "jdk-17.0.2+8/Contents/Home"
-                    overwrite = true
-                }
-            }
         }
     }
 }
