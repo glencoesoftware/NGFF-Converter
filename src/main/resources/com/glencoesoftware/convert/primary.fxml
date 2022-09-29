@@ -51,7 +51,7 @@
    <center>
       <VBox alignment="CENTER" spacing="5.0">
          <padding>
-            <Insets left="5.0" right="10.0" />
+            <Insets left="3.0" right="10.0" />
          </padding>
          <HBox alignment="CENTER" prefHeight="31.0" prefWidth="600.0" VBox.vgrow="NEVER">
             <Label alignment="CENTER_RIGHT" text="Output Folder" textAlignment="RIGHT" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="NEVER">
@@ -128,8 +128,8 @@
       </VBox>
    </center>
    <left>
-      <VBox alignment="CENTER" minWidth="160.0" prefHeight="598.0" prefWidth="160.0" BorderPane.alignment="CENTER">
-         <Label alignment="CENTER" contentDisplay="CENTER" text="NGFF Converter" textAlignment="CENTER" VBox.vgrow="NEVER">
+      <VBox alignment="CENTER" minWidth="165.0" prefHeight="598.0" prefWidth="165.0" BorderPane.alignment="CENTER">
+         <Label alignment="CENTER" contentDisplay="CENTER" text="NGFF-Converter" textAlignment="CENTER" VBox.vgrow="NEVER">
             <font>
                <Font name="System Bold" size="16.0" />
             </font>
@@ -194,7 +194,7 @@
             </VBox.margin>
          </VBox>
          <BorderPane.margin>
-            <Insets left="5.0" />
+            <Insets left="3.0" />
          </BorderPane.margin>
       </VBox>
    </left>

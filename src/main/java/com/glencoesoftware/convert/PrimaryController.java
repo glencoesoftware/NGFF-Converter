@@ -679,7 +679,7 @@ public class PrimaryController {
                                 (long) freeSpace / 1048576),
                         ButtonType.YES,
                         ButtonType.NO);
-                alert.setTitle("NGFF Converter");
+                alert.setTitle("NGFF-Converter");
                 alert.setHeaderText("Possible storage space issue");
 
                 Optional<ButtonType> result = alert.showAndWait();

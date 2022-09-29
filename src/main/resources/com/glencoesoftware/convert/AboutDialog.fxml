@@ -14,7 +14,7 @@
       </VBox.margin>
       <Image url="@glencoe-logo.png"/>
    </ImageView>
-   <Label text="NGFF Converter">
+   <Label text="NGFF-Converter">
       <font>
          <Font name="System Bold" size="18.0"/>
       </font>

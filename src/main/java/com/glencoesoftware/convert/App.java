@@ -29,7 +29,7 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("primary"), 800, 550);
         stage.setScene(scene);
-        stage.setTitle("NGFF Converter");
+        stage.setTitle("NGFF-Converter");
         Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
         stage.getIcons().add(icon);
         stage.setOnCloseRequest(event -> Platform.exit());
