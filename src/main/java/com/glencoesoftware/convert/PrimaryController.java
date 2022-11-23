@@ -99,7 +99,7 @@ public class PrimaryController {
     private Stage r2oHelpWindow;
     public TextArea logBox;
     public Button logFileButton;
-    private boolean isRunning = false;
+    public boolean isRunning = false;
     private Thread runnerThread;
     private ConverterTask currentJob;
     private ArrayList<Control> fileControlButtons;
@@ -627,10 +627,7 @@ public class PrimaryController {
     }
 
     @FXML
-    public void onExit() throws InterruptedException {
-        if (isRunning) {
-            runCancel();
-        }
+    public void onExit() {
         Platform.exit();
     }
 
