@@ -142,7 +142,8 @@ public class PrimaryController {
     @FXML
     public void initialize() throws IOException {
         LOGGER.setLevel(Level.DEBUG);
-         supportedExtensions.add("zarr");
+        supportedExtensions.add("zarr");
+        supportedExtensions.add("mrxs");
         menuBar.setUseSystemMenuBar(true);
         inputFileList.setCellFactory(list -> new FileCell());
         FontIcon addIcon = new FontIcon("bi-plus");
