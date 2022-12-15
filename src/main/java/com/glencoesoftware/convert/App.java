@@ -24,10 +24,14 @@ import java.util.Objects;
 public class App extends Application {
 
     private static Scene scene;
+    private static PrimaryController controller;
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("primary"), 800, 550);
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("primary.fxml"));
+        Parent primary = fxmlLoader.load();
+        scene = new Scene(primary, 800, 550);
+        controller = fxmlLoader.getController();
         stage.setScene(scene);
         stage.setTitle("NGFF-Converter");
         Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
@@ -36,17 +40,15 @@ public class App extends Application {
         stage.show();
     }
 
-    static void setRoot(String fxml) throws IOException {
-        scene.setRoot(loadFXML(fxml));
+    @Override
+    public void stop() throws InterruptedException {
+        if (controller.isRunning) {
+            controller.runCancel();
+        }
     }
 
     public static Scene getScene() {
         return scene;
-    }
-
-    private static Parent loadFXML(String fxml) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        return fxmlLoader.load();
     }
 
     public static void main(String[] args) {
