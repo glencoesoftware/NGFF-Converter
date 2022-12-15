@@ -60,7 +60,7 @@ configurations.all {
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'NGFF Converter',
+        attributes 'Implementation-Title': 'NGFF-Converter',
                 'Implementation-Version': archiveVersion,
                 'Main-Class': mainClassName
     }
