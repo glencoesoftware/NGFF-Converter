@@ -46,9 +46,9 @@ dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.0'
     implementation 'org.kordamp.ikonli:ikonli-bootstrapicons-pack:12.3.0'
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
-    implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.1.7'
-    implementation group: 'ch.qos.logback', name: 'logback-access', version: '1.1.7'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.4'
+    implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.4'
+    implementation group: 'ch.qos.logback', name: 'logback-access', version: '1.4.4'
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
