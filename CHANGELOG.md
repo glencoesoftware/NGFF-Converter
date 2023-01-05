@@ -1,3 +1,8 @@
+# v1.1.1 (2023-01-05)
+
+## Bugfixes/Maintenance:
+* Switch to app image to aid code signing workflow (#36).
+
 # v1.1.0 (2022-12-15)
 
 ## Features:
@@ -10,7 +15,6 @@
 * Fixed an issue which could prevent running conversions from stopping upon exit (#33).
 * Improvements to the build/packaging system. Application filesize should now be much smaller (#29, #24).
 * UI tweaks (#28)
-
 
 # v1.0.3 (2022-09-16)
 

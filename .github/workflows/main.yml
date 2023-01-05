@@ -43,16 +43,22 @@ jobs:
       name: Download blosc
       run: |
         c:\msys64\usr\bin\wget.exe 'https://github.com/glencoesoftware/c-blosc-windows-x86_64/releases/download/20220919/blosc.dll'
-    - name: Run jpackage with Gradle
+    - if: ${{ matrix.os == 'windows-latest' }}
+      name: Run jpackage with Gradle (installer)
       uses: gradle/gradle-build-action@v2
       with:
         arguments: jpackage
+    - if: ${{ matrix.os == 'macos-latest' }}
+      name: Run jpackage with Gradle (application image only)
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: jpackageImage
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Upload Mac pkg
       uses: actions/upload-artifact@v2
       with:
         name: macos-package
-        path: ./build/jpackage/*.pkg
+        path: ./build/jpackage/*.app
         if-no-files-found: error
         retention-days: 3
     - if: ${{ matrix.os == 'windows-latest' }}
@@ -78,6 +84,6 @@ jobs:
         with:
           files: |
             windows-package/*.msi
-            macos-package/*.pkg
+            macos-package/*.app
           draft: true
           fail_on_unmatched_files: true
