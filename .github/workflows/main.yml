@@ -52,13 +52,13 @@ jobs:
       name: Run jpackage with Gradle (application image only)
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: jpackageImage
+        arguments: jpackageImageZip
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Upload Mac pkg
       uses: actions/upload-artifact@v2
       with:
         name: macos-package
-        path: ./build/jpackage/*.app
+        path: ./build/distributions/*.zip
         if-no-files-found: error
         retention-days: 3
     - if: ${{ matrix.os == 'windows-latest' }}
@@ -84,6 +84,6 @@ jobs:
         with:
           files: |
             windows-package/*.msi
-            macos-package/*.app
+            macos-package/*.zip
           draft: true
           fail_on_unmatched_files: true

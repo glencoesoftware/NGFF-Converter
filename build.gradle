@@ -139,4 +139,9 @@ runtime {
             imageOptions += ['--java-options', '-Djava.library.path=../lib']
         }
     }
+
+    tasks.register('jpackageImageZip', Zip) {
+        dependsOn jpackageImage
+        from layout.buildDirectory.dir("jpackage")
+    }
 }
