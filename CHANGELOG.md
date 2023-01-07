@@ -1,3 +1,9 @@
+# v1.1.2 (2023-01-07)
+
+## Bugfixes/Maintenance:
+* Fix app image for code signing
+* Add limited support for M1 Macs
+
 # v1.1.1 (2023-01-05)
 
 ## Bugfixes/Maintenance:
