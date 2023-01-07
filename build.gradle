@@ -34,7 +34,7 @@ sourceCompatibility = 16
 targetCompatibility = 16
 
 javafx {
-    version = '17.0.1'
+    version = '17.0.2'
     modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
@@ -52,6 +52,7 @@ dependencies {
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
+    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac-aarch64"
 }
 
 configurations.all {
