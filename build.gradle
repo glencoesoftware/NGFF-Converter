@@ -61,7 +61,8 @@ configurations.all {
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'NGFF-Converter',
+        attributes \
+                'Implementation-Title': 'NGFF-Converter',
                 'Implementation-Version': archiveVersion,
                 'Main-Class': mainClassName
     }
@@ -75,16 +76,13 @@ runtime {
     def currentOs = org.gradle.internal.os.OperatingSystem.current()
 
     tasks.jpackageImage.doLast {
-        File propFile
         if(currentOs.windows) {
-            propFile = new File("$buildDir/jpackage/$applicationName/app/versions.properties")
             assert file("blosc.dll").exists()
             copy {
                 from "blosc.dll"
                 into("$buildDir/jpackage/$applicationName/app")
             }
         } else if(currentOs.macOsX) {
-            propFile = new File("$buildDir/jpackage/${applicationName}.app/Contents/lib/versions.properties")
             // Add blosc to the image
             assert file("libblosc.dylib").exists()
             copy {
@@ -102,14 +100,6 @@ runtime {
         } else {
             throw new Exception("Unsupported Operating System")
         }
-        def props = new Properties()
-        String ver = String.valueOf(version)
-        props.setProperty("AppVersion", ver)
-        props.setProperty("BioformatsVersion", bfversion)
-        props.setProperty("Bioformats2RawVersion", b2rversion)
-        props.setProperty("Raw2OMETiffVersion", r2oversion)
-        propFile.createNewFile()
-        props.store(new FileOutputStream(propFile), "Compiled file properties")
     }
 
 

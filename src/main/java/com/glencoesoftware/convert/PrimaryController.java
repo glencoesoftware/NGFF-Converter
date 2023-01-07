@@ -573,35 +573,9 @@ public class PrimaryController {
     @FXML
     private void displayAbout() throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader();
-        File props;
-        String bfVer;
-        String b2rVer;
-        String r2oVer;
-        // Fat jar packaging overwrites our class version names.
-        String appPath = System.getProperty("jpackage.app-path");
-        if (appPath != null) {
-            // Figure out if we're running from a build
-            String sysName = System.getProperty("os.name");
-            if (sysName.startsWith("Mac")) {
-                props = new File(appPath + "/../../lib/versions.properties");
-            } else {
-                props = new File(appPath + "/../app/versions.properties");
-            }
-        } else {
-            props = null;
-        }
-        if (props != null) {
-            // Extract package versions from .properties file stored in build
-            Properties properties = new Properties();
-            properties.load(new FileInputStream(props.getCanonicalPath()));
-            bfVer = properties.getProperty("BioformatsVersion");
-            b2rVer = properties.getProperty("Bioformats2RawVersion");
-            r2oVer = properties.getProperty("Raw2OMETiffVersion");
-        } else {
-            bfVer = ImageReader.class.getPackage().getImplementationVersion();
-            b2rVer = Converter.class.getPackage().getImplementationVersion();
-            r2oVer = PyramidFromDirectoryWriter.class.getPackage().getImplementationVersion();
-        }
+        String bfVer = ImageReader.class.getPackage().getImplementationVersion();
+        String b2rVer = Converter.class.getPackage().getImplementationVersion();
+        String r2oVer = PyramidFromDirectoryWriter.class.getPackage().getImplementationVersion();
         fxmlLoader.getNamespace().put("guiVer", version);
         fxmlLoader.getNamespace().put("b2rVer", b2rVer);
         fxmlLoader.getNamespace().put("bfVer", bfVer);
