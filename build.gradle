@@ -52,7 +52,6 @@ dependencies {
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
-    runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac-aarch64"
 }
 
 configurations.all {
