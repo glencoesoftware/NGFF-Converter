@@ -1,3 +1,8 @@
+# v1.1.3 (2023-01-09)
+
+## Bugfixes/Maintenance:
+* Temporarily drop support for M1 Macs, breaks x86_64
+
 # v1.1.2 (2023-01-07)
 
 ## Bugfixes/Maintenance:
