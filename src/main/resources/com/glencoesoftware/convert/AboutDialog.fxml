@@ -31,7 +31,7 @@
    <Label text="${'bioformats2raw - ' + b2rVer}"/>
    <Label text="${'raw2ometiff - ' + r2oVer}"/>
    <Label text="${'Bio-Formats - ' + bfVer}"/>
-   <Label text="Copyright © 2022 Glencoe Software">
+   <Label text="Copyright © Glencoe Software">
       <VBox.margin>
          <Insets top="10.0"/>
       </VBox.margin>
