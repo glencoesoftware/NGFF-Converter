@@ -1,3 +1,8 @@
+# v1.1.4 (2023-01-10)
+
+## Bugfixes/Maintenance:
+* Remove year from Copyright in About window (#37)
+
 # v1.1.3 (2023-01-09)
 
 ## Bugfixes/Maintenance:
