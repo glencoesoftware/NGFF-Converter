@@ -5,9 +5,9 @@ plugins {
 }
 
 version = '1.1.4'
-String bfversion = "6.11.1"
-String b2rversion = "0.6.0"
-String r2oversion = "0.4.0"
+String bfversion = "6.12.0"
+String b2rversion = "0.6.1"
+String r2oversion = "0.4.1"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
 applicationName = 'NGFF-Converter'
