@@ -15,6 +15,14 @@ NGFF-converter is distributed under the terms of the GPL license. Please see LIC
 You should install openjdk-17
 
     sudo apt install openjdk-17-jdk
+    
+In case you get this error or similar
+
+    Native library (linux-x86-64/libblosc.so) not found in resource path
+    
+You should also install
+
+    sudo apt-get install libblosc-dev
 
 ## Project skeleton created using a combination of:
 
