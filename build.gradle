@@ -5,9 +5,9 @@ plugins {
 }
 
 version = '1.1.4'
-String bfversion = "6.11.1"
-String b2rversion = "0.6.0"
-String r2oversion = "0.4.0"
+String bfversion = "6.13.0"
+String b2rversion = "0.7.0"
+String r2oversion = "0.5.0"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
 applicationName = 'NGFF-Converter'
@@ -60,10 +60,17 @@ configurations.all {
 
 jar {
     manifest {
-        attributes \
-                'Implementation-Title': 'NGFF-Converter',
-                'Implementation-Version': archiveVersion,
-                'Main-Class': mainClassName
+        attributes (
+            "Created-By": "Gradle ${gradle.gradleVersion}",
+            "Build-Jdk": "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+            "Built-By": System.properties['user.name'],
+            "Built-On": new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+            "Implementation-Build": "git rev-parse --verify HEAD".execute().getText().trim(),
+            "Implementation-Title": 'NGFF-Converter',
+            "Implementation-Version": archiveVersion,
+            "Implementation-Vendor": "Glencoe Software Inc.",
+            "Main-Class": mainClassName
+        )
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
