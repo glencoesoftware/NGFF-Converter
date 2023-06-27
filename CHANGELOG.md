@@ -1,3 +1,12 @@
+# v1.1.5 (2023-06-26)
+
+## Bugfixes/Maintenance:
+* Update component package versions (#41)
+  * bioformats 6.13.0
+  * bioformats2raw 0.7.0
+  * raw2ometiff 0.5.0
+* Expand documentation (#48)
+
 # v1.1.4 (2023-01-10)
 
 ## Bugfixes/Maintenance:
