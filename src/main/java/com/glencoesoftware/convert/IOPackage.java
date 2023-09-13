@@ -7,6 +7,12 @@
  */
 package com.glencoesoftware.convert;
 
+import com.glencoesoftware.convert.tasks.CreateNGFF;
+import com.glencoesoftware.convert.tasks.CreateTiff;
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import com.glencoesoftware.convert.workflows.ConvertToNGFF;
+import com.glencoesoftware.convert.workflows.ConvertToTiff;
+
 import java.io.File;
 
 public class IOPackage {
@@ -14,6 +20,7 @@ public class IOPackage {
     public File fileOut;
     public PrimaryController.jobStatus status;
     public PrimaryController.OutputMode outputMode;
+    public BaseWorkflow workflow;
 
     public IOPackage(File in, File out, boolean overwrite, PrimaryController.OutputMode mode) {
         outputMode = mode;
@@ -23,6 +30,11 @@ public class IOPackage {
             status = PrimaryController.jobStatus.ERROR;
         } else {
             status = PrimaryController.jobStatus.READY;
+        }
+        if (mode == PrimaryController.OutputMode.TIFF) {
+            this.workflow = new ConvertToTiff();
+        } else {
+            this.workflow = new ConvertToNGFF();
         }
     }
 }

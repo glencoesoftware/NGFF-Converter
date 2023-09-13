@@ -182,13 +182,15 @@
             </ChoiceBox>
          </GridPane>
    
-                  <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
+                  <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS" fx:id="widgetBar">
             <Label text="Extra Arguments" VBox.vgrow="NEVER" />
             <TextArea fx:id="extraParams" VBox.vgrow="ALWAYS">
                <VBox.margin>
                   <Insets left="5.0" right="5.0" />
                </VBox.margin>
             </TextArea>
+            <Label text="More widgets" VBox.vgrow="NEVER" />
+
             <VBox.margin>
                <Insets />
             </VBox.margin>

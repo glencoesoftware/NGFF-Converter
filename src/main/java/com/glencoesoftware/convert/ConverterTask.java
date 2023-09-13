@@ -44,11 +44,20 @@ class ConverterTask extends Task<Integer> {
     }
 
     @Override
-    protected Integer call() throws IOException {
+    protected Integer call() throws Exception {
         RunnerParameterExceptionHandler paramHandler = new RunnerParameterExceptionHandler();
         RunnerExecutionExceptionHandler runHandler = new RunnerExecutionExceptionHandler();
         int count = 0;
         for (IOPackage job : inputFileList.getItems()) {
+            String temporaryStorage;
+            if (parent.tempDirectory != null) {
+                temporaryStorage = parent.tempDirectory.getAbsolutePath();
+            } else {
+                temporaryStorage = job.fileOut.getParent();
+            }
+            job.workflow.calculateIO(job.fileIn.getAbsolutePath(), job.fileOut.getParent(), temporaryStorage);
+            LOGGER.info("Setup job with new config");
+
             CommandLine runner = new CommandLine(new Converter());
             runner.setParameterExceptionHandler(paramHandler);
             runner.setExecutionExceptionHandler(runHandler);
@@ -68,7 +77,6 @@ class ConverterTask extends Task<Integer> {
             ArrayList<String> params;
             if (job.outputMode == PrimaryController.OutputMode.TIFF) {
                 LOGGER.info("Will convert to NGFF first");
-                String temporaryStorage;
                 if (parent.tempDirectory != null) {
                     temporaryStorage = parent.tempDirectory.getAbsolutePath();
                 } else {
@@ -88,6 +96,11 @@ class ConverterTask extends Task<Integer> {
             params.add(0, out.getAbsolutePath());
             params.add(0, in.getAbsolutePath());
             String[] fullParams = params.toArray(new String[args.size()]);
+
+
+            LOGGER.info("Running new model pipeline");
+            job.workflow.execute();
+            LOGGER.info("Completed");
 
 
             int result;

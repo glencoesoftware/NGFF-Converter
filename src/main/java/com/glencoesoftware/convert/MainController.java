@@ -13,12 +13,14 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.bioformats2raw.Converter;
+import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.CreateNGFF;
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import com.glencoesoftware.convert.workflows.ConvertToNGFF;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventTarget;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -46,7 +48,6 @@ import picocli.CommandLine;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -60,30 +61,26 @@ import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 
-public class PrimaryController {
+public class MainController {
 
     private static final ch.qos.logback.classic.Logger LOGGER =
             (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(App.class);
 
     @FXML
-    public Label statusBox;
-    public TextArea extraParams;
+    public Label jobsText;
+    public Label tasksText;
     public TextField outputDirectory;
-    public CheckBox wantOverwrite;
-    public ListView<IOPackage> inputFileList;
+    public ListView<BaseWorkflow> jobList;
+    public ListView<BaseTask> taskList;
     public Label fileListHelpText;
-    public Button addFileButton;
-    public Button removeFileButton;
-    public Button clearFileButton;
-    public Button clearFinishedButton;
+    public SplitPane jobsPane;
+    public Button addJobButton;
+    public Button clearButton;
     public Button chooseDirButton;
     public Button clearDirButton;
-    public Button showLogButton;
-    public Label versionDisplay;
-    public Button runButton;
-    public ChoiceBox<String> outputFormat;
-    public ChoiceBox<String> logLevel;
-    public Separator listSeparator;
+    public Button runJobsButton;
+    public VBox jobsBox;
+    public VBox tasksBox;
     public Menu menuLogLevel;
     public Menu menuOutputFormat;
     public CheckMenuItem menuOverwrite;
@@ -103,11 +100,9 @@ public class PrimaryController {
     private Stage consoleWindow;
     private Stage b2rHelpWindow;
     private Stage r2oHelpWindow;
-    public TextArea logBox;
-    public Button logFileButton;
     public boolean isRunning = false;
     private Thread runnerThread;
-    private ConverterTask currentJob;
+    private WorkflowRunner worker;
     private ArrayList<Control> fileControlButtons;
     private ArrayList<MenuItem> menuControlButtons;
     public ConsoleStream consoleStream;
@@ -133,8 +128,6 @@ public class PrimaryController {
 
     public HashMap<TextField, Method> setters = new HashMap<>();
 
-    @FXML private VBox widgetBar;
-
     public enum OutputMode {
         TIFF("OME-TIFF", ".ome.tiff"),
         NGFF("OME-NGFF", ".zarr");
@@ -155,7 +148,8 @@ public class PrimaryController {
         supportedExtensions.add("zarr");
         supportedExtensions.add("mrxs");
         menuBar.setUseSystemMenuBar(true);
-        inputFileList.setCellFactory(list -> new FileCell());
+        jobList.setCellFactory(list -> new JobCell());
+//        taskList.setCellFactory(list -> new TaskCell());
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
         FontIcon clearIcon = new FontIcon("bi-x");
@@ -166,97 +160,32 @@ public class PrimaryController {
         clearIcon.setIconSize(20);
         finishedIcon.setIconSize(20);
         logIcon.setIconSize(20);
-        addFileButton.setGraphic(addIcon);
-        removeFileButton.setGraphic(removeIcon);
-        clearFileButton.setGraphic(clearIcon);
-        clearFinishedButton.setGraphic(finishedIcon);
-        showLogButton.setGraphic(logIcon);
-        extraParams.setText(userPreferences.get(prefName.ARGS.name(), ""));
-        extraParams.setTooltip(new Tooltip("Extra arguments (one per line)"));
-        addFileButton.setTooltip(new Tooltip("Add files"));
-        removeFileButton.setTooltip(new Tooltip("Remove selected file"));
-        clearFileButton.setTooltip(new Tooltip("Remove all files"));
-        clearFinishedButton.setTooltip(new Tooltip("Clear finished"));
-        ObservableList<String> outputModes = FXCollections.observableArrayList(
-                OutputMode.NGFF.getDisplayName(),
-                OutputMode.TIFF.getDisplayName());
-        outputFormat.getItems().setAll(outputModes);
-        outputFormat.setValue(userPreferences.get(prefName.FORMAT.name(), OutputMode.NGFF.getDisplayName()));
-        outputFormatGroup = new ToggleGroup();
-        outputModes.forEach(mode -> {
-            RadioMenuItem item = new RadioMenuItem(mode);
-            item.setToggleGroup(outputFormatGroup);
-            item.setOnAction(event -> outputFormat.setValue(mode));
-            if (Objects.equals(mode, OutputMode.NGFF.getDisplayName())) {
-                item.setSelected(true);
-            }
-            menuOutputFormat.getItems().add(item);
-        });
+        addJobButton.setGraphic(addIcon);
+//        clearButton.setGraphic(removeIcon);
+//        clearDirButton.setGraphic(clearIcon);
         ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
                 "Trace", "All", "Off");
-        logLevel.setItems(logModes);
-        logLevel.setValue(userPreferences.get(prefName.LOG_LEVEL.name(), "Warn"));
         logLevelGroup = new ToggleGroup();
         logModes.forEach(mode -> {
             RadioMenuItem item = new RadioMenuItem(mode);
             item.setToggleGroup(logLevelGroup);
-            item.setOnAction(event -> logLevel.setValue(mode));
             if (Objects.equals(mode, "Warn")) {
                 item.setSelected(true);
             }
             menuLogLevel.getItems().add(item);
         });
-        outputFormat.setTooltip(new Tooltip("File format to convert to"));
-        logLevel.setTooltip(new Tooltip("Level of detail to show in the logs"));
-        wantOverwrite.setSelected(userPreferences.getBoolean(prefName.OVERWRITE.name(), false));
-        wantOverwrite.setTooltip(new Tooltip("Overwrite existing output files"));
         outputDirectory.setText(userPreferences.get(prefName.OUTPUT_FOLDER.name(), defaultOutputText));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
                 "Applies to new files added to the list."));
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
-        versionDisplay.setText(versionDisplay.getText() + version);
-        createLogControl();
 
         // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
-        fileControlButtons = new ArrayList<>(Arrays.asList(addFileButton, removeFileButton, clearFileButton,
-                clearFinishedButton, outputDirectory, chooseDirButton, clearDirButton, wantOverwrite, logLevel,
-                outputFormat));
+        fileControlButtons = new ArrayList<>(Arrays.asList(outputDirectory, chooseDirButton, clearDirButton));
         menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuOutputFormat, menuAddFiles, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuSavePrefs, menuResetPrefs, menuOverwrite, menuChooseDirectory,
                 menuResetDirectory, menuTempDirectory));
-
-        CreateNGFF test = new CreateNGFF();
-        System.out.println("Adding NGFF config options");
-        ArrayList<Method> controls = test.getConfigurableMethods();
-        ObservableList<Node> widgets = widgetBar.getChildren();
-        WidgetFactory wf = new WidgetFactory();
-        wf.generateWidgets(controls);
-        for (Method m : controls) {
-            wf.getWidget(m);
-            CommandLine.Option cliOption = m.getAnnotation(CommandLine.Option.class);
-            String name = m.getName().substring(3);
-            name = name.replaceAll("\\d+", "").replaceAll("(.)([A-Z])", "$1 $2");
-            widgets.add(new Label(name));
-            String defaultValue = cliOption.defaultValue();
-            if (defaultValue.equals("__no_default_value__")) {
-                defaultValue = cliOption.fallbackValue();
-            }
-            TextField tf = new TextField(defaultValue);
-            tf.setTooltip(new Tooltip(Arrays.toString(cliOption.description())));
-            this.setters.put(tf, m);
-            widgets.add(tf);
-        }
-        this.setters.forEach((key, value) -> {
-            System.out.println(key + " = " + value);
-            try {
-                value.invoke(test.converter, key.getText());
-                System.out.println("Success");
-            } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
-                System.out.println("Error");
-                System.out.println(e);
-            }
-        });
+        createLogControl();
         System.out.println("Complete");
 
     }
@@ -268,10 +197,8 @@ public class PrimaryController {
         LogController logControl = logLoader.getController();
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
-        logBox = logControl.logBox;
-        logFileButton = logControl.logFileButton;
         consoleStream = logControl.stream;
-//        logControl.setParent(this);
+        logControl.setParent(this);
     }
 
     @FXML
@@ -315,32 +242,32 @@ public class PrimaryController {
 
     @FXML
     private void addFiles() {
-        Stage stage = (Stage) addFileButton.getScene().getWindow();
+        Stage stage = (Stage) addJobButton.getScene().getWindow();
         FileChooser addFileChooser = new FileChooser();
         addFileChooser.setTitle("Select files to load...");
         List<File> newFiles = addFileChooser.showOpenMultipleDialog(stage);
-        if (newFiles != null && newFiles.size() > 0) {
+        if (newFiles != null && !newFiles.isEmpty()) {
             addFilesToList(newFiles);
         }
     }
 
     @FXML
     private void removeFile() {
-        final int selectedIdx = inputFileList.getSelectionModel().getSelectedIndex();
+        final int selectedIdx = taskList.getSelectionModel().getSelectedIndex();
         if (selectedIdx != -1) {
-            inputFileList.getItems().remove(selectedIdx);
+            taskList.getItems().remove(selectedIdx);
         }
-        if (inputFileList.getItems().size() == 0) {
+        if (taskList.getItems().isEmpty()) {
             fileListHelpText.setVisible(true);
-            listSeparator.setVisible(false);
+            jobsPane.setVisible(false);
         }
     }
 
     @FXML
     private void clearFiles() {
-        inputFileList.getItems().clear();
+        taskList.getItems().clear();
         fileListHelpText.setVisible(true);
-        listSeparator.setVisible(false);
+        jobsPane.setVisible(false);
     }
 
     @FXML
@@ -359,7 +286,6 @@ public class PrimaryController {
         if (tempDirectory != null) {
             tempDirectory = null;
             menuTempDirectory.setText("Choose Temporary Directory");
-            statusBox.setText("Will use output folder as temporary directory for intermediates.");
             LOGGER.info("Temporary intermediate files will be stored in the same folder as the final output.");
             return;
         }
@@ -370,7 +296,6 @@ public class PrimaryController {
         if (tempDir != null) {
             tempDirectory = tempDir;
             menuTempDirectory.setText("Reset Temporary Directory");
-            statusBox.setText("User specified a temporary directory for intermediates.");
             LOGGER.info("Zarr intermediates will be temporarily written to " + tempDir);
         }
     }
@@ -407,7 +332,7 @@ public class PrimaryController {
     private void addFilesToList(List<File> files) {
         int count = 0;
         Queue<File> fileQueue = new LinkedList<>(files);
-        List<IOPackage> fileList = inputFileList.getItems();
+        List<BaseWorkflow> jobs = jobList.getItems();
         while (!fileQueue.isEmpty()) {
             File file = fileQueue.remove();
             String extension = FilenameUtils.getExtension(file.getName());
@@ -428,72 +353,74 @@ public class PrimaryController {
             } else {
                 outBase = outputDirectory.getText();
             }
-            OutputMode outputMode;
-            if (outputFormat.getValue().equals(OutputMode.NGFF.getDisplayName()) && !extension.equals("zarr")) {
-                outputMode = OutputMode.NGFF;
+            String temporaryStorage;
+            if (tempDirectory != null) {
+                temporaryStorage = tempDirectory.getAbsolutePath();
             } else {
-                outputMode = OutputMode.TIFF;
+                temporaryStorage = outBase;
             }
-            File outFile = new File(outBase, outPath + outputMode.getExtension());
-            fileList.add(new IOPackage(file, outFile, wantOverwrite.isSelected(), outputMode));
+            BaseWorkflow job = new ConvertToNGFF();
+            job.calculateIO(filePath, outBase, temporaryStorage);
+            jobs.add(job);
             count++;
         }
-        statusBox.setText("Found and added " + count + " supported file(s)");
-        if (fileList.size() > 0) {
+        if (!jobs.isEmpty()) {
             fileListHelpText.setVisible(false);
-            listSeparator.setVisible(true);
+            jobsPane.setVisible(true);
         }
     }
 
     @FXML
     private void listClickHandler(MouseEvent event) throws IOException {
-        if (event.getButton().equals(MouseButton.PRIMARY)) {
-            if (event.getClickCount() == 2) {
-                if (isRunning) { return; }
-                final IOPackage target = inputFileList.getSelectionModel().getSelectedItem();
-                if (target != null) {
-                    if (target.status == jobStatus.COMPLETED) {
-                        Desktop.getDesktop().open(target.fileOut.getParentFile());
-                        return;
-                    }
-                    // Todo: Full UI for editing file path
-                    Stage stage = (Stage) inputFileList.getScene().getWindow();
-                    FileChooser outputFileChooser = new FileChooser();
-                    outputFileChooser.setInitialDirectory(target.fileOut.getParentFile());
-                    outputFileChooser.setInitialFileName(target.fileOut.getName());
-                    FileChooser.ExtensionFilter zarrFilter = new FileChooser.ExtensionFilter(
-                            "Zarr file",OutputMode.NGFF.getExtension());
-                    FileChooser.ExtensionFilter tiffFilter = new FileChooser.ExtensionFilter(
-                            "OME TIFF file",OutputMode.TIFF.getExtension());
-                    outputFileChooser.getExtensionFilters().add(zarrFilter);
-                    outputFileChooser.getExtensionFilters().add(tiffFilter);
-                    if (target.outputMode == OutputMode.NGFF) {
-                        outputFileChooser.setSelectedExtensionFilter(zarrFilter);
-                    } else {
-                        outputFileChooser.setSelectedExtensionFilter(tiffFilter);
-                    }
-                    outputFileChooser.setTitle("Choose output file for " + target.fileIn.getName());
-                    File newOutput = outputFileChooser.showSaveDialog(stage);
-                    if (newOutput != null) {
-                        String desiredExtension = outputFileChooser.getSelectedExtensionFilter().getExtensions().get(0);
-                        if (!newOutput.getName().toLowerCase().endsWith(desiredExtension)) {
-                            newOutput = new File(newOutput.getAbsolutePath() + desiredExtension);
-                        }
-                        if (desiredExtension.equals(OutputMode.NGFF.getExtension())){
-                            target.outputMode = OutputMode.NGFF;
-                        } else {
-                            target.outputMode = OutputMode.TIFF;
-                        }
-                        target.fileOut = newOutput;
-                        // Reset status
-                        target.status = jobStatus.READY;
-                        inputFileList.refresh();
-                    }
-                    }
-
-                }
-            }
-        }
+        return;
+    }
+//        if (event.getButton().equals(MouseButton.PRIMARY)) {
+//            if (event.getClickCount() == 2) {
+//                if (isRunning) { return; }
+//                final BaseWorkflow target = jobList.getSelectionModel().getSelectedItem();
+//                if (target != null) {
+//                    if (target.status == jobStatus.COMPLETED) {
+//                        Desktop.getDesktop().open(target.finalOutput.getParentFile());
+//                        return;
+//                    }
+//                    // Todo: Full UI for editing file path
+//                    Stage stage = (Stage) jobList.getScene().getWindow();
+//                    FileChooser outputFileChooser = new FileChooser();
+//                    outputFileChooser.setInitialDirectory(target.finalOutput.getParentFile());
+//                    outputFileChooser.setInitialFileName(target.finalOutput.getName());
+//                    FileChooser.ExtensionFilter zarrFilter = new FileChooser.ExtensionFilter(
+//                            "Zarr file", OutputMode.NGFF.getExtension());
+//                    FileChooser.ExtensionFilter tiffFilter = new FileChooser.ExtensionFilter(
+//                            "OME TIFF file", OutputMode.TIFF.getExtension());
+//                    outputFileChooser.getExtensionFilters().add(zarrFilter);
+//                    outputFileChooser.getExtensionFilters().add(tiffFilter);
+//                    if (target.outputMode == OutputMode.NGFF) {
+//                        outputFileChooser.setSelectedExtensionFilter(zarrFilter);
+//                    } else {
+//                        outputFileChooser.setSelectedExtensionFilter(tiffFilter);
+//                    }
+//                    outputFileChooser.setTitle("Choose output file for " + target.fileIn.getName());
+//                    File newOutput = outputFileChooser.showSaveDialog(stage);
+//                    if (newOutput != null) {
+//                        String desiredExtension = outputFileChooser.getSelectedExtensionFilter().getExtensions().get(0);
+//                        if (!newOutput.getName().toLowerCase().endsWith(desiredExtension)) {
+//                            newOutput = new File(newOutput.getAbsolutePath() + desiredExtension);
+//                        }
+//                        if (desiredExtension.equals(OutputMode.NGFF.getExtension())){
+//                            target.outputMode = OutputMode.NGFF;
+//                        } else {
+//                            target.outputMode = OutputMode.TIFF;
+//                        }
+//                        target.fileOut = newOutput;
+//                        // Reset status
+//                        target.status = jobStatus.READY;
+//                        jobList.refresh();
+//                    }
+//                    }
+//
+//                }
+//            }
+//        }
 
     @FXML
     private void listKeyHandler(KeyEvent event) {
@@ -504,16 +431,16 @@ public class PrimaryController {
 
     @FXML
     private void clearFinished() {
-        inputFileList.setItems(inputFileList.getItems()
+        jobList.setItems(jobList.getItems()
                 .stream()
-                .filter((item) -> (item.status != jobStatus.COMPLETED))
+                .filter((item) -> (item.status != BaseWorkflow.workflowStatus.COMPLETED))
                 .collect(Collectors.toCollection(FXCollections::observableArrayList)));
     }
 
     @FXML
     public void toggleFileLogging() {
         if (fileAppender == null) {
-            Stage stage = (Stage) inputFileList.getScene().getWindow();
+            Stage stage = (Stage) jobList.getScene().getWindow();
             FileChooser outputFileChooser = new FileChooser();
             outputFileChooser.setInitialFileName("ngff-converter.log");
             outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
@@ -535,75 +462,64 @@ public class PrimaryController {
                 ch.qos.logback.classic.Logger rootLogger =
                         (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
                 rootLogger.addAppender(fileAppender);
-                logFileButton.setText("Stop logging to file");
+//                logFileButton.setText("Stop logging to file");
                 wantLogToFile.setSelected(true);
             } else {
                 wantLogToFile.setSelected(false);
             }
         } else if (wantLogToFile.isSelected()) {
             fileAppender.start();
-            logFileButton.setText("Stop logging to file");
+//            logFileButton.setText("Stop logging to file");
         } else {
             fileAppender.stop();
-            logFileButton.setText("Resume logging to file");
+//            logFileButton.setText("Resume logging to file");
         }
     }
 
     @FXML
     private void toggleOverwrite() {
-        boolean overwrite = wantOverwrite.isSelected();
-        menuOverwrite.setSelected(overwrite);
-        List<jobStatus> doNotChange = Arrays.asList(jobStatus.COMPLETED, jobStatus.FAILED, jobStatus.RUNNING);
-        inputFileList.getItems().forEach((item) -> {
+        boolean overwrite = menuOverwrite.isSelected();
+        List<BaseWorkflow.workflowStatus> doNotChange = Arrays.asList(BaseWorkflow.workflowStatus.COMPLETED,
+                BaseWorkflow.workflowStatus.FAILED, BaseWorkflow.workflowStatus.RUNNING);
+        jobList.getItems().forEach((item) -> {
             if (doNotChange.contains(item.status)) { return; }
-            if ((!overwrite) && item.fileOut.exists()) {
-                item.status = jobStatus.ERROR;
+            if ((!overwrite) && item.finalOutput.exists()) {
+                item.status = BaseWorkflow.workflowStatus.WARNING;
             } else {
-                item.status = jobStatus.READY;
+                item.status = BaseWorkflow.workflowStatus.PENDING;
             }
         });
-        inputFileList.refresh();
+        jobList.refresh();
     }
 
     @FXML
     private void overwriteMenu() {
-        wantOverwrite.setSelected(!wantOverwrite.isSelected());
         toggleOverwrite();
     }
 
-    @FXML
-    private void updateFormat() {
-        if (outputFormatGroup == null) return;
-        String val = outputFormat.getValue();
-        int idx = outputFormat.getItems().indexOf(val);
-        outputFormatGroup.selectToggle(outputFormatGroup.getToggles().get(idx));
-    }
-
-    @FXML
-    private void updateLogLevel() {
-        if (logLevelGroup == null) return;
-        String val = logLevel.getValue();
-        int idx = logLevel.getItems().indexOf(val);
-        logLevelGroup.selectToggle(logLevelGroup.getToggles().get(idx));
-    }
+//    @FXML
+//    private void updateLogLevel() {
+//        if (logLevelGroup == null) return;
+//        String val = logLevel.getValue();
+//        int idx = logLevel.getItems().indexOf(val);
+//        logLevelGroup.selectToggle(logLevelGroup.getToggles().get(idx));
+//    }
 
 
     @FXML
     private void resetPrefs() throws BackingStoreException {
         userPreferences.clear();
         userPreferences.flush();
-        statusBox.setText("Cleared saved default settings.");
     }
 
     @FXML
     private void savePrefs() throws BackingStoreException {
-        userPreferences.put(prefName.FORMAT.name(), outputFormat.getValue());
-        userPreferences.put(prefName.LOG_LEVEL.name(), logLevel.getValue());
-        userPreferences.putBoolean(prefName.OVERWRITE.name(), wantOverwrite.isSelected());
+//        userPreferences.put(prefName.FORMAT.name(), outputFormat.getValue());
+//        userPreferences.put(prefName.LOG_LEVEL.name(), logLevel.getValue());
+//        userPreferences.putBoolean(prefName.OVERWRITE.name(), wantOverwrite.isSelected());
         userPreferences.put(prefName.OUTPUT_FOLDER.name(), outputDirectory.getText());
-        userPreferences.put(prefName.ARGS.name(), extraParams.getText());
+//        userPreferences.put(prefName.ARGS.name(), extraParams.getText());
         userPreferences.flush();
-        statusBox.setText("Saved current settings as defaults.");
     };
 
     @FXML
@@ -630,13 +546,13 @@ public class PrimaryController {
         stage.setScene(scene);
         stage.setAlwaysOnTop(true);
         stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(inputFileList.getScene().getWindow());
+        stage.initOwner(jobList.getScene().getWindow());
         stage.setResizable(false);
         stage.show();
     }
 
     public void runCompleted() {
-        runButton.setText("Run Conversions");
+        runJobsButton.setText("Run Conversions");
         menuRun.setText("Run Conversions");
         isRunning = false;
         fileControlButtons.forEach((control -> control.setDisable(false)));
@@ -651,14 +567,14 @@ public class PrimaryController {
     }
 
     public void runCancel() throws InterruptedException {
-        currentJob.interrupted = true;
+        worker.interrupted = true;
         runnerThread.interrupt();
         runnerThread.join();
-        inputFileList.getItems().forEach((job) -> {
-            if (job.status == jobStatus.RUNNING) {
-                job.status = jobStatus.FAILED;
-            }});
-        inputFileList.refresh();
+//        jobList.getItems().forEach((job) -> {
+//            if (job.status == workflowStatus.RUNNING) {
+//                job.status = workflowStatus.FAILED;
+//            }});
+        jobList.refresh();
         runCompleted();
     }
 
@@ -672,9 +588,9 @@ public class PrimaryController {
 
         // Validate there is enough space to perform conversions.
         HashMap<Path, Double> spaceMap = new HashMap<>();
-        inputFileList.getItems().stream().filter(job -> job.status != jobStatus.COMPLETED).forEach(job -> {
-            double estimatedSize = job.fileIn.length() * 1.3;
-            Path targetDrive = Paths.get(job.fileOut.getAbsolutePath()).getRoot();
+        jobList.getItems().stream().filter(job -> job.status != BaseWorkflow.workflowStatus.COMPLETED).forEach(job -> {
+            double estimatedSize = job.firstInput.length() * 1.3;
+            Path targetDrive = Paths.get(job.finalOutput.getAbsolutePath()).getRoot();
             double neededSpace = spaceMap.getOrDefault(targetDrive, 0.0);
             spaceMap.put(targetDrive, neededSpace + estimatedSize);
         });
@@ -709,33 +625,33 @@ public class PrimaryController {
 
         fileControlButtons.forEach((control -> control.setDisable(true)));
         menuControlButtons.forEach((control -> control.setDisable(true)));
-        runButton.setText("Stop Conversions");
+        runJobsButton.setText("Stop Conversions");
         menuRun.setText("Stop Conversions");
         isRunning = true;
         LOGGER.info("Beginning file conversion...\n");
         List<String> extraArgs =  new ArrayList<>();
-        extraArgs.add("--log-level=" + logLevel.getValue().toUpperCase());
-        if (wantOverwrite.isSelected()) {
-            extraArgs.add("--overwrite");
-        }
-        String[] userArgs = extraParams.getText().split("\n");
+//        extraArgs.add("--log-level=" + logLevel.getValue().toUpperCase());
+//        if (menuOverwrite.isSelected()) {
+//            extraArgs.add("--overwrite");
+//        }
+//        String[] userArgs = extraParams.getText().split("\n");
+//
+//        Arrays.asList(userArgs).forEach((String userArg) -> {
+//            if (userArg.equals("")) return;
+//            // Fix missing '--'
+//            if (!userArg.startsWith("-")) {
+//                userArg = "--" + userArg;
+//            }
+//            // Fix common typo using space instead of equals
+//            if (!userArg.contains("=") && userArg.chars().filter(num -> num == ' ').count() == 1) {
+//                    userArg = userArg.replace(' ', '=');
+//            }
+//            extraArgs.add(userArg);
+//        });
 
-        Arrays.asList(userArgs).forEach((String userArg) -> {
-            if (userArg.equals("")) return;
-            // Fix missing '--'
-            if (!userArg.startsWith("-")) {
-                userArg = "--" + userArg;
-            }
-            // Fix common typo using space instead of equals
-            if (!userArg.contains("=") && userArg.chars().filter(num -> num == ' ').count() == 1) {
-                    userArg = userArg.replace(' ', '=');
-            }
-            extraArgs.add(userArg);
-        });
-
-        currentJob = new ConverterTask(extraArgs, this);
-        currentJob.interrupted = false;
-        runnerThread = new Thread(currentJob);
+        worker = new WorkflowRunner(this);
+        worker.interrupted = false;
+        runnerThread = new Thread(worker);
         runnerThread.setDaemon(true);
         runnerThread.start();
     }
