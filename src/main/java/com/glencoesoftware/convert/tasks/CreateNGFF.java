@@ -12,8 +12,13 @@ import java.util.Arrays;
 
 public class CreateNGFF extends BaseTask{
 
-    public final Converter converter = new Converter();
+    private String name = "Convert to NGFF";
 
+    public String getName() {
+        return this.name;
+    }
+
+    public final Converter converter = new Converter();
     private Method[] paramMethods = null;
 
     public Method[] getParamMethods() {

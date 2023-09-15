@@ -2,6 +2,7 @@ package com.glencoesoftware.convert.workflows;
 
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.tasks.BaseTask;
+import javafx.collections.ObservableList;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +32,9 @@ public abstract class BaseWorkflow {
 
     public boolean allowOverwrite = false;
 
-    private BaseTask[] tasks;
+    public ObservableList<BaseTask> tasks;
 
-    protected void setTasks(BaseTask[] tasks) {
+    protected void setTasks(ObservableList<BaseTask> tasks) {
         this.tasks = tasks;
     }
 
@@ -42,10 +43,10 @@ public abstract class BaseWorkflow {
             return null;
         }
         int nextIndex = this.currentStage + 1;
-        if (nextIndex >= this.tasks.length) {
+        if (nextIndex >= this.tasks.size()) {
             return null;
         }
-        return this.tasks[nextIndex];
+        return this.tasks.get(nextIndex);
     }
 
     public BaseTask getLastStage(){
@@ -55,14 +56,14 @@ public abstract class BaseWorkflow {
         if (this.currentStage == 0){
             return null;
         }
-        return this.tasks[this.currentStage - 1];
+        return this.tasks.get(this.currentStage - 1);
     }
 
     public BaseTask getCurrentStage(){
         if (this.status == workflowStatus.COMPLETED) {
             return null;
         }
-        return this.tasks[this.currentStage];
+        return this.tasks.get(this.currentStage);
     }
 
     public void calculateIO(String inputPath, String outputBasePath, String workingDir) {
@@ -70,12 +71,12 @@ public abstract class BaseWorkflow {
         String targetDir = workingDir;
         this.firstInput = new File(inputPath);
         File workingInput = this.firstInput;
-        for (int i = 0; i < this.tasks.length; i++) {
-            if (i == this.tasks.length - 1) {
+        for (int i = 0; i < this.tasks.size(); i++) {
+            if (i == this.tasks.size() - 1) {
                 // This is the last task, use the final output destination rather than the temp dir
                 targetDir = outputBasePath;
             }
-            BaseTask task = this.tasks[i];
+            BaseTask task = this.tasks.get(i);
             task.setInput(workingInput);
             task.setOutput(targetDir);
             workingInput = task.getOutput();
@@ -107,8 +108,8 @@ public abstract class BaseWorkflow {
             }
         }
         // Cleanup intermediates
-        for (int i = 0; i < this.tasks.length - 1; ++i) {
-            BaseTask task = this.tasks[i];
+        for (int i = 0; i < this.tasks.size() - 1; ++i) {
+            BaseTask task = this.tasks.get(i);
             File output = task.getOutput();
             if (!Objects.equals(output, this.finalOutput)) {
                 if (!output.exists()){

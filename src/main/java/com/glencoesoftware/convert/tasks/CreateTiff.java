@@ -15,6 +15,13 @@ public class CreateTiff extends BaseTask {
 
     private final PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
 
+    private String name = "Convert to TIFF";
+
+    public String getName() {
+        return this.name;
+    }
+
+
     public void setOutput(String basePath) {
         this.output = Paths.get(basePath, this.outputName + ".ome.tiff").toFile();
     }

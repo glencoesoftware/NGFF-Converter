@@ -30,6 +30,12 @@ public abstract class BaseTask {
         this.outputName = FilenameUtils.getBaseName(input.getAbsolutePath());
     };
 
+    public String getStatus() {
+        return this.status.toString();
+    };
+
+    abstract public String getName();
+
     public File getOutput(){
         return this.output;
     };

@@ -13,14 +13,18 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.bioformats2raw.Converter;
+import com.glencoesoftware.convert.tables.ButtonTableCell;
+import com.glencoesoftware.convert.tables.StatusTableCell;
 import com.glencoesoftware.convert.tasks.BaseTask;
-import com.glencoesoftware.convert.tasks.CreateNGFF;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.convert.workflows.ConvertToNGFF;
+import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.application.Platform;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -33,12 +37,17 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.paint.Paint;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -71,7 +80,10 @@ public class MainController {
     public Label tasksText;
     public TextField outputDirectory;
     public ListView<BaseWorkflow> jobList;
-    public ListView<BaseTask> taskList;
+    public TableView<BaseTask> taskList;
+    public TableColumn<BaseTask, String> taskNameColumn;
+    public TableColumn<BaseTask, Void> taskStatusColumn;
+    public TableColumn<BaseTask, Void> taskActionColumn;
     public Label fileListHelpText;
     public SplitPane jobsPane;
     public Button addJobButton;
@@ -149,20 +161,25 @@ public class MainController {
         supportedExtensions.add("mrxs");
         menuBar.setUseSystemMenuBar(true);
         jobList.setCellFactory(list -> new JobCell());
-//        taskList.setCellFactory(list -> new TaskCell());
+        taskNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        taskNameColumn.setCellValueFactory(new PropertyValueFactory<BaseTask,String>("name"));
+
+        taskActionColumn.setCellFactory(col -> new ButtonTableCell());
+
+
+        taskStatusColumn.setCellFactory(col -> new StatusTableCell());
+
+
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
         FontIcon clearIcon = new FontIcon("bi-x");
         FontIcon finishedIcon = new FontIcon("bi-check");
-        FontIcon logIcon = new FontIcon("bi-text-left");
+
         addIcon.setIconSize(20);
         removeIcon.setIconSize(20);
         clearIcon.setIconSize(20);
         finishedIcon.setIconSize(20);
-        logIcon.setIconSize(20);
         addJobButton.setGraphic(addIcon);
-//        clearButton.setGraphic(removeIcon);
-//        clearDirButton.setGraphic(clearIcon);
         ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
                 "Trace", "All", "Off");
         logLevelGroup = new ToggleGroup();
@@ -371,56 +388,12 @@ public class MainController {
     }
 
     @FXML
-    private void listClickHandler(MouseEvent event) throws IOException {
-        return;
-    }
-//        if (event.getButton().equals(MouseButton.PRIMARY)) {
-//            if (event.getClickCount() == 2) {
-//                if (isRunning) { return; }
-//                final BaseWorkflow target = jobList.getSelectionModel().getSelectedItem();
-//                if (target != null) {
-//                    if (target.status == jobStatus.COMPLETED) {
-//                        Desktop.getDesktop().open(target.finalOutput.getParentFile());
-//                        return;
-//                    }
-//                    // Todo: Full UI for editing file path
-//                    Stage stage = (Stage) jobList.getScene().getWindow();
-//                    FileChooser outputFileChooser = new FileChooser();
-//                    outputFileChooser.setInitialDirectory(target.finalOutput.getParentFile());
-//                    outputFileChooser.setInitialFileName(target.finalOutput.getName());
-//                    FileChooser.ExtensionFilter zarrFilter = new FileChooser.ExtensionFilter(
-//                            "Zarr file", OutputMode.NGFF.getExtension());
-//                    FileChooser.ExtensionFilter tiffFilter = new FileChooser.ExtensionFilter(
-//                            "OME TIFF file", OutputMode.TIFF.getExtension());
-//                    outputFileChooser.getExtensionFilters().add(zarrFilter);
-//                    outputFileChooser.getExtensionFilters().add(tiffFilter);
-//                    if (target.outputMode == OutputMode.NGFF) {
-//                        outputFileChooser.setSelectedExtensionFilter(zarrFilter);
-//                    } else {
-//                        outputFileChooser.setSelectedExtensionFilter(tiffFilter);
-//                    }
-//                    outputFileChooser.setTitle("Choose output file for " + target.fileIn.getName());
-//                    File newOutput = outputFileChooser.showSaveDialog(stage);
-//                    if (newOutput != null) {
-//                        String desiredExtension = outputFileChooser.getSelectedExtensionFilter().getExtensions().get(0);
-//                        if (!newOutput.getName().toLowerCase().endsWith(desiredExtension)) {
-//                            newOutput = new File(newOutput.getAbsolutePath() + desiredExtension);
-//                        }
-//                        if (desiredExtension.equals(OutputMode.NGFF.getExtension())){
-//                            target.outputMode = OutputMode.NGFF;
-//                        } else {
-//                            target.outputMode = OutputMode.TIFF;
-//                        }
-//                        target.fileOut = newOutput;
-//                        // Reset status
-//                        target.status = jobStatus.READY;
-//                        jobList.refresh();
-//                    }
-//                    }
-//
-//                }
-//            }
-//        }
+    private void listClickHandler(MouseEvent event) {
+        BaseWorkflow target = jobList.getSelectionModel().getSelectedItem();
+        if (target != null) {
+            taskList.setItems(target.tasks);
+        }
+     }
 
     @FXML
     private void listKeyHandler(KeyEvent event) {

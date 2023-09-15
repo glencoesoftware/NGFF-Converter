@@ -4,22 +4,32 @@ import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import picocli.CommandLine;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
+
+import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 
 public class Output extends BaseTask {
     // Virtual task to enable display of global config and cleanup of intermediates
     private boolean overwrite = false;
 
+    public String getName() {
+        return "Output";
+    }
+
     public void setOverwrite(boolean overwrite) {
         this.overwrite = overwrite;
     }
 
-    public boolean getOverwrite(){
+    public boolean getOverwrite() {
         return this.overwrite;
     }
 
@@ -28,7 +38,7 @@ public class Output extends BaseTask {
     }
 
     private void setupIO() {
-        return;
+        this.output = this.input;
     }
 
     public void run() {
@@ -36,15 +46,19 @@ public class Output extends BaseTask {
         setupIO();
         this.status = taskStatus.RUNNING;
         try {
+            if (!Objects.equals(this.input.getAbsolutePath(), this.output.getAbsolutePath())) {
+                Files.copy(this.input.toPath(), this.output.toPath(), ATOMIC_MOVE);
+            }
             this.status = taskStatus.COMPLETED;
-        } catch (Exception e) {
+        } catch (IOException e) {
             this.status = taskStatus.FAILED;
-            System.out.println("Failed");
+            System.out.println("Failed to copy");
+            System.out.println(e);
+        }
+        }
+
+        @Override
+        public ArrayList<Method> getConfigurableMethods () {
+            return null;
         }
     }
-
-    @Override
-    public ArrayList<Method> getConfigurableMethods() {
-        return null;
-    }
-}
