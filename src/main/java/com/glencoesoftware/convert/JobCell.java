@@ -7,6 +7,7 @@
  */
 package com.glencoesoftware.convert;
 
+import com.glencoesoftware.convert.tasks.CreateNGFF;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.convert.workflows.ConvertToNGFF;
 import com.glencoesoftware.convert.workflows.ConvertToTiff;
@@ -63,7 +64,7 @@ public class JobCell extends ListCell<BaseWorkflow> {
         Tooltip.install(nameIn, fullPath);
 
         formatChoice = new ChoiceBox<>();
-        formatChoice.getItems().addAll(ConvertToTiff.getDisplayName(), ConvertToNGFF.getDisplayName());
+//        formatChoice.getItems().addAll(ConvertToTiff.getDisplayName(), ConvertToNGFF.getDisplayName());
 
 
         ok = new FontIcon("bi-play-circle");
@@ -113,7 +114,7 @@ public class JobCell extends ListCell<BaseWorkflow> {
             nameIn.setText(fileIn.getName());
             fullPath.setText(fileIn.getAbsolutePath());
             actionButtons.getChildren().clear();
-            switch (job.status) {
+            switch (job.status.get()) {
                 case PENDING -> {
                     monitor.setGraphic(ok);
                     monitor.setTooltip(new Tooltip("Ready to run"));

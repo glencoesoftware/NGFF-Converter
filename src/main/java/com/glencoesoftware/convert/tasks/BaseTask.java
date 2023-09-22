@@ -1,5 +1,7 @@
 package com.glencoesoftware.convert.tasks;
 
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import javafx.beans.property.SimpleObjectProperty;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -8,7 +10,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public abstract class BaseTask {
-    public static enum taskStatus {PENDING, RUNNING, COMPLETED, FAILED}
+
+    public BaseWorkflow parent;
+    public static enum taskStatus {PENDING, RUNNING, COMPLETED, FAILED, ERROR}
 
     public taskStatus status = taskStatus.PENDING;
 
@@ -17,13 +21,17 @@ public abstract class BaseTask {
 
     public String outputName = "";
 
-    public String outputExtension = "";
+    public String warningMessage = "";
 
     public ArrayList<String> parameters = new ArrayList<>();
 
     public File getInput(){
         return this.input;
     };
+
+    public BaseTask(BaseWorkflow parent) {
+        this.parent = parent;
+    }
 
     public void setInput(File input){
         this.input = input;
@@ -44,6 +52,6 @@ public abstract class BaseTask {
 
     abstract public void run();
 
-    abstract ArrayList<Method> getConfigurableMethods();
+    abstract public void updateStatus();
 
 }

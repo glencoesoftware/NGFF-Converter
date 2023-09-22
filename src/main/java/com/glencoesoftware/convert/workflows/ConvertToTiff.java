@@ -8,13 +8,19 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 public class ConvertToTiff extends BaseWorkflow{
+
     public ConvertToTiff() {
         ObservableList<BaseTask> tasks = FXCollections.observableArrayList();
-        tasks.addAll(new CreateNGFF(), new CreateTiff(), new Output());
+        tasks.addAll(new CreateNGFF(this), new CreateTiff(this), new Output(this));
         this.setTasks(tasks);
     }
 
     public static String getDisplayName() {
         return "OME-TIFF";
     }
+
+    public String getName() {
+        return getDisplayName();
+    }
+
 }

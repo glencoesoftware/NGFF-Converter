@@ -226,37 +226,7 @@ public class PrimaryController {
                 menuClearFinished, menuClearAll, menuSavePrefs, menuResetPrefs, menuOverwrite, menuChooseDirectory,
                 menuResetDirectory, menuTempDirectory));
 
-        CreateNGFF test = new CreateNGFF();
         System.out.println("Adding NGFF config options");
-        ArrayList<Method> controls = test.getConfigurableMethods();
-        ObservableList<Node> widgets = widgetBar.getChildren();
-        WidgetFactory wf = new WidgetFactory();
-        wf.generateWidgets(controls);
-        for (Method m : controls) {
-            wf.getWidget(m);
-            CommandLine.Option cliOption = m.getAnnotation(CommandLine.Option.class);
-            String name = m.getName().substring(3);
-            name = name.replaceAll("\\d+", "").replaceAll("(.)([A-Z])", "$1 $2");
-            widgets.add(new Label(name));
-            String defaultValue = cliOption.defaultValue();
-            if (defaultValue.equals("__no_default_value__")) {
-                defaultValue = cliOption.fallbackValue();
-            }
-            TextField tf = new TextField(defaultValue);
-            tf.setTooltip(new Tooltip(Arrays.toString(cliOption.description())));
-            this.setters.put(tf, m);
-            widgets.add(tf);
-        }
-        this.setters.forEach((key, value) -> {
-            System.out.println(key + " = " + value);
-            try {
-                value.invoke(test.converter, key.getText());
-                System.out.println("Success");
-            } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
-                System.out.println("Error");
-                System.out.println(e);
-            }
-        });
         System.out.println("Complete");
 
     }

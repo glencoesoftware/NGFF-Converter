@@ -1,6 +1,8 @@
 package com.glencoesoftware.convert.tables;
 
 import com.glencoesoftware.convert.tasks.BaseTask;
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 
 import com.glencoesoftware.convert.tasks.BaseTask;
@@ -9,7 +11,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Paint;
 
 
-public class MultiButtonTableCell extends TableCell<BaseTask, Void> {
+public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
 
     private final HBox container;
 
@@ -28,6 +30,7 @@ public class MultiButtonTableCell extends TableCell<BaseTask, Void> {
         });
 
         container = new HBox(5, view, delete);
+        container.setAlignment(Pos.CENTER);
     }
 
     @Override

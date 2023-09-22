@@ -1,6 +1,7 @@
 package com.glencoesoftware.convert.tasks;
 
 import com.glencoesoftware.bioformats2raw.Converter;
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import picocli.CommandLine;
 
@@ -21,6 +22,10 @@ public class Output extends BaseTask {
     // Virtual task to enable display of global config and cleanup of intermediates
     private boolean overwrite = false;
 
+    public Output(BaseWorkflow parent) {
+        super(parent);
+    }
+
     public String getName() {
         return "Output";
     }
@@ -34,8 +39,29 @@ public class Output extends BaseTask {
     }
 
     public void setOutput(String basePath) {
-        this.output = Paths.get(basePath, this.outputName + ".ome.tiff").toFile();
+        // Todo: Conform to desired workflow output type
+        this.output = Paths.get(basePath, this.input.getName()).toFile();
+        this.parent.finalOutput = this.output;
+        // Get the previous task and update it's output
+        this.parent.tasks.get(this.parent.tasks.size() - 2).output = this.output;
     }
+
+    public void updateStatus() {
+        System.out.println("Doing status update");
+        if (this.status == taskStatus.COMPLETED) {
+            return;
+        }
+        if (this.output == null | this.input == null) {
+            this.status = taskStatus.ERROR;
+            this.warningMessage = "I/O not configured";
+        } else if (this.output.exists() && !this.overwrite) {
+            this.status = taskStatus.ERROR;
+            this.warningMessage = "Output file already exists";
+        } else {
+            this.status = taskStatus.PENDING;
+        }
+    }
+
 
     private void setupIO() {
         this.output = this.input;
@@ -57,8 +83,4 @@ public class Output extends BaseTask {
         }
         }
 
-        @Override
-        public ArrayList<Method> getConfigurableMethods () {
-            return null;
-        }
     }

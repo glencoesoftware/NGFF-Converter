@@ -1,6 +1,7 @@
 package com.glencoesoftware.convert.tasks;
 
 import com.glencoesoftware.bioformats2raw.Converter;
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import picocli.CommandLine;
 
@@ -14,6 +15,10 @@ import java.util.Arrays;
 public class CreateTiff extends BaseTask {
 
     private final PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
+
+    public CreateTiff(BaseWorkflow parent) {
+        super(parent);
+    }
 
     private String name = "Convert to TIFF";
 
@@ -44,21 +49,15 @@ public class CreateTiff extends BaseTask {
         }
     }
 
-    @Override
-    public ArrayList<Method> getConfigurableMethods() {
-        Method[] allMethods = Arrays.stream(PyramidFromDirectoryWriter.class.getDeclaredMethods())
-                .filter(m -> Modifier.isPublic(m.getModifiers()) && m.getName().startsWith("set"))
-                .toArray(Method[]::new);
-        ArrayList<Method> desiredMethods = new ArrayList<>();
-        for (Method m : allMethods) {
-            Annotation t = m.getAnnotation(CommandLine.Option.class);
-            if (t == null) {
-                System.out.println("No option config detected for " + m.getName());
-            } else {
-                System.out.println("Found Option config for " + m.getName());
-                desiredMethods.add(m);
-            }
+    public void updateStatus() {
+        if (this.status == taskStatus.COMPLETED) { return; }
+        if (this.output == null | this.input == null) {
+            this.status = taskStatus.ERROR;
+            this.warningMessage = "I/O not configured";
+        } else {
+            this.status = taskStatus.PENDING;
         }
-        return desiredMethods;
-    }
+    };
+
+
 }

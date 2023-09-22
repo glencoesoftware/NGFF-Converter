@@ -13,8 +13,8 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.bioformats2raw.Converter;
-import com.glencoesoftware.convert.tables.ButtonTableCell;
-import com.glencoesoftware.convert.tables.StatusTableCell;
+import com.glencoesoftware.convert.dialogs.AddFilesDialog;
+import com.glencoesoftware.convert.tables.*;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.convert.workflows.ConvertToNGFF;
@@ -22,12 +22,13 @@ import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.application.Platform;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -37,17 +38,13 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.cell.*;
 import javafx.scene.input.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.paint.Paint;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -55,10 +52,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,7 +62,6 @@ import java.util.Queue;
 import java.util.*;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import java.util.stream.Collectors;
 
 
 public class MainController {
@@ -79,7 +73,12 @@ public class MainController {
     public Label jobsText;
     public Label tasksText;
     public TextField outputDirectory;
-    public ListView<BaseWorkflow> jobList;
+    public TableView<BaseWorkflow> jobList;
+    public TableColumn<BaseWorkflow, Boolean> workflowSelectionColumn;
+    public TableColumn<BaseWorkflow, String> workflowNameColumn;
+    public TableColumn<BaseWorkflow, String> workflowFormatColumn;
+    public TableColumn<BaseWorkflow, Void> workflowStatusColumn;
+    public TableColumn<BaseWorkflow, Void> workflowActionColumn;
     public TableView<BaseTask> taskList;
     public TableColumn<BaseTask, String> taskNameColumn;
     public TableColumn<BaseTask, Void> taskStatusColumn;
@@ -91,8 +90,9 @@ public class MainController {
     public Button chooseDirButton;
     public Button clearDirButton;
     public Button runJobsButton;
+    public Button configureSelectedButton;
+    public Button removeSelectedButton;
     public VBox jobsBox;
-    public VBox tasksBox;
     public Menu menuLogLevel;
     public Menu menuOutputFormat;
     public CheckMenuItem menuOverwrite;
@@ -134,11 +134,19 @@ public class MainController {
 
     public enum jobStatus {READY, ERROR, COMPLETED, FAILED, RUNNING, NO_OUTPUT}
 
-    public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, ARGS};
+    public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, ARGS, DEFAULT_FORMAT, SHOW_FORMAT_DLG};
 
-    private final Preferences userPreferences = Preferences.userRoot();
+    public final Preferences userPreferences = Preferences.userRoot();
 
-    public HashMap<TextField, Method> setters = new HashMap<>();
+    private AddFilesDialog addFilesDialog;
+
+    public ChangeListener<Number> taskWatcher = new ChangeListener<>() {
+        @Override
+        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+            taskList.refresh();
+        }
+    };
+
 
     public enum OutputMode {
         TIFF("OME-TIFF", ".ome.tiff"),
@@ -160,15 +168,70 @@ public class MainController {
         supportedExtensions.add("zarr");
         supportedExtensions.add("mrxs");
         menuBar.setUseSystemMenuBar(true);
-        jobList.setCellFactory(list -> new JobCell());
+
+        // Hide jobs pane until we need it.
+        jobsPane.setVisible(false);
+        jobsPane.getDividers().get(0).positionProperty().addListener(
+                (o, oldPos, newPos) -> dividerResized());
+
+        // Configure jobs table
+        workflowSelectionColumn.setCellFactory(CheckBoxTableCell.forTableColumn(idx -> {
+            handleSelectionChange();
+            return jobList.getItems().get(idx).getSelected();
+        }));
+        workflowSelectionColumn.setCellValueFactory(cd -> cd.getValue().getSelected());
+        workflowNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        workflowNameColumn.setCellValueFactory(new PropertyValueFactory<>("input"));
+        workflowFormatColumn.setCellFactory(col -> new ChoiceTableCell());
+        workflowFormatColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        workflowStatusColumn.setCellFactory(col -> new WorkflowStatusTableCell());
+        workflowActionColumn.setCellFactory(col -> new MultiButtonTableCell());
+
+        // Configure tasks table
         taskNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        taskNameColumn.setCellValueFactory(new PropertyValueFactory<BaseTask,String>("name"));
-
+        taskNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         taskActionColumn.setCellFactory(col -> new ButtonTableCell());
+        taskStatusColumn.setCellFactory(col -> new TaskStatusTableCell());
 
+        jobList.getItems().addListener((ListChangeListener<BaseWorkflow>)(c -> {
+            if (jobList.getItems().isEmpty()) {
+                fileListHelpText.setVisible(true);
+                jobsPane.setVisible(false);
+            } else {
+                // Compute column sizing
+                dividerResized();
+                fileListHelpText.setVisible(false);
+                jobsPane.setVisible(true);
+            }
+        }));
 
-        taskStatusColumn.setCellFactory(col -> new StatusTableCell());
+        // Monitor the job list and display tasks when a job is clicked.
+        jobList.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (oldSelection != null) {
+                oldSelection.currentStage.removeListener(taskWatcher);
+            }
+            if (newSelection != null) {
+                newSelection.currentStage.addListener(taskWatcher);
+                taskList.setItems(newSelection.tasks);
+                if (newSelection.status.get() == BaseWorkflow.workflowStatus.RUNNING) {
+                    tasksText.setText(
+                            String.format("Tasks: %d of %d",
+                                    newSelection.currentStage.get(), newSelection.tasks.size()));
+                }
+                tasksText.setText("Tasks: " + newSelection.getInput());
+                taskList.refresh();
+            } else {
+                taskList.setItems(null);
+                tasksText.setText("Tasks");
+            }
+        });
 
+        taskList.setPlaceholder(new Label("Select a job for details"));
+        // Disable entry selection on the task list
+        taskList.setSelectionModel(null);
+
+        // Create the file addition dialog
+        addFilesDialog = new AddFilesDialog();
 
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
@@ -198,13 +261,19 @@ public class MainController {
         if (version == null) { version = "DEV"; }
 
         // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
+        // Todo: update
         fileControlButtons = new ArrayList<>(Arrays.asList(outputDirectory, chooseDirButton, clearDirButton));
         menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuOutputFormat, menuAddFiles, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuSavePrefs, menuResetPrefs, menuOverwrite, menuChooseDirectory,
                 menuResetDirectory, menuTempDirectory));
         createLogControl();
-        System.out.println("Complete");
 
+    }
+
+    private void dividerResized() {
+        // Adjust Name column sizes as the divider is moved
+        workflowNameColumn.setMinWidth(Math.max(jobList.getWidth() - 390, 120));
+        taskNameColumn.setMinWidth(Math.max(taskList.getWidth() - 150, 100));
     }
 
     private void createLogControl() throws IOException {
@@ -217,6 +286,8 @@ public class MainController {
         consoleStream = logControl.stream;
         logControl.setParent(this);
     }
+
+
 
     @FXML
     private void b2rHelp() throws IOException {
@@ -270,21 +341,34 @@ public class MainController {
 
     @FXML
     private void removeFile() {
-        final int selectedIdx = taskList.getSelectionModel().getSelectedIndex();
+        final int selectedIdx = jobList.getSelectionModel().getSelectedIndex();
         if (selectedIdx != -1) {
-            taskList.getItems().remove(selectedIdx);
-        }
-        if (taskList.getItems().isEmpty()) {
-            fileListHelpText.setVisible(true);
-            jobsPane.setVisible(false);
+            jobList.getItems().remove(selectedIdx);
         }
     }
 
     @FXML
     private void clearFiles() {
-        taskList.getItems().clear();
-        fileListHelpText.setVisible(true);
-        jobsPane.setVisible(false);
+        jobList.getItems().clear();
+    }
+
+    @FXML
+    private void removeSelected() {
+        List<BaseWorkflow> new_list = jobList.getItems()
+                .stream()
+                .filter((item) -> (!item.getSelected().getValue()))
+                .toList();
+        jobList.getItems().clear();
+        jobList.getItems().addAll(new_list);
+    }
+
+    @FXML
+    private void configureSelected() {
+        // Todo: Write this
+        System.out.println("Status is:");
+        for (BaseWorkflow job : jobList.getItems()) {
+            System.out.println("Job " + job.getName() + job.getSelected().getValue());
+        }
     }
 
     @FXML
@@ -323,6 +407,18 @@ public class MainController {
     }
 
     @FXML
+    private void handleSelectionChange() {
+        for (BaseWorkflow job: jobList.getItems()) {
+            if (job.getSelected().getValue()) {
+                removeSelectedButton.setVisible(true);
+                configureSelectedButton.setVisible(true);
+                return;
+            }
+        }
+        removeSelectedButton.setVisible(false);
+        configureSelectedButton.setVisible(false);
+    }
+    @FXML
     private void handleFileDragOver(DragEvent event) {
         Dragboard db = event.getDragboard();
         if (db.hasFiles()) {
@@ -345,9 +441,28 @@ public class MainController {
         event.consume();
     }
 
+    public String getOutputBaseDirectory(File sourceFile) {
+        if (outputDirectory.getText().equals(defaultOutputText)) {
+            return sourceFile.getParent();
+        } else {
+            return outputDirectory.getText();
+        }
+    }
+
+    public String getWorkingDirectory(File sourceFile) {
+        if (tempDirectory != null) {
+            return tempDirectory.getAbsolutePath();
+        } else {
+            return getOutputBaseDirectory(sourceFile);
+        }
+    }
+
     @FXML
     private void addFilesToList(List<File> files) {
-        int count = 0;
+        OutputMode desiredFormat = addFilesDialog.show(this);
+        // Handle user cancel
+        if (desiredFormat == null) { return; };
+
         Queue<File> fileQueue = new LinkedList<>(files);
         List<BaseWorkflow> jobs = jobList.getItems();
         while (!fileQueue.isEmpty()) {
@@ -363,37 +478,21 @@ public class MainController {
                 continue;
             }
             String filePath = file.getAbsolutePath();
-            String outPath = FilenameUtils.getBaseName(filePath);
-            String outBase;
-            if (outputDirectory.getText().equals(defaultOutputText)) {
-                outBase = file.getParent();
-            } else {
-                outBase = outputDirectory.getText();
+            String outBase = getOutputBaseDirectory(file);
+            String temporaryStorage = getWorkingDirectory(file);
+            BaseWorkflow job;
+            switch (desiredFormat) {
+                case TIFF -> job = new ConvertToTiff();
+                case NGFF -> job = new ConvertToNGFF();
+                default -> {
+                    System.out.println("Invalid format " + desiredFormat);
+                    return;
+                }
             }
-            String temporaryStorage;
-            if (tempDirectory != null) {
-                temporaryStorage = tempDirectory.getAbsolutePath();
-            } else {
-                temporaryStorage = outBase;
-            }
-            BaseWorkflow job = new ConvertToNGFF();
             job.calculateIO(filePath, outBase, temporaryStorage);
             jobs.add(job);
-            count++;
-        }
-        if (!jobs.isEmpty()) {
-            fileListHelpText.setVisible(false);
-            jobsPane.setVisible(true);
         }
     }
-
-    @FXML
-    private void listClickHandler(MouseEvent event) {
-        BaseWorkflow target = jobList.getSelectionModel().getSelectedItem();
-        if (target != null) {
-            taskList.setItems(target.tasks);
-        }
-     }
 
     @FXML
     private void listKeyHandler(KeyEvent event) {
@@ -404,10 +503,12 @@ public class MainController {
 
     @FXML
     private void clearFinished() {
-        jobList.setItems(jobList.getItems()
+        List<BaseWorkflow> new_list = jobList.getItems()
                 .stream()
-                .filter((item) -> (item.status != BaseWorkflow.workflowStatus.COMPLETED))
-                .collect(Collectors.toCollection(FXCollections::observableArrayList)));
+                .filter((item) -> (item.status.get() != BaseWorkflow.workflowStatus.COMPLETED))
+                .toList();
+        jobList.getItems().clear();
+        jobList.getItems().addAll(new_list);
     }
 
     @FXML
@@ -455,11 +556,11 @@ public class MainController {
         List<BaseWorkflow.workflowStatus> doNotChange = Arrays.asList(BaseWorkflow.workflowStatus.COMPLETED,
                 BaseWorkflow.workflowStatus.FAILED, BaseWorkflow.workflowStatus.RUNNING);
         jobList.getItems().forEach((item) -> {
-            if (doNotChange.contains(item.status)) { return; }
+            if (doNotChange.contains(item.status.get())) { return; }
             if ((!overwrite) && item.finalOutput.exists()) {
-                item.status = BaseWorkflow.workflowStatus.WARNING;
+                item.status.set(BaseWorkflow.workflowStatus.WARNING);
             } else {
-                item.status = BaseWorkflow.workflowStatus.PENDING;
+                item.status.set(BaseWorkflow.workflowStatus.PENDING);
             }
         });
         jobList.refresh();
@@ -561,12 +662,13 @@ public class MainController {
 
         // Validate there is enough space to perform conversions.
         HashMap<Path, Double> spaceMap = new HashMap<>();
-        jobList.getItems().stream().filter(job -> job.status != BaseWorkflow.workflowStatus.COMPLETED).forEach(job -> {
-            double estimatedSize = job.firstInput.length() * 1.3;
-            Path targetDrive = Paths.get(job.finalOutput.getAbsolutePath()).getRoot();
-            double neededSpace = spaceMap.getOrDefault(targetDrive, 0.0);
-            spaceMap.put(targetDrive, neededSpace + estimatedSize);
-        });
+        jobList.getItems().stream().filter(job ->
+                job.status.get() != BaseWorkflow.workflowStatus.COMPLETED).forEach(job -> {
+                    double estimatedSize = job.firstInput.length() * 1.3;
+                    Path targetDrive = Paths.get(job.finalOutput.getAbsolutePath()).getRoot();
+                    double neededSpace = spaceMap.getOrDefault(targetDrive, 0.0);
+                    spaceMap.put(targetDrive, neededSpace + estimatedSize);
+                });
         for (Map.Entry<Path, Double> entry : spaceMap.entrySet()) {
             Path drive = entry.getKey();
             double neededSpace = entry.getValue();
@@ -602,25 +704,6 @@ public class MainController {
         menuRun.setText("Stop Conversions");
         isRunning = true;
         LOGGER.info("Beginning file conversion...\n");
-        List<String> extraArgs =  new ArrayList<>();
-//        extraArgs.add("--log-level=" + logLevel.getValue().toUpperCase());
-//        if (menuOverwrite.isSelected()) {
-//            extraArgs.add("--overwrite");
-//        }
-//        String[] userArgs = extraParams.getText().split("\n");
-//
-//        Arrays.asList(userArgs).forEach((String userArg) -> {
-//            if (userArg.equals("")) return;
-//            // Fix missing '--'
-//            if (!userArg.startsWith("-")) {
-//                userArg = "--" + userArg;
-//            }
-//            // Fix common typo using space instead of equals
-//            if (!userArg.contains("=") && userArg.chars().filter(num -> num == ' ').count() == 1) {
-//                    userArg = userArg.replace(' ', '=');
-//            }
-//            extraArgs.add(userArg);
-//        });
 
         worker = new WorkflowRunner(this);
         worker.interrupted = false;

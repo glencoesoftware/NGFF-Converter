@@ -11,11 +11,11 @@ import ch.qos.logback.classic.Level;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TableView;
 import org.slf4j.LoggerFactory;
 
 class WorkflowRunner extends Task<Integer> {
-    private final ListView<BaseWorkflow> jobList;
+    private final TableView<BaseWorkflow> jobList;
     private final MainController parent;
     public boolean interrupted = false;
     private static final ch.qos.logback.classic.Logger LOGGER =
@@ -31,13 +31,13 @@ class WorkflowRunner extends Task<Integer> {
     protected Integer call() throws Exception {
         int count = 0;
         for (BaseWorkflow job : jobList.getItems()) {
-            if (interrupted || (job.status == BaseWorkflow.workflowStatus.COMPLETED) ||
-                    (job.status == BaseWorkflow.workflowStatus.FAILED)) {
+            if (interrupted || (job.status.get() == BaseWorkflow.workflowStatus.COMPLETED) ||
+                    (job.status.get() == BaseWorkflow.workflowStatus.FAILED)) {
                 continue;
             }
             LOGGER.info("Setup job with new config");
 
-            job.status = BaseWorkflow.workflowStatus.RUNNING;
+            job.status.set(BaseWorkflow.workflowStatus.RUNNING);
             Platform.runLater(() -> {
                 LOGGER.info("Working on " + job.firstInput.getName());
                 jobList.refresh();
@@ -49,10 +49,8 @@ class WorkflowRunner extends Task<Integer> {
 
             //Todo: Cleanup intermediates?
 
-            switch (job.status) {
-                case COMPLETED -> {
-                    LOGGER.info("Successfully created: " + job.finalOutput.getName() + "\n");
-                }
+            switch (job.status.get()) {
+                case COMPLETED -> LOGGER.info("Successfully created: " + job.finalOutput.getName() + "\n");
                 case FAILED -> {
                     if (interrupted) {
                         LOGGER.info("User aborted job: " + job.finalOutput.getName() + "\n");
@@ -60,9 +58,7 @@ class WorkflowRunner extends Task<Integer> {
                         LOGGER.info("Job failed, see logs \n");
                     }
                 }
-                default -> {
-                    LOGGER.info("Job status is invalid????: " + job.status);
-                }
+                default -> LOGGER.info("Job status is invalid????: " + job.status);
             }
 
             Platform.runLater(jobList::refresh);

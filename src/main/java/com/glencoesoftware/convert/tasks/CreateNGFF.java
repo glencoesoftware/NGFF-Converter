@@ -1,6 +1,8 @@
 package com.glencoesoftware.convert.tasks;
 
 import com.glencoesoftware.bioformats2raw.Converter;
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import com.glencoesoftware.convert.workflows.ConvertToNGFF;
 import picocli.CommandLine;
 
 import java.lang.annotation.Annotation;
@@ -14,13 +16,16 @@ public class CreateNGFF extends BaseTask{
 
     private String name = "Convert to NGFF";
 
+    public CreateNGFF(BaseWorkflow parent) {
+        super(parent);
+    }
+
     public String getName() {
         return this.name;
     }
 
     public final Converter converter = new Converter();
     private Method[] paramMethods = null;
-
     public Method[] getParamMethods() {
         if (this.paramMethods == null) {
             Method[] converterMethods = Converter.class.getDeclaredMethods();
@@ -32,21 +37,6 @@ public class CreateNGFF extends BaseTask{
         return this.paramMethods;
     }
 
-    public ArrayList<Method> getConfigurableMethods() {
-        Method[] allMethods = this.getParamMethods();
-        ArrayList<Method> desiredMethods = new ArrayList<Method>();
-        for (Method m : allMethods) {
-            Annotation t = m.getAnnotation(CommandLine.Option.class);
-            if (t == null) {
-                System.out.println("No option config detected for " + m.getName());
-            } else {
-                System.out.println("Found Option config for " + m.getName());
-                desiredMethods.add(m);
-            }
-        }
-        return desiredMethods;
-    }
-
     public void setOutput(String basePath) {
         this.output = Paths.get(basePath, this.outputName + ".zarr").toFile();
     }
@@ -55,6 +45,16 @@ public class CreateNGFF extends BaseTask{
         converter.setInputPath(this.input.getAbsolutePath());
         converter.setOutputPath(this.output.getAbsolutePath());
     }
+
+    public void updateStatus() {
+        if (this.status == taskStatus.COMPLETED) { return; }
+        if (this.output == null | this.input == null) {
+            this.status = taskStatus.ERROR;
+            this.warningMessage = "I/O not configured";
+        } else {
+            this.status = taskStatus.PENDING;
+        }
+    };
 
     public void run() {
         // Apply GUI configurations first
