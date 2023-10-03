@@ -14,6 +14,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.convert.dialogs.AddFilesDialog;
+import com.glencoesoftware.convert.dialogs.ConfigureJobDialog;
 import com.glencoesoftware.convert.tables.*;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -41,10 +42,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.stage.*;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -94,7 +92,7 @@ public class MainController {
     public Button removeSelectedButton;
     public VBox jobsBox;
     public Menu menuLogLevel;
-    public Menu menuOutputFormat;
+    public MenuItem menuOutputFormat;
     public CheckMenuItem menuOverwrite;
     public CheckMenuItem wantLogToFile;
     public MenuItem menuRun;
@@ -175,6 +173,13 @@ public class MainController {
                 (o, oldPos, newPos) -> dividerResized());
 
         // Configure jobs table
+        CheckBox selectAllBox = new CheckBox();
+        selectAllBox.setOnAction(e -> {
+            for (BaseWorkflow job: jobList.getItems()) {
+                job.setSelected(selectAllBox.isSelected());
+            }
+        });
+        workflowSelectionColumn.setGraphic(selectAllBox);
         workflowSelectionColumn.setCellFactory(CheckBoxTableCell.forTableColumn(idx -> {
             handleSelectionChange();
             return jobList.getItems().get(idx).getSelected();
@@ -287,6 +292,10 @@ public class MainController {
         logControl.setParent(this);
     }
 
+    @FXML
+    private void configureDefaultFormat() {
+        addFilesDialog.show(this);
+    }
 
 
     @FXML
@@ -380,6 +389,7 @@ public class MainController {
         if (newDir != null) {
             outputDirectory.setText(newDir.getAbsolutePath());
         }
+        updateJobIO();
     }
 
     @FXML
@@ -399,24 +409,39 @@ public class MainController {
             menuTempDirectory.setText("Reset Temporary Directory");
             LOGGER.info("Zarr intermediates will be temporarily written to " + tempDir);
         }
+        updateJobIO();
+    }
+
+    private void updateJobIO() {
+        for (BaseWorkflow job : jobList.getItems()) {
+            String outBase = getOutputBaseDirectory(job.firstInput);
+            String temporaryStorage = getWorkingDirectory(job.firstInput);
+            job.calculateIO(job.firstInput.getAbsolutePath(), outBase, temporaryStorage);
+        }
     }
 
     @FXML
     private void resetOutputDirectory() {
         outputDirectory.setText(defaultOutputText);
+        updateJobIO();
     }
 
     @FXML
     private void handleSelectionChange() {
+        HashSet<String> selectedTypes = new HashSet<String>();
         for (BaseWorkflow job: jobList.getItems()) {
             if (job.getSelected().getValue()) {
-                removeSelectedButton.setVisible(true);
-                configureSelectedButton.setVisible(true);
-                return;
+                selectedTypes.add(job.getName());
             }
         }
         removeSelectedButton.setVisible(false);
         configureSelectedButton.setVisible(false);
+        if (!selectedTypes.isEmpty()) {
+            removeSelectedButton.setVisible(true);
+            if (selectedTypes.size() < 2) {
+                configureSelectedButton.setVisible(true);
+            }
+        };
     }
     @FXML
     private void handleFileDragOver(DragEvent event) {
@@ -465,6 +490,10 @@ public class MainController {
 
         Queue<File> fileQueue = new LinkedList<>(files);
         List<BaseWorkflow> jobs = jobList.getItems();
+        HashSet<String> existing = new HashSet<>();
+        for (BaseWorkflow job : jobs) {
+            existing.add(job.firstInput.getAbsolutePath());
+        }
         while (!fileQueue.isEmpty()) {
             File file = fileQueue.remove();
             String extension = FilenameUtils.getExtension(file.getName());
@@ -478,12 +507,16 @@ public class MainController {
                 continue;
             }
             String filePath = file.getAbsolutePath();
+            if (existing.contains(filePath)){
+                LOGGER.debug("File already in queue: " + file.getName());
+                continue;
+            }
             String outBase = getOutputBaseDirectory(file);
             String temporaryStorage = getWorkingDirectory(file);
             BaseWorkflow job;
             switch (desiredFormat) {
-                case TIFF -> job = new ConvertToTiff();
-                case NGFF -> job = new ConvertToNGFF();
+                case TIFF -> job = new ConvertToTiff(this);
+                case NGFF -> job = new ConvertToNGFF(this);
                 default -> {
                     System.out.println("Invalid format " + desiredFormat);
                     return;
@@ -622,6 +655,29 @@ public class MainController {
         stage.initModality(Modality.WINDOW_MODAL);
         stage.initOwner(jobList.getScene().getWindow());
         stage.setResizable(false);
+        stage.show();
+    }
+
+    public void displaySettingsDialog(ObservableList<BaseWorkflow> jobs){
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        fxmlLoader.setLocation(App.class.getResource("ConfigureJob.fxml"));
+        Scene scene;
+        try {
+            scene = new Scene(fxmlLoader.load());
+        } catch (IOException e) {
+            System.out.println("Error encountered" + e);
+            return;
+        }
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.initStyle(StageStyle.UNDECORATED);
+        stage.initOwner(jobList.getScene().getWindow());
+        stage.setResizable(false);
+
+        ConfigureJobDialog controller = fxmlLoader.getController();
+//        ObservableList<BaseWorkflow> jobs = jobList.getSelectionModel().getSelectedItems();
+        controller.initData(jobs);
         stage.show();
     }
 

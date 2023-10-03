@@ -14,7 +14,7 @@
            </BorderPane.margin>
            <Menu mnemonicParsing="false" text="File">
                <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
-               <Menu fx:id="menuOutputFormat" mnemonicParsing="false" text="Set output format" />
+               <MenuItem fx:id="menuOutputFormat" mnemonicParsing="false" text="Configure output format" onAction="#configureDefaultFormat" />
                <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing files" />
                <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
                <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />

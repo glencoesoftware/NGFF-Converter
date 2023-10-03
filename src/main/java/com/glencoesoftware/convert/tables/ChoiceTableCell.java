@@ -26,10 +26,10 @@ public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
             BaseWorkflow newWorkflow;
             if (options.getValue().equals("OME-TIFF")) {
                 System.out.println("Switching to tiff");
-                newWorkflow = new ConvertToTiff();
+                newWorkflow = new ConvertToTiff(thisWorkflow.controller);
             } else {
                 System.out.println("Switching to NGFF");
-                newWorkflow = new ConvertToNGFF();
+                newWorkflow = new ConvertToNGFF(thisWorkflow.controller);
             }
 
             newWorkflow.calculateIO(thisWorkflow.firstInput.getAbsolutePath(), thisWorkflow.finalOutput.getParent(),

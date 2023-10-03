@@ -1,19 +1,16 @@
 package com.glencoesoftware.convert.tasks;
 
-import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
-import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
-import picocli.CommandLine;
+import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
@@ -21,11 +18,14 @@ import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 public class Output extends BaseTask {
     // Virtual task to enable display of global config and cleanup of intermediates
     private boolean overwrite = false;
+    private ArrayList<Node> standardSettings;
+    private CheckBox overwriteBox;
+    private TextField outputPath;
+
 
     public Output(BaseWorkflow parent) {
         super(parent);
     }
-
     public String getName() {
         return "Output";
     }
@@ -62,7 +62,6 @@ public class Output extends BaseTask {
         }
     }
 
-
     private void setupIO() {
         this.output = this.input;
     }
@@ -79,8 +78,61 @@ public class Output extends BaseTask {
         } catch (IOException e) {
             this.status = taskStatus.FAILED;
             System.out.println("Failed to copy");
-            System.out.println(e);
         }
+    }
+
+    private void generateNodes() {
+        // Generate standard controls
+        standardSettings = new ArrayList<>();
+        outputPath = new TextField();
+        HBox outputControl = new HBox(5, new Label("Output file: "), outputPath);
+        standardSettings.add(outputControl);
+        overwriteBox = new CheckBox("Overwrite existing file");
+        standardSettings.add(overwriteBox);
+    }
+
+    private void updateNodes() {
+        outputPath.setText(this.output.getAbsolutePath());
+        overwriteBox.setSelected(this.parent.controller.menuOverwrite.isSelected());
+    }
+
+
+    public ArrayList<Node> getStandardSettings() {
+        if (this.standardSettings == null) {
+            generateNodes();
         }
+        updateNodes();
+        return this.standardSettings;
+    }
+
+    public ArrayList<Node> getAdvancedSettings() {
+        return null;
+    }
+
+    public void applySettings() {
+        System.out.println("Applying settings" + overwriteBox.selectedProperty().get());
+        setOverwrite(overwriteBox.selectedProperty().get());
+        // Todo: set output properly
+        setOutput(outputPath.getText());
+    }
+
+    public void setValues(Object[] values) {
+        overwriteBox.setSelected((boolean) values[0]);
+    }
+
+    public void setDefaults() {
 
     }
+
+    public void applyDefaults() {
+
+    }
+
+    public Object[] getValues() {
+        return new Object[]{
+                overwriteBox.isSelected(),
+        };
+    }
+}
+
+

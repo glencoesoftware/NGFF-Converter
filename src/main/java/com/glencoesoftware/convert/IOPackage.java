@@ -31,10 +31,10 @@ public class IOPackage {
         } else {
             status = PrimaryController.jobStatus.READY;
         }
-        if (mode == PrimaryController.OutputMode.TIFF) {
-            this.workflow = new ConvertToTiff();
-        } else {
-            this.workflow = new ConvertToNGFF();
-        }
+//        if (mode == PrimaryController.OutputMode.TIFF) {
+//            this.workflow = new ConvertToTiff();
+//        } else {
+//            this.workflow = new ConvertToNGFF();
+//        }
     }
 }

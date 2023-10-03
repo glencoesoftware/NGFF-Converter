@@ -1,6 +1,7 @@
 package com.glencoesoftware.convert.workflows;
 
 import com.glencoesoftware.convert.App;
+import com.glencoesoftware.convert.MainController;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.Output;
 import javafx.beans.property.*;
@@ -13,7 +14,10 @@ import java.util.Objects;
 
 public abstract class BaseWorkflow {
 
-    private final BooleanProperty selected = new SimpleBooleanProperty(true);
+    // Keep a reference to the parent controller
+    public MainController controller = null;
+
+    private final BooleanProperty selected = new SimpleBooleanProperty(false);
 
     public void setSelected(boolean val) {
         this.selected.set(val);
@@ -131,6 +135,15 @@ public abstract class BaseWorkflow {
         LOGGER.info("Path calculation complete. Final output will be:");
         LOGGER.info(workingInput.getAbsolutePath());
         this.respondToUpdate();
+    }
+
+    public void reset() {
+        this.currentStage.set(-1);
+        this.status.set(workflowStatus.PENDING);
+        for (BaseTask task : this.tasks) {
+            task.status = BaseTask.taskStatus.PENDING;
+            task.updateStatus();
+        }
     }
 
     public void execute() throws Exception {

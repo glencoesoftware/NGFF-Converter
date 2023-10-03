@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane fx:id="configureJob" prefHeight="600.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.ConfigureJobDialog">
+   <top>
+      <VBox BorderPane.alignment="CENTER">
+            <Label fx:id="mainLabel" alignment="TOP_CENTER" maxWidth="1.7976931348623157E308" text="Configuring {{Workflow}}" textAlignment="CENTER">
+            <font>
+               <Font name="System Bold" size="24.0" />
+            </font>
+         </Label>
+            <HBox alignment="CENTER_LEFT" spacing="5.0" VBox.vgrow="NEVER">
+                <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevTask" text="&lt;" />
+                <Button fx:id="nextButton" mnemonicParsing="false" onAction="#nextTask" text="&gt;" />
+                <Label fx:id="taskLabel" text="Settings for {{Task Name}}" HBox.hgrow="ALWAYS" />
+            </HBox>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </VBox>
+   </top>
+   <center>
+      <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <content>
+            <VBox>
+               <children>
+                  <VBox fx:id="standardSettings" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" spacing="10.0" VBox.vgrow="SOMETIMES">
+                     <VBox.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </VBox.margin>
+                  </VBox>
+                  <Accordion fx:id="advancedPane" VBox.vgrow="SOMETIMES">
+                    <panes>
+                      <TitledPane alignment="CENTER" contentDisplay="RIGHT" text="Advanced Settings">
+                           <content>
+                              <VBox fx:id="advancedSettings" maxHeight="1.7976931348623157E308" spacing="10.0">
+                                 <padding>
+                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                 </padding>
+                              </VBox>
+                           </content>
+                      </TitledPane>
+                    </panes>
+                  </Accordion>
+                  <Region prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+               </children>
+            </VBox>
+        </content>
+      </ScrollPane>
+   </center>
+   <bottom>
+      <ButtonBar BorderPane.alignment="CENTER">
+        <buttons>
+          <Button mnemonicParsing="false" onAction="#closeDialog" text="Close" />
+            <Button layoutX="230.0" layoutY="10.0" mnemonicParsing="false" onAction="#applySettings" text="Apply" />
+        </buttons>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </ButtonBar>
+   </bottom>
+</BorderPane>

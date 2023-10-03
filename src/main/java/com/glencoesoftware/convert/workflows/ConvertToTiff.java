@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert.workflows;
 
+import com.glencoesoftware.convert.MainController;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.CreateNGFF;
 import com.glencoesoftware.convert.tasks.CreateTiff;
@@ -9,7 +10,8 @@ import javafx.collections.ObservableList;
 
 public class ConvertToTiff extends BaseWorkflow{
 
-    public ConvertToTiff() {
+    public ConvertToTiff(MainController controller) {
+        this.controller = controller;
         ObservableList<BaseTask> tasks = FXCollections.observableArrayList();
         tasks.addAll(new CreateNGFF(this), new CreateTiff(this), new Output(this));
         this.setTasks(tasks);
@@ -22,5 +24,6 @@ public class ConvertToTiff extends BaseWorkflow{
     public String getName() {
         return getDisplayName();
     }
+
 
 }
