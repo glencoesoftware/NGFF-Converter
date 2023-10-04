@@ -92,14 +92,13 @@ public class ConfigureJobDialog {
             for (int i = 0; i < this.tasks.size(); i++) {
                 // Fetch settings from the template task used in the dialog
                 BaseTask task = this.tasks.get(i);
-                Object[] newValues = task.getValues();
-                // Remember to apply those
+                // Remember to apply settings to the first task
                 task.applySettings();
                 // Iterate through the other selected jobs and apply the same settings
                 for (int j = 1; j < this.jobs.size(); j++) {
                     BaseWorkflow otherJob = this.jobs.get(j);
                     BaseTask otherTask = otherJob.tasks.get(i);
-                    otherTask.setValues(newValues);
+                    otherTask.cloneValues(task);
                     otherTask.applySettings();
                 }
             }

@@ -68,17 +68,13 @@ public abstract class BaseTask {
     // they hit the 'Apply' button.
     abstract public void applySettings();
 
-    // Get an array of settings values from the widgets above. Used in multi-mode to copy settings between tasks of the
-    // same type. Object list should hold values in a set order.
-    abstract public Object[] getValues();
-
-    // Takes an object array from getValues and applies those settings to the widgets.
-    abstract public void setValues(Object[] objects);
-
     // Should store current task settings as default values for each (where applicable)
     abstract public void setDefaults();
 
     // Load default values saved previously
     abstract public void applyDefaults();
+
+    // Copy values from supplied instance's widgets to this instance's widgets
+    abstract public void cloneValues(BaseTask source);
 
 }

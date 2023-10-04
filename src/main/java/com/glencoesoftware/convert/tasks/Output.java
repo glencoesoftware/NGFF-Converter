@@ -116,10 +116,6 @@ public class Output extends BaseTask {
         setOutput(outputPath.getText());
     }
 
-    public void setValues(Object[] values) {
-        overwriteBox.setSelected((boolean) values[0]);
-    }
-
     public void setDefaults() {
 
     }
@@ -128,11 +124,17 @@ public class Output extends BaseTask {
 
     }
 
-    public Object[] getValues() {
-        return new Object[]{
-                overwriteBox.isSelected(),
-        };
+    public void cloneValues(BaseTask sourceInstance) {
+        if (!(sourceInstance instanceof Output source)) {
+            System.out.println("Incorrect input type");
+            return;
+        }
+        if (this.standardSettings == null) {
+            generateNodes();
+        }
+        overwriteBox.setSelected(source.overwriteBox.isSelected());
     }
+
 }
 
 
