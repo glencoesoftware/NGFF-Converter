@@ -1,7 +1,7 @@
 package com.glencoesoftware.convert.workflows;
 
 import com.glencoesoftware.convert.App;
-import com.glencoesoftware.convert.MainController;
+import com.glencoesoftware.convert.PrimaryController;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.Output;
 import javafx.beans.property.*;
@@ -15,7 +15,7 @@ import java.util.Objects;
 public abstract class BaseWorkflow {
 
     // Keep a reference to the parent controller
-    public MainController controller = null;
+    public PrimaryController controller = null;
 
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
 

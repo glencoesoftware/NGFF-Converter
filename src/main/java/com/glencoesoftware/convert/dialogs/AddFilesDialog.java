@@ -1,6 +1,6 @@
 package com.glencoesoftware.convert.dialogs;
 
-import com.glencoesoftware.convert.MainController;
+import com.glencoesoftware.convert.PrimaryController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -47,7 +47,7 @@ public class AddFilesDialog {
 
         ObservableList<String> options = FXCollections.observableArrayList();
 
-        for (MainController.OutputMode mode : MainController.OutputMode.values()) {
+        for (PrimaryController.OutputMode mode : PrimaryController.OutputMode.values()) {
             options.add(mode.getDisplayName());
         }
 
@@ -79,10 +79,10 @@ public class AddFilesDialog {
         });
     }
 
-    public MainController.OutputMode show(MainController parent) {
+    public PrimaryController.OutputMode show(PrimaryController parent) {
         Preferences prefs = parent.userPreferences;
-        boolean shouldShow = prefs.getBoolean(MainController.prefName.SHOW_FORMAT_DLG.name(), true);
-        String choice = prefs.get(MainController.prefName.DEFAULT_FORMAT.name(), "OME-NGFF");
+        boolean shouldShow = prefs.getBoolean(PrimaryController.prefName.SHOW_FORMAT_DLG.name(), true);
+        String choice = prefs.get(PrimaryController.prefName.DEFAULT_FORMAT.name(), "OME-NGFF");
         if (shouldShow) {
             if (dialog.getOwner() == null) {
                 dialog.initOwner(parent.jobList.getScene().getWindow());
@@ -92,7 +92,7 @@ public class AddFilesDialog {
             if (result.isEmpty()) { return null; };
             choice = result.get();
             if (setDefault.isSelected()) {
-                prefs.put(MainController.prefName.DEFAULT_FORMAT.name(), choice);
+                prefs.put(PrimaryController.prefName.DEFAULT_FORMAT.name(), choice);
                 try {
                     prefs.flush();
                 } catch (BackingStoreException e) {
@@ -100,7 +100,7 @@ public class AddFilesDialog {
                 }
             }
             if (doNotShowAgain.isSelected()) {
-                prefs.putBoolean(MainController.prefName.SHOW_FORMAT_DLG.name(), false);
+                prefs.putBoolean(PrimaryController.prefName.SHOW_FORMAT_DLG.name(), false);
                 try {
                     prefs.flush();
                 } catch (BackingStoreException e) {
@@ -109,7 +109,7 @@ public class AddFilesDialog {
             }
         }
         // There is probably a better way to do this
-        for (MainController.OutputMode mode : MainController.OutputMode.values()) {
+        for (PrimaryController.OutputMode mode : PrimaryController.OutputMode.values()) {
             if (Objects.equals(mode.getDisplayName(), choice)) {
                 return mode;
             }

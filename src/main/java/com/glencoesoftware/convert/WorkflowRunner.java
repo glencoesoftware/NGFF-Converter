@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
 
 class WorkflowRunner extends Task<Integer> {
     private final TableView<BaseWorkflow> jobList;
-    private final MainController parent;
+    private final PrimaryController parent;
     public boolean interrupted = false;
     private static final ch.qos.logback.classic.Logger LOGGER =
-            (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(ConverterTask.class);
+            (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(WorkflowRunner.class);
 
-    public WorkflowRunner(MainController controller) {
+    public WorkflowRunner(PrimaryController controller) {
         LOGGER.setLevel(Level.DEBUG);
         parent = controller;
         jobList = parent.jobList;

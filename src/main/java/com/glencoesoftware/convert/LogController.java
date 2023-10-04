@@ -20,7 +20,7 @@ public class LogController {
     public TextArea logBox;
     public ConsoleStream stream;
     public Button logFileButton;
-    public MainController parentController;
+    public PrimaryController parentController;
 
     @FXML
     public void initialize() {
@@ -28,7 +28,7 @@ public class LogController {
         ConsoleStreamAppender.setStaticOutputStream(stream);
     }
 
-    public void setParent(MainController parent) {
+    public void setParent(PrimaryController parent) {
         parentController = parent;
     }
 

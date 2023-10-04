@@ -7,8 +7,6 @@
  */
 package com.glencoesoftware.convert;
 
-import com.glencoesoftware.convert.tasks.CreateNGFF;
-import com.glencoesoftware.convert.tasks.CreateTiff;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -26,11 +24,11 @@ import java.util.Objects;
 public class App extends Application {
 
     private static Scene scene;
-    private static MainController controller;
+    private static PrimaryController controller;
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("main.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("primary.fxml"));
         Parent primary = fxmlLoader.load();
         scene = new Scene(primary, 1024, 600);
         controller = fxmlLoader.getController();
