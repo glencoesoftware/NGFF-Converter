@@ -6,7 +6,7 @@
 <?import javafx.scene.text.*?>
 
 <VBox alignment="CENTER" prefHeight="500.0" prefWidth="600.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.LogController">
-      <Label pickOnBounds="false" text="Execution Logs">
+      <Label fx:id="title" pickOnBounds="false" text="Execution Logs">
          <font>
             <Font name="System Bold" size="14.0" />
          </font>
@@ -26,7 +26,7 @@
       <VBox.margin>
          <Insets bottom="5.0" />
       </VBox.margin>
-      <Button fx:id="logFileButton" layoutX="226.0" layoutY="10.0" mnemonicParsing="false" onAction="#onToggleLogging" text="Setup log file" />
+<!--      <Button fx:id="logFileButton" layoutX="226.0" layoutY="10.0" mnemonicParsing="false" onAction="#onToggleLogging" text="Setup log file" />-->
       <Button mnemonicParsing="false" onAction="#copyLogs" text="Copy To Clipboard" />
       <Button mnemonicParsing="false" onAction="#clearLogs" text="Clear" />
    </HBox>

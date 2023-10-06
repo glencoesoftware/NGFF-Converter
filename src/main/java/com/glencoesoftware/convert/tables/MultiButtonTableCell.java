@@ -5,74 +5,74 @@ import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.util.List;
+import java.awt.*;
 
 
 public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
 
     private final HBox container;
     private final Button showLog = new Button();
-    private final Button statusClearComplete = new Button();
-    private final Button statusStopRunning = new Button();
-    private final Button statusClearPending = new Button();
+    private final Button removeJob = new Button();
+    private final Button stopRunning = new Button();
     private final Button configureTasks = new Button();
     private final Button resetJob = new Button();
-    private final FontIcon clearCompleteIcon = new FontIcon("bi-check");
-    private final FontIcon logIcon = new FontIcon("bi-terminal");
+    private final Button showFile = new Button();
+    private final FontIcon removeIcon = new FontIcon("bi-trash-fill");
+    private final FontIcon logIcon = new FontIcon("bi-terminal-fill");
     private final FontIcon stopRunningIcon = new FontIcon("bi-stop-fill");
-    private final FontIcon removeJobIcon = new FontIcon("bi-x");
-    private final FontIcon tasksIcon = new FontIcon("bi-list-check");
     private final FontIcon configureIcon = new FontIcon("bi-gear-fill");
     private final FontIcon restartIcon = new FontIcon("bi-arrow-repeat");
+    private final FontIcon openDirIcon = new FontIcon("bi-folder-symlink-fill");
 
     {
         showLog.setGraphic(logIcon);
-        statusClearComplete.setGraphic(clearCompleteIcon);
-        statusStopRunning.setGraphic(stopRunningIcon);
-        statusClearPending.setGraphic(removeJobIcon);
-        configureTasks.setGraphic(configureIcon);
-        resetJob.setGraphic(restartIcon);
+        showLog.setTooltip(new Tooltip("Show execution logs"));
+        showLog.setOnAction(evt -> getTableRow().getItem().showLogBox());
 
-        statusClearComplete.setOnAction(evt -> {
+        removeJob.setGraphic(removeIcon);
+        removeJob.setTooltip(new Tooltip("Remove from list"));
+        removeJob.setOnAction(evt -> {
             // delete this row item from TableView items
             getTableView().getItems().remove(getIndex());
         });
 
-        statusClearPending.setOnAction(evt -> {
-            // delete this row item from TableView items
-            getTableView().getItems().remove(getIndex());
-        });
-
-        statusStopRunning.setOnAction(evt -> {
-            int index = getIndex();
-            // delete this row item from TableView items
-            List<BaseWorkflow> jobs = getTableView().getItems();
-            BaseWorkflow subject = jobs.get(index);
+        stopRunning.setGraphic(stopRunningIcon);
+        stopRunning.setTooltip(new Tooltip("Stop execution"));
+        stopRunning.setOnAction(evt -> {
+            // Stop an ongoing run
+            BaseWorkflow subject = getTableRow().getItem();
             System.out.println("Would halt execution of " + subject.firstInput.getName());
         });
 
+        configureTasks.setGraphic(configureIcon);
+        configureTasks.setTooltip(new Tooltip("Configure job settings"));
         configureTasks.setOnAction(evt -> {
-            int index = getIndex();
-            // delete this row item from TableView items
-            List<BaseWorkflow> jobs = getTableView().getItems();
-            BaseWorkflow subject = jobs.get(index);
+            BaseWorkflow subject = getTableRow().getItem();
             System.out.println("Would configure " + subject.firstInput.getName());
-            subject.controller.displaySettingsDialog(FXCollections.observableArrayList(subject));
+            subject.controller.displaySettingsDialog(FXCollections.observableArrayList(subject), 0);
         });
 
+        resetJob.setGraphic(restartIcon);
+        resetJob.setTooltip(new Tooltip("Reset job to run again"));
         resetJob.setOnAction(evt -> {
-            int index = getIndex();
-            // delete this row item from TableView items
-            List<BaseWorkflow> jobs = getTableView().getItems();
-            BaseWorkflow subject = jobs.get(index);
+            BaseWorkflow subject = getTableRow().getItem();
             System.out.println("Would reset " + subject.firstInput.getName());
             subject.reset();
             getTableView().refresh();
         });
+
+        showFile.setGraphic(openDirIcon);
+        showFile.setTooltip(new Tooltip("Open containing folder"));
+        showFile.setOnAction(evt -> {
+            Desktop desktop = Desktop.getDesktop();
+            desktop.browseFileDirectory(getTableRow().getItem().finalOutput);
+        });
+
 
         container = new HBox(5);
         container.setAlignment(Pos.CENTER);
@@ -86,11 +86,11 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         this.container.getChildren().clear();
         BaseWorkflow current = getTableView().getItems().get(getIndex());
         switch (current.status.get()) {
-            case COMPLETED -> this.container.getChildren().addAll(this.statusClearComplete, this.showLog);
-            case RUNNING -> this.container.getChildren().addAll(this.statusStopRunning, this.showLog);
-            case FAILED -> this.container.getChildren().addAll(this.resetJob, this.showLog);
-            case PENDING, WARNING -> this.container.getChildren().addAll(this.statusClearPending, this.configureTasks);
-            default -> System.out.println("Error: " + "No definition for table contents??");
+            case COMPLETED -> this.container.getChildren().addAll(this.showLog, this.showFile, this.removeJob);
+            case RUNNING, QUEUED -> this.container.getChildren().addAll(this.showLog, this.stopRunning);
+            case FAILED -> this.container.getChildren().addAll(this.showLog, this.resetJob, this.removeJob);
+            case WARNING, READY -> this.container.getChildren().addAll(
+                    this.showLog, this.configureTasks, this.removeJob);
         }
     }
 

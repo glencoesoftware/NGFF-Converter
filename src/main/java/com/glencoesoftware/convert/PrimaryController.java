@@ -114,7 +114,7 @@ public class PrimaryController {
     private WorkflowRunner worker;
     private ArrayList<Control> fileControlButtons;
     private ArrayList<MenuItem> menuControlButtons;
-    public ConsoleStream consoleStream;
+    public TextAreaStream textAreaStream;
     public ToggleGroup logLevelGroup;
     public ToggleGroup outputFormatGroup;
     public FileAppender<ILoggingEvent> fileAppender;
@@ -128,8 +128,6 @@ public class PrimaryController {
     public String version;
 
     public final String defaultOutputText = "<Same as input>";
-
-    public enum jobStatus {READY, ERROR, COMPLETED, FAILED, RUNNING, NO_OUTPUT}
 
     public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, ARGS, DEFAULT_FORMAT, SHOW_FORMAT_DLG};
 
@@ -211,13 +209,14 @@ public class PrimaryController {
 
         // Monitor the job list and display tasks when a job is clicked.
         jobList.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            System.out.println("New selection detected " + newSelection);
             if (oldSelection != null) {
                 oldSelection.currentStage.removeListener(taskWatcher);
             }
             if (newSelection != null) {
                 newSelection.currentStage.addListener(taskWatcher);
                 taskList.setItems(newSelection.tasks);
-                if (newSelection.status.get() == BaseWorkflow.workflowStatus.RUNNING) {
+                if (newSelection.status.get() == JobState.status.RUNNING) {
                     tasksText.setText(
                             String.format("Tasks: %d of %d",
                                     newSelection.currentStage.get(), newSelection.tasks.size()));
@@ -287,7 +286,7 @@ public class PrimaryController {
         LogController logControl = logLoader.getController();
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
-        consoleStream = logControl.stream;
+        textAreaStream = logControl.stream;
         logControl.setParent(this);
     }
 
@@ -377,6 +376,9 @@ public class PrimaryController {
         for (BaseWorkflow job : jobList.getItems()) {
             System.out.println("Job " + job.getName() + job.getSelected().getValue());
         }
+        displaySettingsDialog(FXCollections.observableArrayList(
+                jobList.getItems().stream().filter(job -> job.getSelected().getValue()).toList()), 0);
+
     }
 
     @FXML
@@ -427,17 +429,24 @@ public class PrimaryController {
 
     @FXML
     private void handleSelectionChange() {
-        HashSet<String> selectedTypes = new HashSet<String>();
+        HashSet<String> selectedTypes = new HashSet<>();
+        boolean allowConfig = true;
         for (BaseWorkflow job: jobList.getItems()) {
             if (job.getSelected().getValue()) {
                 selectedTypes.add(job.getName());
+                if (job.status.getValue() != JobState.status.READY &&
+                        job.status.getValue() != JobState.status.WARNING) {
+                    // A selected job is already running, completed or failed = should not change config.
+                    allowConfig = false;
+                    break;
+                }
             }
         }
         removeSelectedButton.setVisible(false);
         configureSelectedButton.setVisible(false);
         if (!selectedTypes.isEmpty()) {
             removeSelectedButton.setVisible(true);
-            if (selectedTypes.size() < 2) {
+            if (allowConfig && selectedTypes.size() < 2) {
                 configureSelectedButton.setVisible(true);
             }
         };
@@ -537,7 +546,7 @@ public class PrimaryController {
     private void clearFinished() {
         List<BaseWorkflow> new_list = jobList.getItems()
                 .stream()
-                .filter((item) -> (item.status.get() != BaseWorkflow.workflowStatus.COMPLETED))
+                .filter((item) -> (item.status.get() != JobState.status.COMPLETED))
                 .toList();
         jobList.getItems().clear();
         jobList.getItems().addAll(new_list);
@@ -585,14 +594,14 @@ public class PrimaryController {
     @FXML
     private void toggleOverwrite() {
         boolean overwrite = menuOverwrite.isSelected();
-        List<BaseWorkflow.workflowStatus> doNotChange = Arrays.asList(BaseWorkflow.workflowStatus.COMPLETED,
-                BaseWorkflow.workflowStatus.FAILED, BaseWorkflow.workflowStatus.RUNNING);
+        List<JobState.status> doNotChange = Arrays.asList(JobState.status.COMPLETED,
+                JobState.status.FAILED, JobState.status.RUNNING);
         jobList.getItems().forEach((item) -> {
             if (doNotChange.contains(item.status.get())) { return; }
             if ((!overwrite) && item.finalOutput.exists()) {
-                item.status.set(BaseWorkflow.workflowStatus.WARNING);
+                item.status.set(JobState.status.WARNING);
             } else {
-                item.status.set(BaseWorkflow.workflowStatus.PENDING);
+                item.status.set(JobState.status.QUEUED);
             }
         });
         jobList.refresh();
@@ -657,7 +666,7 @@ public class PrimaryController {
         stage.show();
     }
 
-    public void displaySettingsDialog(ObservableList<BaseWorkflow> jobs){
+    public void displaySettingsDialog(ObservableList<BaseWorkflow> jobs, int taskIndex){
         FXMLLoader fxmlLoader = new FXMLLoader();
         fxmlLoader.setLocation(App.class.getResource("ConfigureJob.fxml"));
         Scene scene;
@@ -676,7 +685,7 @@ public class PrimaryController {
 
         ConfigureJobDialog controller = fxmlLoader.getController();
 //        ObservableList<BaseWorkflow> jobs = jobList.getSelectionModel().getSelectedItems();
-        controller.initData(jobs);
+        controller.initData(jobs, taskIndex);
         stage.show();
     }
 
@@ -687,7 +696,7 @@ public class PrimaryController {
         fileControlButtons.forEach((control -> control.setDisable(false)));
         menuControlButtons.forEach((control -> control.setDisable(false)));
         // Print anything left in the console buffer.
-        consoleStream.forceFlush();
+        textAreaStream.forceFlush();
     }
 
     @FXML
@@ -718,7 +727,7 @@ public class PrimaryController {
         // Validate there is enough space to perform conversions.
         HashMap<Path, Double> spaceMap = new HashMap<>();
         jobList.getItems().stream().filter(job ->
-                job.status.get() != BaseWorkflow.workflowStatus.COMPLETED).forEach(job -> {
+                job.status.get() != JobState.status.COMPLETED).forEach(job -> {
                     double estimatedSize = job.firstInput.length() * 1.3;
                     Path targetDrive = Paths.get(job.finalOutput.getAbsolutePath()).getRoot();
                     double neededSpace = spaceMap.getOrDefault(targetDrive, 0.0);
@@ -762,7 +771,7 @@ public class PrimaryController {
 
         worker = new WorkflowRunner(this);
         worker.interrupted = false;
-        runnerThread = new Thread(worker);
+        runnerThread = new Thread(worker, "Converter");
         runnerThread.setDaemon(true);
         runnerThread.start();
     }

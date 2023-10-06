@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert.tasks;
 
+import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.pyramid.CompressionType;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
@@ -50,7 +51,6 @@ public class CreateTiff extends BaseTask {
         this.output = Paths.get(basePath, this.outputName + ".ome.tiff").toFile();
     }
 
-
     private void setupIO() {
         converter.setInputPath(this.input.getAbsolutePath());
         converter.setOutputPath(this.output.getAbsolutePath());
@@ -59,27 +59,30 @@ public class CreateTiff extends BaseTask {
     public void run() {
         // Apply GUI configurations first
         setupIO();
-        this.status = taskStatus.RUNNING;
+        LOGGER.info("Running raw2ometiff");
+        this.status = JobState.status.RUNNING;
         try {
             converter.call();
-            this.status = taskStatus.COMPLETED;
+            this.status = JobState.status.COMPLETED;
+            LOGGER.info("TIFF creation successful");
         } catch (Exception e) {
-            this.status = taskStatus.FAILED;
-            System.out.println("Failed");
+            this.status = JobState.status.FAILED;
+            LOGGER.error("TIFF creation failed - " + e);
         }
     }
 
     public void updateStatus() {
-        if (this.status == taskStatus.COMPLETED) { return; }
+        if (this.status == JobState.status.COMPLETED) { return; }
         if (this.output == null | this.input == null) {
-            this.status = taskStatus.ERROR;
+            this.status = JobState.status.WARNING;
             this.warningMessage = "I/O not configured";
         } else {
-            this.status = taskStatus.PENDING;
+            this.status = JobState.status.READY;
         }
     }
 
-    private void generateNodes() {
+    public void generateNodes() {
+        if (standardSettings != null) return;
         // Generate standard controls
         standardSettings = new ArrayList<>();
         advancedSettings = new ArrayList<>();
@@ -151,7 +154,7 @@ public class CreateTiff extends BaseTask {
 
     }
 
-    private void updateNodes() {
+    public void updateNodes() {
         logLevel.getSelectionModel().select("WARN");
         maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
         compression.setValue(converter.getCompression());
@@ -195,7 +198,7 @@ public class CreateTiff extends BaseTask {
 
         if (compression.getValue() == CompressionType.JPEG_2000) {
             CodecOptions codec = JPEG2000CodecOptions.getDefaultOptions();
-            if (compressionQuality.getText().isEmpty()) {
+            if (!compressionQuality.getText().isEmpty()) {
                 codec.quality = Double.parseDouble(compressionQuality.getText());
             }
             converter.setCompressionOptions(codec);

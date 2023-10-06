@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert.tables;
 
+import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -46,7 +47,7 @@ public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
         switch (current.status) {
             case COMPLETED -> {
                 this.mainLabel.setText("Completed");
-                this.mainLabel.setGraphic(finishedIcon);
+                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 this.labelTooltip.setText("Task successful");
                 this.container.getChildren().add(this.mainLabel);
             }
@@ -54,15 +55,15 @@ public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
                 this.mainLabel.setText("00:00:10");
                 this.container.getChildren().addAll(this.progressBar, this.mainLabel);
             }
-            case ERROR -> {
-                this.mainLabel.setText("Error");
-                this.mainLabel.setGraphic(warningIcon);
+            case WARNING -> {
+                this.mainLabel.setText("Warning");
+                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 this.labelTooltip.setText(current.warningMessage);
                 this.container.getChildren().add(this.mainLabel);
             }
             default -> {
-                this.mainLabel.setText("Pending");
-                this.mainLabel.setGraphic(this.pendingIcon);
+                this.mainLabel.setText("Ready");
+                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 this.container.getChildren().add(mainLabel);
             }
         }

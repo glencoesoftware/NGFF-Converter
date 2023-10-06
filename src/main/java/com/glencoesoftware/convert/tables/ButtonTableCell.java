@@ -1,6 +1,7 @@
 package com.glencoesoftware.convert.tables;
 
 import com.glencoesoftware.convert.tasks.BaseTask;
+import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 
 import javafx.scene.control.TableCell;
@@ -23,6 +24,7 @@ public class ButtonTableCell extends TableCell<BaseTask, Void> {
         configureButton.setOnAction(ext -> {
             BaseTask task = getTableView().getItems().get(getIndex());
             System.out.println("Configuring task " + task.toString());
+            task.parent.controller.displaySettingsDialog(FXCollections.observableArrayList(task.parent), getIndex());
         });
 
     }

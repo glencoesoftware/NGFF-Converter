@@ -9,7 +9,6 @@ import javafx.collections.ObservableList;
 
 public class ConvertToNGFF extends BaseWorkflow {
 
-
     public ConvertToNGFF(PrimaryController controller) {
         this.controller = controller;
         ObservableList<BaseTask> tasks = FXCollections.observableArrayList();

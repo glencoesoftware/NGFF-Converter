@@ -1,11 +1,10 @@
 package com.glencoesoftware.convert.tables;
 
-import com.glencoesoftware.convert.tasks.BaseTask;
+import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableCell;
-import javafx.scene.layout.HBox;
+import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Paint;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -41,31 +40,12 @@ public class WorkflowStatusTableCell extends TableCell<BaseWorkflow, Void> {
         setGraphic(empty ? null : this.mainLabel);
         if (empty) return;
         BaseWorkflow current = getTableView().getItems().get(getIndex());
-        switch (current.status.get()) {
-            case PENDING -> {
-                this.mainLabel.setText("Pending");
-                this.mainLabel.setGraphic(this.pendingIcon);
-            }
-            case COMPLETED -> {
-                this.mainLabel.setText("Completed");
-                this.mainLabel.setGraphic(this.finishedIcon);
-            }
-            case RUNNING -> {
-                this.mainLabel.setText("Running");
-                this.mainLabel.setGraphic(this.runningIcon);
-            }
-            case FAILED -> {
-                this.mainLabel.setText("Failed");
-                this.mainLabel.setGraphic(this.failedIcon);
-            }
-            case WARNING -> {
-                this.mainLabel.setText("Error");
-                this.mainLabel.setGraphic(this.warningIcon);
-            }
-            default -> {
-                this.mainLabel.setText("Unknown");
-                this.mainLabel.setGraphic(this.failedIcon);
-            }
+        this.mainLabel.setText(current.getStatusString());
+        this.mainLabel.setGraphic(JobState.getStatusIcon(current.status.get(),15));
+        if (!current.statusText.isEmpty()) {
+            this.mainLabel.setTooltip(new Tooltip(current.statusText));
+        } else {
+            this.mainLabel.setTooltip(null);
         }
     }
 }

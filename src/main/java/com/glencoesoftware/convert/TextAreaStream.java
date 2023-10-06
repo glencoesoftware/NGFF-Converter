@@ -14,20 +14,19 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.OutputStream;
 
-// We want to capture stdout from Picocli into a JavaFX text area.
+// We want to capture stdout from workflows into a JavaFX text area.
 // We could write the stream directly, but this creates excessive GUI updates.
 // Instead, we'll capture lines into a temporary buffer and flush to console.
 // Note that Trace-level logs can print thousands of lines in a single operation.
 // We only show the last 1000 lines in the GUI.
-public class ConsoleStream extends OutputStream
+public class TextAreaStream extends OutputStream
 {
     private final TextArea output;
     private final StringBuilder buffer;
     private final int lineLimit = 1000;
     private boolean locked = false;
 
-    public ConsoleStream(TextArea logBox)
-    {
+    public TextAreaStream(TextArea logBox) {
         this.output = logBox;
         this.buffer = new StringBuilder();
     }
@@ -71,6 +70,5 @@ public class ConsoleStream extends OutputStream
             this.locked = false;
         });
     }
-
 }
 

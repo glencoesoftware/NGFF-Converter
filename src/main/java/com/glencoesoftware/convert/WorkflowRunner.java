@@ -28,24 +28,30 @@ class WorkflowRunner extends Task<Integer> {
     }
 
     @Override
-    protected Integer call() throws Exception {
+    protected Integer call() {
         int count = 0;
+        // Set everything to queued status
         for (BaseWorkflow job : jobList.getItems()) {
-            if (interrupted || (job.status.get() == BaseWorkflow.workflowStatus.COMPLETED) ||
-                    (job.status.get() == BaseWorkflow.workflowStatus.FAILED)) {
+            job.prepareToActivate();
+            if (job.status.get() == JobState.status.READY | job.status.get() == JobState.status.WARNING) {
+                job.status.set(JobState.status.QUEUED);
+            }
+        }
+        // Start executing jobs
+        for (BaseWorkflow job : jobList.getItems()) {
+            if (interrupted || (job.status.get() == JobState.status.COMPLETED) ||
+                    (job.status.get() == JobState.status.FAILED)) {
                 continue;
             }
-            LOGGER.info("Setup job with new config");
 
-            job.status.set(BaseWorkflow.workflowStatus.RUNNING);
+            job.status.set(JobState.status.RUNNING);
             Platform.runLater(() -> {
-                LOGGER.info("Working on " + job.firstInput.getName());
+                jobList.getSelectionModel().select(job);
                 jobList.refresh();
             });
 
             LOGGER.info("Running new model pipeline");
             job.execute();
-            LOGGER.info("Completed");
 
             //Todo: Cleanup intermediates?
 
@@ -60,6 +66,7 @@ class WorkflowRunner extends Task<Integer> {
                 }
                 default -> LOGGER.info("Job status is invalid????: " + job.status);
             }
+            count++;
 
             Platform.runLater(jobList::refresh);
         }

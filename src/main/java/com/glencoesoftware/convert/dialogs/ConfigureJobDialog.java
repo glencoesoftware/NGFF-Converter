@@ -37,8 +37,6 @@ public class ConfigureJobDialog {
     @FXML
     private Label taskLabel;
 
-    private void initialize() {}
-
     private void resetDialog() {
         this.jobs = null;
         standardSettings.getChildren().clear();
@@ -50,7 +48,7 @@ public class ConfigureJobDialog {
         nextButton.setDisable(false);
 }
 
-    public void initData(ObservableList<BaseWorkflow> jobs) {
+    public void initData(ObservableList<BaseWorkflow> jobs, int taskIndex) {
         resetDialog();
         this.jobs = jobs;
         if (jobs.isEmpty()) {
@@ -65,12 +63,16 @@ public class ConfigureJobDialog {
         else mainLabel.setText("Configuring %s".formatted(jobSample.getInput()));
 
         this.tasks = jobSample.tasks;
+        jobSample.prepareGUI();
+        this.taskIndex = taskIndex;
         displayTaskSettings();
     }
 
     private void displayTaskSettings() {
         standardSettings.getChildren().clear();
         advancedSettings.getChildren().clear();
+        prevButton.setDisable(this.taskIndex == 0);
+        nextButton.setDisable(this.taskIndex == tasks.size() - 1);
         this.currentTask = tasks.get(this.taskIndex);
         this.taskLabel.setText("Settings for %s".formatted(this.currentTask.getName()));
         ArrayList<Node> baseSettings = this.currentTask.getStandardSettings();
@@ -82,6 +84,7 @@ public class ConfigureJobDialog {
         } else {
             advancedPane.setVisible(false);
         }
+
     }
     @FXML
     private void applySettings() {
@@ -94,12 +97,14 @@ public class ConfigureJobDialog {
                 BaseTask task = this.tasks.get(i);
                 // Remember to apply settings to the first task
                 task.applySettings();
+                task.updateStatus();
                 // Iterate through the other selected jobs and apply the same settings
                 for (int j = 1; j < this.jobs.size(); j++) {
                     BaseWorkflow otherJob = this.jobs.get(j);
                     BaseTask otherTask = otherJob.tasks.get(i);
                     otherTask.cloneValues(task);
                     otherTask.applySettings();
+                    otherTask.updateStatus();
                 }
             }
             System.out.println("Done");
@@ -108,6 +113,7 @@ public class ConfigureJobDialog {
         // If there's just one task we do it this easy way.
         for (BaseTask task : this.tasks) {
             task.applySettings();
+            task.updateStatus();
         }
         System.out.println("Done");
     }
@@ -121,19 +127,11 @@ public class ConfigureJobDialog {
     @FXML
     private void nextTask() {
         this.taskIndex += 1;
-        if (this.taskIndex == tasks.size() - 1) {
-            nextButton.setDisable(true);
-        }
-        prevButton.setDisable(false);
         displayTaskSettings();
     }
     @FXML
     private void prevTask() {
         this.taskIndex -= 1;
-        if (this.taskIndex == 0) {
-            prevButton.setDisable(true);
-        }
-        nextButton.setDisable(false);
         displayTaskSettings();
     }
 

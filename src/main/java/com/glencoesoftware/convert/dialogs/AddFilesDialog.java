@@ -20,8 +20,6 @@ public class AddFilesDialog {
     private final Dialog<String> dialog;
 
 
-    private final VBox container;
-
     private final ChoiceBox<String> workflows;
     private final CheckBox setDefault;
     private final CheckBox doNotShowAgain;
@@ -67,7 +65,7 @@ public class AddFilesDialog {
         explainer.setPadding(spacer);
         explainer.setMinWidth(Control.USE_PREF_SIZE);
 
-        container = new VBox(10, title, workflows, setDefault, doNotShowAgain, explainer);
+        VBox container = new VBox(10, title, workflows, setDefault, doNotShowAgain, explainer);
         container.setFillWidth(true);
         container.setPadding(new Insets(10));
         dialog.getDialogPane().getChildren().add(container);
@@ -89,7 +87,7 @@ public class AddFilesDialog {
             }
             workflows.setValue(choice);
             Optional<String> result = dialog.showAndWait();
-            if (result.isEmpty()) { return null; };
+            if (result.isEmpty()) { return null; }
             choice = result.get();
             if (setDefault.isSelected()) {
                 prefs.put(PrimaryController.prefName.DEFAULT_FORMAT.name(), choice);

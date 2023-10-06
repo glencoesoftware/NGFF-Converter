@@ -3,6 +3,7 @@ package com.glencoesoftware.convert.tasks;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
+import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.google.common.base.Splitter;
 import javafx.beans.property.BooleanProperty;
@@ -92,7 +93,12 @@ public class CreateNGFF extends BaseTask{
     }
 
     public void setOutput(String basePath) {
-        this.output = Paths.get(basePath, this.outputName + ".zarr").toFile();
+        this.output = Paths.get(
+                basePath, this.outputName + ".zarr").toFile();
+    }
+
+    public void setOverwrite(boolean shouldOverwrite) {
+        converter.setOverwrite(shouldOverwrite);
     }
 
     private void setupIO() {
@@ -101,33 +107,43 @@ public class CreateNGFF extends BaseTask{
     }
 
     public void updateStatus() {
-        if (this.status == taskStatus.COMPLETED) { return; }
+        if (this.status == JobState.status.COMPLETED) { return; }
         if (this.output == null | this.input == null) {
-            this.status = taskStatus.ERROR;
+            this.status = JobState.status.WARNING;
             this.warningMessage = "I/O not configured";
-        } else {
-            this.status = taskStatus.PENDING;
+            return;
         }
+        if (this.output.exists() & !converter.getOverwrite()) {
+            this.status = JobState.status.WARNING;
+            this.warningMessage = "NGFF file %s already exists".formatted(this.output.getName());
+            return;
+        }
+        this.status = JobState.status.READY;
     }
 
     public void run() {
         // Apply GUI configurations first
         setupIO();
-        this.status = taskStatus.RUNNING;
+        LOGGER.info("Running bioformats2raw");
+        this.status = JobState.status.RUNNING;
         try {
             int result = converter.call();
             if (result == 0) {
-                this.status = taskStatus.COMPLETED;
+                this.status = JobState.status.COMPLETED;
+                LOGGER.info("NGFF creation complete");
             } else {
-                this.status = taskStatus.FAILED;
+                this.status = JobState.status.FAILED;
+                LOGGER.error("NGFF creation failed with exit code %d".formatted(result));
+
             }
         } catch (Exception e) {
-            System.out.println("Error");
-            this.status = taskStatus.FAILED;
+            LOGGER.error("NGFF creation failed - " + e);
+            this.status = JobState.status.FAILED;
         }
     }
 
-    private void generateNodes() {
+    public void generateNodes() {
+        if (standardSettings != null) return;
         UnaryOperator<TextFormatter.Change> integerFilter = change -> {
             String newText = change.getControlNewText();
             if (newText.matches("([1-9][0-9]*)?")) {
@@ -473,8 +489,8 @@ public class CreateNGFF extends BaseTask{
 
     }
 
-    private void updateNodes() {
-        logLevel.setValue("WARN");
+    public void updateNodes() {
+        logLevel.setValue(converter.getLogLevel());
         maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
         compression.setValue(converter.getCompression());
         tileHeight.setText(String.valueOf(converter.getTileHeight()));
@@ -494,6 +510,7 @@ public class CreateNGFF extends BaseTask{
         } else {
             scaleFormatCSV.setText(csvPath.toString());
         }
+        // Todo: Solve this conflict
         fillValue.setText(String.valueOf(converter.getFillValue()));
         Map<String, Object> compressionProps = converter.getCompressionProperties();
         if (compressionProps.containsKey("cname")) {
@@ -579,7 +596,7 @@ public class CreateNGFF extends BaseTask{
         if (!resolutions.getText().isEmpty()) {
             converter.setResolutions(Integer.parseInt(resolutions.getText()));
         }
-        if (series.getText().isEmpty()) {
+        if (!series.getText().isEmpty()) {
             converter.setSeriesList(Arrays.stream(series.getText().split(",")).map(Integer::parseInt).toList());
         }
         converter.setDimensionOrder(dimensionOrder.getValue());
@@ -588,35 +605,13 @@ public class CreateNGFF extends BaseTask{
         converter.setReuseExistingResolutions(useExistingResolutions.isSelected());
         converter.setChunkDepth(Integer.parseInt(chunkDepth.getText()));
         converter.setScaleFormat(scaleFormatString.getText());
-        if (scaleFormatCSV.getText().isEmpty()) {
+        if (scaleFormatCSV.getText() != null) {
             converter.setAdditionalScaleFormatCSV(Paths.get(scaleFormatCSV.getText()));
         }
-        if (fillValue.getText().isEmpty()) {
+        if (!fillValue.getText().isEmpty()) {
             converter.setFillValue(Short.valueOf(fillValue.getText()));
         }
-        Map<String, Object> compressionProps = new HashMap<>();
-        switch (compression.getValue()) {
-            case blosc -> {
-                if (compressorBloscCname.getValue() != null) {
-                    compressionProps.put("cname", compressorBloscCname.getValue());
-                }
-                if (compressorBloscClevel.getText().isEmpty()) {
-                    compressionProps.put("clevel", compressorBloscClevel.getText());
-                }
-                if (compressorBloscBlockSize.getText().isEmpty()) {
-                    compressionProps.put("blocksize", compressorBloscBlockSize.getText());
-                }
-                if (compressorBloscShuffle.getValue() != null) {
-                    compressionProps.put("shuffle", compressorBloscShuffle.getValue());
-                }
-            }
-            case zlib -> {
-                if (compressorZlibLevel.getText().isEmpty()) {
-                    compressionProps.put("level", compressorZlibLevel.getText());
-                }
-            }
-
-        }
+        Map<String, Object> compressionProps = getCompressionProps();
         converter.setCompressionProperties(compressionProps);
 
         converter.setMaxCachedTiles(Integer.parseInt(maxCachedTiles.getText()));
@@ -626,23 +621,54 @@ public class CreateNGFF extends BaseTask{
         converter.setUnnested(!nested.isSelected());
         converter.setNoOMEMeta(noOMEMeta.isSelected());
         converter.setNoRootGroup(noRoot.isSelected());
-        if (pyramidName.getText().isEmpty()) {
+        if (pyramidName.getText() != null) {
             converter.setPyramidName(pyramidName.getText());
         }
         converter.setKeepMemoFiles(keepMemos.isSelected());
-        if (memoDirectory.getText().isEmpty()) {
+        if (memoDirectory.getText() != null) {
             converter.setMemoDirectory(new File(memoDirectory.getText()));
         }
-        if (readerOptions.getText().isEmpty()) {
+        if (readerOptions.getText() != null) {
             converter.setReaderOptions(Arrays.stream(readerOptions.getText().split(",")).toList());
         }
-        if (outputOptions.getText().isEmpty()) {
+        if (outputOptions.getText() != null) {
             converter.setOutputOptions(Splitter.on(",")
                     .withKeyValueSeparator("=")
                     .split(outputOptions.getText()));
         }
         converter.setExtraReaders(desiredReaders.toArray(new Class<?>[0]));
+
     }
+
+
+
+    private Map<String, Object> getCompressionProps() {
+        Map<String, Object> compressionProps = new HashMap<>();
+        switch (compression.getValue()) {
+            case blosc -> {
+                if (compressorBloscCname.getValue() != null) {
+                    compressionProps.put("cname", compressorBloscCname.getValue());
+                }
+                if (compressorBloscClevel.getText() != null) {
+                    compressionProps.put("clevel", compressorBloscClevel.getText());
+                }
+                if (compressorBloscBlockSize.getText() != null) {
+                    compressionProps.put("blocksize", compressorBloscBlockSize.getText());
+                }
+                if (compressorBloscShuffle.getValue() != null) {
+                    compressionProps.put("shuffle", compressorBloscShuffle.getValue());
+                }
+            }
+            case zlib -> {
+                if (compressorZlibLevel.getText() != null) {
+                    compressionProps.put("level", compressorZlibLevel.getText());
+                }
+            }
+
+        }
+        return compressionProps;
+    }
+
 
     public void setDefaults() {
         return;
