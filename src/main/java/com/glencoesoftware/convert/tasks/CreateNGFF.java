@@ -9,18 +9,14 @@ import com.google.common.base.Splitter;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
+import org.controlsfx.control.ToggleSwitch;
 
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import ome.xml.model.enums.DimensionOrder;
@@ -37,6 +33,7 @@ import java.util.function.UnaryOperator;
 
 import static java.util.stream.Collectors.joining;
 
+// Run bioformats2raw on a file
 public class CreateNGFF extends BaseTask{
 
     public final Converter converter = new Converter();
@@ -55,7 +52,7 @@ public class CreateNGFF extends BaseTask{
     private ChoiceBox<DimensionOrder> dimensionOrder;
     private ChoiceBox<Downsampling> downsampling;
     private TextField minImageSize;
-    private CheckBox useExistingResolutions;
+    private ToggleSwitch useExistingResolutions;
     private TextField chunkDepth;
     private TextField scaleFormatString;
     private TextField scaleFormatCSV;
@@ -68,14 +65,14 @@ public class CreateNGFF extends BaseTask{
     private TextField compressorZlibLevel;
 
     private TextField maxCachedTiles;
-    private CheckBox disableMinMax;
-    private CheckBox disableHCS;
-    private CheckBox nested;
-    private CheckBox noOMEMeta;
-    private CheckBox noRoot;
+    private ToggleSwitch disableMinMax;
+    private ToggleSwitch disableHCS;
+    private ToggleSwitch nested;
+    private ToggleSwitch noOMEMeta;
+    private ToggleSwitch noRoot;
 
     private TextField pyramidName;
-    private CheckBox keepMemos;
+    private ToggleSwitch keepMemos;
     private TextField memoDirectory;
 
     private TextField readerOptions;
@@ -168,106 +165,150 @@ public class CreateNGFF extends BaseTask{
             return null;
         };
 
-
         standardSettings = new ArrayList<>();
         advancedSettings = new ArrayList<>();
+
         logLevel = new ChoiceBox<>(FXCollections.observableArrayList("OFF", "ERROR", "WARN",
                 "INFO", "DEBUG", "TRACE", "ALL"));
-        HBox logSettings = new HBox(5, new Label("Log Level"), logLevel);
-        logSettings.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(logSettings);
+        standardSettings.add(getSettingContainer(
+                logLevel,
+                "Log Level",
+                "Detail level of logs to record"
+        ));
 
         maxWorkers = new TextField();
         maxWorkers.setTextFormatter(new TextFormatter<>(integerFilter));
-        HBox workerBox = new HBox(5, new Label("Max Workers"), maxWorkers);
-        workerBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(workerBox);
+        standardSettings.add(getSettingContainer(
+                maxWorkers,
+                "Max Workers",
+                "Maximum number of worker processes to use for this task"
+        ));
 
         compression = new ChoiceBox<>();
         compression.setItems(FXCollections.observableArrayList( ZarrCompression.values()));
-        HBox compressionBox = new HBox(5, new Label("Compression Type"), compression);
-        compressionBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(compressionBox);
+        standardSettings.add(getSettingContainer(
+                compression,
+                "Compression Type",
+                """
+                        Type of compression to use with the image.
+                        
+                        blosc - Fast, lossless compression (recommended)
+                        zlib - Alternative lossless compression
+                        null/raw - No compression. Will increase file size
+                        """
+        ));
 
         tileHeight = new TextField();
         tileHeight.setTextFormatter(new TextFormatter<>(integerFilter));
-        HBox tileHeightBox = new HBox(5, new Label("Tile Height"), tileHeight);
-        tileHeightBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(tileHeightBox);
+        standardSettings.add(getSettingContainer(
+                tileHeight,
+                "Tile height",
+                """
+                Maximum tile height (default: 1024). This is both
+                the chunk size (in Y) when writing Zarr and the
+                tile size used for reading from the original
+                data. Changing the tile size may have
+                performance implications.
+                """
+        ));
 
         tileWidth = new TextField();
         tileWidth.setTextFormatter(new TextFormatter<>(integerFilter));
-        HBox tileWidthBox = new HBox(5, new Label("Tile Width"), tileWidth);
-        tileWidthBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(tileWidthBox);
+        standardSettings.add(getSettingContainer(
+                tileWidth,
+                "Tile width",
+                """
+                        Maximum tile width (default: 1024).
+                        This is both the chunk size (in X) when writing
+                        Zarr and the tile size used for reading from the
+                        original data. Changing the tile size may have
+                        performance implications.
+                        """
+
+        ));
 
         resolutions = new TextField();
         resolutions.setTextFormatter(new TextFormatter<>(integerFilter));
-        HBox resolutionsBox = new HBox(5, new Label("Resolutions"), resolutions);
-        resolutionsBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(resolutionsBox);
+        standardSettings.add(getSettingContainer(
+                resolutions,
+                "Resolutions",
+                "Number of pyramid resolutions to generate"
+        ));
 
         series = new TextField();
-        series.setTooltip(new Tooltip("Comma-separated list of series indexes to convert"));
-        HBox seriesBox = new HBox(5, new Label("Series"), series);
-        seriesBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(seriesBox);
+        standardSettings.add(getSettingContainer(
+                series,
+                "Series",
+                "Comma-separated list of series indexes to convert"
+        ));
 
-
-
+        /* Begin advanced settings */
 
         dimensionOrder = new ChoiceBox<>();
         dimensionOrder.setItems(FXCollections.observableArrayList( DimensionOrder.values()));
-        HBox dimensionBox = new HBox(5, new Label("Dimension Order"), dimensionOrder);
-        dimensionBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(dimensionBox);
+        advancedSettings.add(getSettingContainer(
+                dimensionOrder,
+                "Dimension Order",
+                """
+                Override the input file dimension order in the
+                output file.
+                [Can break compatibility with raw2ometiff]
+                """
+        ));
 
         downsampling = new ChoiceBox<>();
         downsampling.setItems(FXCollections.observableArrayList( Downsampling.values()));
-        HBox downsampleBox = new HBox(5, new Label("Downsampling Type"), downsampling);
-        downsampleBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(downsampleBox);
+        advancedSettings.add(getSettingContainer(
+                downsampling,
+                "Downsampling Type",
+                "Tile downsampling algorithm used for pyramid resolutions"
+        ));
 
         minImageSize = new TextField();
         minImageSize.setTextFormatter(new TextFormatter<>(integerFilter));
-        minImageSize.setTooltip(new Tooltip("""
+        advancedSettings.add(getSettingContainer(
+                minImageSize,
+                "Minimum Resolution Size",
+                """
                 Specifies the desired size for the largest XY
                 dimension of the smallest resolution, when
                 calculating the number of resolutions to generate.
                 If the target size cannot be matched exactly,
                 the largest XY dimension of the smallest
-                resolution should be smaller than the target size."""));
-        HBox minImageSizeBox = new HBox(5, new Label("Minimum Resolution Size"), minImageSize);
-        minImageSizeBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(minImageSizeBox);
+                resolution should be smaller than the target size.
+                """
+        ));
 
-        useExistingResolutions = new CheckBox("Use Existing Resolutions");
-        useExistingResolutions.setTooltip(new Tooltip("""
+        useExistingResolutions = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                useExistingResolutions,
+                "Use Existing Resolutions",
+                """
                 Use existing sub resolutions from original input format.
                 [Will break compatibility with raw2ometiff]
-                """));
-        advancedSettings.add(useExistingResolutions);
+                """
+        ));
 
         chunkDepth = new TextField();
         chunkDepth.setTextFormatter(new TextFormatter<>(integerFilterZero));
-        chunkDepth.setTooltip(new Tooltip("Maximum chunk depth to read"));
-        HBox chunkDepthBox = new HBox(5, new Label("Maximum Chunk Depth"), chunkDepth);
-        chunkDepthBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(chunkDepthBox);
+        advancedSettings.add(getSettingContainer(
+                chunkDepth,
+                "Maximum Chunk Depth",
+                "Maximum chunk depth to read"
+        ));
 
         scaleFormatString = new TextField();
-        scaleFormatString.setTooltip(new Tooltip(
+        advancedSettings.add(getSettingContainer(
+                scaleFormatString,
+                "Scale Format String",
                 """
                          Format string for scale paths; the first two
-                         arguments will always be series and resolution
-                         followed by any additional arguments brought in
-                         from the Scale Format CSV.
+                        arguments will always be series and resolution
+                        followed by any additional arguments brought in
+                        from the Scale Format CSV.
                         [Can break compatibility with raw2ometiff]
-                        """));
-        HBox scaleStringBox = new HBox(5, new Label("Scale Format String"), scaleFormatString);
-        scaleStringBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(scaleStringBox);
-
+                        """
+        ));
 
         scaleFormatCSV = new TextField();
         scaleFormatCSV.setEditable(false);
@@ -281,76 +322,110 @@ public class CreateNGFF extends BaseTask{
                 scaleFormatCSV.setText(selectedFile.getAbsolutePath());
             }
         });
-        HBox scaleCSVBox = new HBox(5, new Label("Scale Format CSV"), scaleFormatCSV);
-        scaleCSVBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(scaleCSVBox);
+        advancedSettings.add(getSettingContainer(
+                scaleFormatCSV,
+                "Scale Format CSV",
+                """
+                        Additional format string argument CSV file
+                        (without header row).  Arguments will be added
+                        to the end of the scale format string mapping
+                        the at the corresponding CSV row index.  It is
+                        expected that the CSV file contain exactly the
+                        same number of rows as the input file has series
+                        """
+        ));
 
         fillValue = new TextField();
         fillValue.setTextFormatter(new TextFormatter<>(integerFilterZero));
-        HBox fillValueBox = new HBox(5, new Label("Fill Value"), fillValue);
-        fillValueBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(fillValueBox);
+        advancedSettings.add(getSettingContainer(
+                fillValue,
+                "Fill Value",
+                """
+                        Default value to fill in for missing tiles (0-255)
+                        (currently .mrxs only)
+                        """
+        ));
 
         maxCachedTiles = new TextField();
         maxCachedTiles.setTextFormatter(new TextFormatter<>(integerFilter));
-        HBox cachedTilesBox = new HBox(5, new Label("Max Cached Tiles"), maxCachedTiles);
-        cachedTilesBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(cachedTilesBox);
+        advancedSettings.add(getSettingContainer(
+                maxCachedTiles,
+                "Max Cached Tiles",
+                """
+                        Maximum number of tiles that will be cached across
+                        all workers
+                        """
+        ));
 
-
-
-        disableMinMax = new CheckBox("Calculate min/max values");
-        disableMinMax.setTooltip(new Tooltip("""
+        disableMinMax = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                disableMinMax,
+                "Calculate min/max values",
+                """
                 Whether to calculate minimum and maximum pixel
                 values. Min/max calculation can result in slower
                 conversions. If true, min/max values are saved
-                as OMERO rendering metadata (true by default)"""));
-        advancedSettings.add(disableMinMax);
+                as OMERO rendering metadata
+                """
+        ));
 
-        disableHCS = new CheckBox("Disable HCS writing");
-        disableHCS.setTooltip(new Tooltip("Turn off HCS writing"));
-        advancedSettings.add(disableHCS);
+        disableHCS = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                disableHCS,
+                "Disable HCS Writing",
+                "Turn off HCS writing"
+        ));
 
-        nested = new CheckBox("Nested structure");
-        nested.setTooltip(new Tooltip("""
+        nested = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                nested,
+                "Nested Structure",
+                """
                 Whether to use '/' as the chunk path separator.
                 Has the added effect of making blocks appear as
                 subdirectories when viewed in your OS file browser.
-                """));
-        advancedSettings.add(nested);
+                """
+        ));
 
-        noOMEMeta = new CheckBox("Disable OME metadata");
-        noOMEMeta.setTooltip(new Tooltip("""
+        noOMEMeta = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                noOMEMeta,
+                "Disable OME metadata",
+                """
                 Turn off OME metadata exporting
                 [Will break compatibility with raw2ometiff]
-                """));
-        advancedSettings.add(noOMEMeta);
+                """
+        ));
 
-        noRoot = new CheckBox("Disable root group");
-        noRoot.setTooltip(new Tooltip("""
+        noRoot = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                noRoot,
+                "Disable root group",
+                """
                 Turn off creation of root group and corresponding metadata
                 [Will break compatibility with raw2ometiff]
-                """));
-        advancedSettings.add(noRoot);
+                """
+        ));
 
         pyramidName = new TextField();
-        pyramidName.setTooltip(new Tooltip("""
+        advancedSettings.add(getSettingContainer(
+                pyramidName,
+                "Pyramid name",
+                """
                 Name of pyramid
                 [Can break compatibility with raw2ometiff]
-                """));
-        HBox pyramidNameBox = new HBox(5, new Label("Pyramid name"), pyramidName);
-        pyramidNameBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(pyramidNameBox);
+                """
+        ));
 
-        keepMemos = new CheckBox("Keep memo files");
-        keepMemos.setTooltip(new Tooltip("""
-                Do not delete .bfmemo files created during conversion
-                """));
-        advancedSettings.add(keepMemos);
+        keepMemos = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                keepMemos,
+                "Keep Memo Files",
+                "Do not delete .bfmemo files created during conversion"
+        ));
 
         memoDirectory = new TextField();
         memoDirectory.setEditable(false);
-        memoDirectory.setTooltip(new Tooltip("Directory used to store .bfmemo cache files"));
         memoDirectory.onMouseClickedProperty().set(e -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setTitle("Choose memo file directory");
@@ -359,19 +434,17 @@ public class CreateNGFF extends BaseTask{
                 memoDirectory.setText(newDir.getAbsolutePath());
             }
         });
-        HBox memoDirectoryBox = new HBox(5, new Label("Memo file directory"), memoDirectory);
-        memoDirectoryBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(memoDirectoryBox);
+        advancedSettings.add(getSettingContainer(
+                memoDirectory,
+                "Memo file directory",
+                "Directory used to store .bfmemo cache files"
+        ));
 
-
-        compressionPropertiesBox = new VBox(5);
-        compressionPropertiesBox.setPadding(new Insets(5));
-        compressionPropertiesBox.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID,
-                CornerRadii.EMPTY, BorderWidths.DEFAULT)));
+        compressionPropertiesBox = getSettingGroupContainer();
+        Label compressionTitle = getSettingHeader("Compression Properties",
+                "Parameters to be supplied to the compression algorithm");
         advancedSettings.add(compressionPropertiesBox);
 
-        Label compressionTitle = new Label("Compression Properties");
-        compressionTitle.setFont(Font.font("ARIEL", FontWeight.BOLD, 12));
         Hyperlink compressionHelpText = new Hyperlink("Help");
         compressionHelpText.setOnAction(e -> {
             try {
@@ -384,30 +457,43 @@ public class CreateNGFF extends BaseTask{
 
         compressorBloscCname = new ChoiceBox<>(FXCollections.observableArrayList(
                 "zstd", "blosclz", "lz4", "lz4hc", "zlib"));
-        HBox bloscCnameBox = new HBox(5, new Label("cname"), compressorBloscCname);
-        bloscCnameBox.setAlignment(Pos.CENTER_LEFT);
-
+        VBox bloscCnameBox = getSettingContainer(
+                compressorBloscCname,
+                "cname",
+                ""
+        );
 
         compressorBloscClevel = new TextField();
         compressorBloscClevel.setTextFormatter(new TextFormatter<>(integerFilterSingleDigit));
-        HBox bloscLevelBox = new HBox(5, new Label("clevel"), compressorBloscClevel);
-        bloscLevelBox.setAlignment(Pos.CENTER_LEFT);
+        VBox bloscLevelBox = getSettingContainer(
+                compressorBloscClevel,
+                "clevel",
+                ""
+        );
 
         compressorBloscBlockSize = new TextField();
         compressorBloscBlockSize.setTextFormatter(new TextFormatter<>(integerFilter));
-        HBox bloscSizeBox = new HBox(5, new Label("blocksize"), compressorBloscBlockSize);
-        bloscSizeBox.setAlignment(Pos.CENTER_LEFT);
-
+        VBox bloscSizeBox = getSettingContainer(
+                compressorBloscBlockSize,
+                "blocksize",
+                ""
+        );
 
         compressorBloscShuffle = new ChoiceBox<>(FXCollections.observableArrayList(
                 "-1 (AUTOSHUFFLE)", "0 (NOSHUFFLE)", "1 (BYTESHUFFLE)", "2 (BITSHUFFLE)"));
-        HBox bloscShuffleBox = new HBox(5, new Label("shuffle"), compressorBloscShuffle);
-        bloscShuffleBox.setAlignment(Pos.CENTER_LEFT);
+        VBox bloscShuffleBox = getSettingContainer(
+                compressorBloscShuffle,
+                "shuffle",
+                ""
+        );
 
         compressorZlibLevel = new TextField();
         compressorZlibLevel.setTextFormatter(new TextFormatter<>(integerFilterSingleDigit));
-        HBox zlibLevelBox = new HBox(5, new Label("level"), compressorZlibLevel);
-        zlibLevelBox.setAlignment(Pos.CENTER_LEFT);
+        VBox zlibLevelBox = getSettingContainer(
+                compressorZlibLevel,
+                "level",
+                ""
+        );
 
         compression.getSelectionModel().selectedIndexProperty().addListener(
                 (observableValue, number, number2) -> {
@@ -435,24 +521,29 @@ public class CreateNGFF extends BaseTask{
                 Reader-specific options, in format
                 key=value,key2=value2
                 """));
-        HBox readerOptionsBox = new HBox(5, new Label("Reader options"), readerOptions);
-        readerOptionsBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(readerOptionsBox);
+        advancedSettings.add(getSettingContainer(
+                readerOptions,
+                "Reader Options",
+                """
+                        Reader-specific options, in format
+                        key=value,key2=value2
+                        """
+        ));
 
         outputOptions = new TextField();
-        outputOptions.setTooltip(new Tooltip("""
+        advancedSettings.add(getSettingContainer(
+                outputOptions,
+                "Output Options",
+                """
                 Key-value pairs to be used as
                 an additional argument to Filesystem
                 implementations if used. In format
                 key=value,key2=value2
-                 For example,
+                For example,
                 s3fs_path_style_access=true
                 might be useful for connecting to minio.
-                """));
-        HBox outputOptionsBox = new HBox(5, new Label("Output options"), outputOptions);
-        outputOptionsBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(outputOptionsBox);
-
+                """
+        ));
 
         extraReaders = new ListView<>();
 
@@ -476,16 +567,11 @@ public class CreateNGFF extends BaseTask{
         });
         desiredReaders.addAll(FXCollections.observableArrayList(allReaders));
 
-        VBox extraReadersBox = new VBox(5, new Label("Extra Readers"), extraReaders);
-        extraReadersBox.setPadding(new Insets(5));
-        extraReadersBox.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID,
-                CornerRadii.EMPTY, BorderWidths.DEFAULT)));
-        advancedSettings.add(extraReadersBox);
-
-
-
-        // Todo: Pull overwrite from output task
-
+        advancedSettings.add(getSettingContainer(
+                extraReaders,
+                "Extra Readers",
+                "Use this dialog to enable/disable extra image format readers"
+        ));
 
     }
 
@@ -516,28 +602,28 @@ public class CreateNGFF extends BaseTask{
         if (compressionProps.containsKey("cname")) {
             compressorBloscCname.setValue((String) compressionProps.get("cname"));
         } else {
-            compressorBloscCname.setValue(null);
+            compressorBloscCname.setValue("lz4");
         }
         if (compressionProps.containsKey("blocksize")) {
             compressorBloscBlockSize.setText((String) compressionProps.get("blocksize"));
         } else {
-            compressorBloscBlockSize.setText(null);
+            compressorBloscBlockSize.setText("0");
         }
         if (compressionProps.containsKey("clevel")) {
             compressorBloscClevel.setText((String) compressionProps.get("clevel"));
         } else {
-            compressorBloscClevel.setText(null);
+            compressorBloscClevel.setText("5");
         }
         if (compressionProps.containsKey("shuffle")) {
             // Auto = -1, No = 0, Byte = 1, Bit = 2. So add 1 to get an index for the choicebox
             compressorBloscShuffle.getSelectionModel().select((int) compressionProps.get("shuffle") + 1);
         } else {
-            compressorBloscShuffle.setValue(null);
+            compressorBloscShuffle.getSelectionModel().select(2);
         }
         if (compressionProps.containsKey("level")) {
             compressorZlibLevel.setText((String) compressionProps.get("level"));
         } else {
-            compressorZlibLevel.setText(null);
+            compressorZlibLevel.setText("1");
         }
 
         maxCachedTiles.setText(String.valueOf(converter.getMaxCachedTiles()));
@@ -656,7 +742,8 @@ public class CreateNGFF extends BaseTask{
                     compressionProps.put("blocksize", compressorBloscBlockSize.getText());
                 }
                 if (compressorBloscShuffle.getValue() != null) {
-                    compressionProps.put("shuffle", compressorBloscShuffle.getValue());
+                    // Auto = -1, No = 0, Byte = 1, Bit = 2. So subtract 1 to convert
+                    compressionProps.put("shuffle", compressorBloscShuffle.getSelectionModel().getSelectedIndex() - 1);
                 }
             }
             case zlib -> {

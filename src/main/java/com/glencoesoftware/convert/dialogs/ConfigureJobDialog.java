@@ -4,11 +4,12 @@ import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.ArrayList;
 
@@ -36,11 +37,40 @@ public class ConfigureJobDialog {
     private Label mainLabel;
     @FXML
     private Label taskLabel;
+    @FXML
+    private TitledPane advancedExpando;
+
+    public void initialize() {
+        HBox expandoHeader = new HBox(5);
+        expandoHeader.setMaxWidth(Double.MAX_VALUE);
+        expandoHeader.setAlignment(Pos.CENTER_LEFT);
+        Label expandoText = new Label("Show Advanced Settings...");
+        expandoText.getStyleClass().add("expando-title");
+        Region expandoSpacer = new Region();
+        FontIcon collapseButton = new FontIcon("bi-caret-down-fill");
+        expandoHeader.getChildren().addAll(expandoText, expandoSpacer, collapseButton);
+        HBox.setHgrow(expandoSpacer, Priority.ALWAYS);
+        expandoHeader.setPrefWidth(350);
+        advancedExpando.expandedProperty().addListener((e, ov, nv) -> {
+            if (nv) {
+                expandoText.setText("Hide advanced settings...");
+                collapseButton.setIconLiteral("bi-caret-up-fill");
+            } else {
+                expandoText.setText("Show advanced settings...");
+                collapseButton.setIconLiteral("bi-caret-down-fill");
+            }
+        });
+        advancedExpando.setGraphic(expandoHeader);
+        advancedExpando.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+
+    }
 
     private void resetDialog() {
         this.jobs = null;
         standardSettings.getChildren().clear();
         advancedSettings.getChildren().clear();
+        standardSettings.setFillWidth(true);
+        standardSettings.setMaxWidth(Double.MAX_VALUE);
         this.tasks = null;
         this.taskIndex = 0;
         this.currentTask = null;
@@ -74,7 +104,7 @@ public class ConfigureJobDialog {
         prevButton.setDisable(this.taskIndex == 0);
         nextButton.setDisable(this.taskIndex == tasks.size() - 1);
         this.currentTask = tasks.get(this.taskIndex);
-        this.taskLabel.setText("Settings for %s".formatted(this.currentTask.getName()));
+        this.taskLabel.setText("Settings for: %s".formatted(this.currentTask.getName()));
         ArrayList<Node> baseSettings = this.currentTask.getStandardSettings();
         ArrayList<Node> advSettings = this.currentTask.getAdvancedSettings();
         if (baseSettings != null) standardSettings.getChildren().addAll(baseSettings);
@@ -119,7 +149,7 @@ public class ConfigureJobDialog {
     }
 
     @FXML
-    private void closeDialog() {
+    private void onClose() {
         Stage stage = (Stage) configureJob.getScene().getWindow();
         stage.close();
     }
@@ -133,6 +163,18 @@ public class ConfigureJobDialog {
     private void prevTask() {
         this.taskIndex -= 1;
         displayTaskSettings();
+    }
+    @FXML
+    private void restoreDefaults() {
+
+    }
+    @FXML
+    private void setDefaults() {
+
+    }
+    @FXML
+    private void applyToAll() {
+
     }
 
 }

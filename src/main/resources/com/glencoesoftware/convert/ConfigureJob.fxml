@@ -3,19 +3,33 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 
-<BorderPane fx:id="configureJob" prefHeight="600.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.ConfigureJobDialog">
+<BorderPane fx:id="configureJob" prefHeight="600.0" prefWidth="440.0" stylesheets="@ConfigureJob.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.ConfigureJobDialog">
    <top>
       <VBox BorderPane.alignment="CENTER">
-            <Label fx:id="mainLabel" alignment="TOP_CENTER" maxWidth="1.7976931348623157E308" text="Configuring {{Workflow}}" textAlignment="CENTER">
-            <font>
-               <Font name="System Bold" size="24.0" />
-            </font>
-         </Label>
+          <HBox alignment="CENTER">
+              <HBox.margin>
+                  <Insets />
+              </HBox.margin>
+              <Label fx:id="mainLabel" alignment="TOP_CENTER" maxWidth="1.7976931348623157E308" text="Configuring {{Workflow}}" textAlignment="CENTER" HBox.hgrow="ALWAYS" />
+              <Button contentDisplay="GRAPHIC_ONLY" maxHeight="32.0" maxWidth="32.0" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" prefWidth="32.0" styleClass="close-button">
+                  <graphic>
+                      <FontIcon iconColor="black" iconLiteral="bi-x" iconSize="30" styleClass="close-icon" />
+                  </graphic>
+              </Button>
+          </HBox>
             <HBox alignment="CENTER_LEFT" spacing="5.0" VBox.vgrow="NEVER">
-                <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevTask" text="&lt;" />
-                <Button fx:id="nextButton" mnemonicParsing="false" onAction="#nextTask" text="&gt;" />
+                <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevTask" prefHeight="32.0" prefWidth="32.0" styleClass="task-arrow">
+                    <graphic>
+                       <FontIcon iconColor="black" iconLiteral="bi-chevron-left" iconSize="16" />
+                    </graphic>
+                </Button>
+                <Button fx:id="nextButton" mnemonicParsing="false" onAction="#nextTask" prefHeight="32.0" prefWidth="32.0" styleClass="task-arrow">
+                    <graphic>
+                        <FontIcon iconColor="black" iconLiteral="bi-chevron-right" iconSize="16" />
+                    </graphic>
+                </Button>
                 <Label fx:id="taskLabel" text="Settings for {{Task Name}}" HBox.hgrow="ALWAYS" />
             </HBox>
          <BorderPane.margin>
@@ -24,43 +38,53 @@
       </VBox>
    </top>
    <center>
-      <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-        <content>
-            <VBox>
-               <children>
-                  <VBox fx:id="standardSettings" alignment="TOP_CENTER" maxHeight="1.7976931348623157E308" spacing="10.0" VBox.vgrow="SOMETIMES">
-                     <VBox.margin>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </VBox.margin>
-                  </VBox>
-                  <Accordion fx:id="advancedPane" VBox.vgrow="SOMETIMES">
-                    <panes>
-                      <TitledPane alignment="CENTER" contentDisplay="RIGHT" text="Advanced Settings">
-                           <content>
-                              <VBox fx:id="advancedSettings" maxHeight="1.7976931348623157E308" spacing="10.0">
-                                 <padding>
-                                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                                 </padding>
-                              </VBox>
-                           </content>
-                      </TitledPane>
-                    </panes>
-                  </Accordion>
-                  <Region prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
-               </children>
-            </VBox>
-        </content>
-      </ScrollPane>
+       <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefHeight="200.0" prefWidth="200.0" vbarPolicy="ALWAYS" BorderPane.alignment="CENTER">
+           <VBox styleClass="vbox">
+               <VBox fx:id="standardSettings" maxHeight="1.7976931348623157E308" spacing="20.0" styleClass="vbox" VBox.vgrow="SOMETIMES">
+                   <VBox.margin>
+                       <Insets bottom="5.0" left="5.0" right="5.0" top="10.0" />
+                   </VBox.margin>
+               </VBox>
+               <Accordion fx:id="advancedPane" VBox.vgrow="SOMETIMES">
+                   <panes>
+                       <TitledPane fx:id="advancedExpando" alignment="CENTER" contentDisplay="GRAPHIC_ONLY" text="Advanced Settings">
+                           <VBox fx:id="advancedSettings" maxHeight="1.7976931348623157E308" spacing="20.0" styleClass="vbox">
+                               <padding>
+                                   <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+                               </padding>
+                           </VBox>
+                       </TitledPane>
+                   </panes>
+               </Accordion>
+               <Region prefHeight="200.0" prefWidth="200.0" styleClass="vbox" VBox.vgrow="ALWAYS" />
+           </VBox>
+       </ScrollPane>
    </center>
    <bottom>
-      <ButtonBar BorderPane.alignment="CENTER">
-        <buttons>
-          <Button mnemonicParsing="false" onAction="#closeDialog" text="Close" />
-            <Button layoutX="230.0" layoutY="10.0" mnemonicParsing="false" onAction="#applySettings" text="Apply" />
-        </buttons>
+      <HBox spacing="10.0" BorderPane.alignment="CENTER">
+        <MenuButton popupSide="TOP" prefHeight="32.0" styleClass="minor-button" text="Options">
+            <items>
+                <MenuItem mnemonicParsing="false" onAction="#restoreDefaults" text="Restore Defaults" />
+                <MenuItem mnemonicParsing="false" onAction="#setDefaults" text="Set Defaults" />
+                <MenuItem mnemonicParsing="false" onAction="#applyToAll" text="Apply to all" />
+            </items>
+            <padding>
+               <Insets left="12.0" right="12.0" />
+            </padding>
+            </MenuButton>
+        <Region styleClass="hbox" HBox.hgrow="ALWAYS" />
+
+          <Button mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" styleClass="minor-button" text="Close">
+            <padding>
+               <Insets left="12.0" right="12.0" />
+            </padding></Button>
+        <Button mnemonicParsing="false" onAction="#applySettings" prefHeight="32.0" styleClass="major-button" text="Apply Settings">
+            <padding>
+               <Insets left="12.0" right="12.0" />
+            </padding></Button>
          <BorderPane.margin>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
          </BorderPane.margin>
-      </ButtonBar>
+      </HBox>
    </bottom>
 </BorderPane>

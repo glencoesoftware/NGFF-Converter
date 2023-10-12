@@ -4,8 +4,14 @@ import ch.qos.logback.classic.Level;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -99,5 +105,54 @@ public abstract class BaseTask {
     // Should receive global overwrite setting and apply that to the engine if necessary.
     public void setOverwrite(boolean shouldOverwrite) {
     }
+
+    public VBox getSettingContainer(Node node, String headerText, String tooltipText) {
+        return new VBox(5, getSettingHeader(headerText, tooltipText), node);
+    }
+
+
+    public VBox getSettingContainer(ChoiceBox<?> node, String headerText, String tooltipText) {
+        VBox container = new VBox(5, getSettingHeader(headerText, tooltipText), node);
+        node.setMaxWidth(Double.MAX_VALUE);
+        return container;
+    }
+
+    public static VBox getSettingContainer(TextField node, String headerText, String tooltipText) {
+        VBox container = new VBox(5, getSettingHeader(headerText, tooltipText), node);
+        node.setMaxWidth(Double.MAX_VALUE);
+        return container;
+    }
+
+    // Create a bordered container for grouping settings together
+    public VBox getSettingGroupContainer() {
+        VBox container = new VBox(5);
+        container.getStyleClass().add("setting-subcontainer");
+        return container;
+
+    }
+
+    private static final Font labelFont = Font.font("Roboto", FontWeight.BOLD, 14);
+    private static final Paint labelColor = Paint.valueOf("#455A64");
+
+    // Get a nice-looking capsule for the setting, including a header and tooltip
+    public static Label getSettingHeader(String labelText, String tooltipText) {
+        Label label = new Label(labelText);
+        label.getStyleClass().add("setting-label");
+        label.setTextFill(labelColor);
+        if (!tooltipText.isEmpty()) {
+            FontIcon help = new FontIcon("bi-question-circle");
+            help.setIconSize(14);
+            help.setIconColor(labelColor);
+            label.setGraphic(help);
+            label.setContentDisplay(ContentDisplay.RIGHT);
+            Tooltip tooltip = new Tooltip(tooltipText);
+            tooltip.setAutoHide(true);
+            label.setTooltip(tooltip);
+            // User can click the 'help' icon to see the tooltip (without having to hover)
+            help.setOnMouseClicked(e -> tooltip.show(label, e.getScreenX(), e.getScreenY()));
+        }
+        return label;
+    }
+
 
 }

@@ -5,19 +5,17 @@ import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.pyramid.CompressionType;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.collections.FXCollections;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.*;
 import loci.formats.codec.CodecOptions;
 import loci.formats.codec.JPEG2000CodecOptions;
+import org.controlsfx.control.ToggleSwitch;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.function.UnaryOperator;
 
+// Run raw2ometiff on a file
 public class CreateTiff extends BaseTask {
 
     private final PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
@@ -38,13 +36,13 @@ public class CreateTiff extends BaseTask {
     private ChoiceBox<CompressionType> compression;
 
     private ChoiceBox<String> logLevel;
-    private CheckBox legacy;
+    private ToggleSwitch legacy;
     private TextField maxWorkers;
     private TextField compressionQuality;
 
-    private CheckBox rgb;
+    private ToggleSwitch rgb;
 
-    private CheckBox split;
+    private ToggleSwitch split;
 
 
     public void setOutput(String basePath) {
@@ -106,34 +104,55 @@ public class CreateTiff extends BaseTask {
 
         logLevel = new ChoiceBox<>(FXCollections.observableArrayList("OFF", "ERROR", "WARN",
                 "INFO", "DEBUG", "TRACE","ALL"));
-        HBox logSettings = new HBox(5, new Label("Log Level"), logLevel);
-        logSettings.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(logSettings);
+        standardSettings.add(getSettingContainer(
+                logLevel,
+                "Log Level",
+                "Detail level of logs to record"
+        ));
 
         maxWorkers = new TextField();
         maxWorkers.setTextFormatter(new TextFormatter<>(integerFilter));
-        HBox workerBox = new HBox(5, new Label("Max Workers"), maxWorkers);
-        workerBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(workerBox);
+        standardSettings.add(getSettingContainer(
+                maxWorkers,
+                "Max Workers",
+                "Maximum number of worker processes to use for this task"
+        ));
 
         compression = new ChoiceBox<>();
         compression.setItems(FXCollections.observableArrayList( CompressionType.values()));
-        HBox compressionBox = new HBox(5, new Label("Compression Type"), compression);
-        compressionBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(compressionBox);
+        standardSettings.add(getSettingContainer(
+                compression,
+                "Compression Type",
+                "Compression type for output OME-TIFF file"
+        ));
 
-        rgb = new CheckBox("RGB");
-        advancedSettings.add(rgb);
+        rgb = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                rgb,
+                "RGB",
+                "Attempt to write channels as RGB; channel count must be a multiple of 3"
+        ));
 
-        split = new CheckBox("Split series");
-        advancedSettings.add(split);
+        split = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                split,
+                "Split Series",
+                "Split output into one OME-TIFF file per OME Image/Zarr group"
+        ));
 
-        legacy = new CheckBox("Legacy mode");
-        advancedSettings.add(legacy);
+        legacy = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                legacy,
+                "Legacy Mode",
+                "Write a Bio-Formats 5.9.x pyramid instead of OME-TIFF"
+        ));
 
         compressionQuality = new TextField();
         compressionQuality.setTextFormatter(new TextFormatter<>(floatFilter));
-        compressionQuality.setTooltip(new Tooltip("""
+        advancedSettings.add(getSettingContainer(
+                compressionQuality,
+                "Compression Quality",
+                """
                 Only applied if compression type is set to JPEG-2000 Lossy.
                 This option controls the encoded bitrate in bits per pixel.
                 The quality is a floating point number and must be greater than 0.
@@ -147,10 +166,8 @@ public class CreateTiff extends BaseTask {
                  We recommend experimenting with different quality values between 0.25 and the
                  bit depth of the input image to find an acceptable tradeoff between file size
                  and visual appeal of the converted images.
-                """));
-        HBox compressionQualityBox = new HBox(5, new Label("Compression Quality"), compressionQuality);
-        compressionQualityBox.setAlignment(Pos.CENTER_LEFT);
-        advancedSettings.add(compressionQualityBox);
+                 """
+        ));
 
     }
 

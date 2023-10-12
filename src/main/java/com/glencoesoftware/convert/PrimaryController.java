@@ -30,6 +30,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,8 +41,11 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.*;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
@@ -90,7 +94,6 @@ public class PrimaryController {
     public Button configureSelectedButton;
     public Button removeSelectedButton;
     public VBox jobsBox;
-    public Menu menuLogLevel;
     public MenuItem menuOutputFormat;
     public CheckMenuItem menuOverwrite;
     public CheckMenuItem wantLogToFile;
@@ -248,15 +251,6 @@ public class PrimaryController {
         addJobButton.setGraphic(addIcon);
         ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
                 "Trace", "All", "Off");
-        logLevelGroup = new ToggleGroup();
-        logModes.forEach(mode -> {
-            RadioMenuItem item = new RadioMenuItem(mode);
-            item.setToggleGroup(logLevelGroup);
-            if (Objects.equals(mode, "Warn")) {
-                item.setSelected(true);
-            }
-            menuLogLevel.getItems().add(item);
-        });
         outputDirectory.setText(userPreferences.get(prefName.OUTPUT_FOLDER.name(), defaultOutputText));
         outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
                 "Applies to new files added to the list."));
@@ -266,7 +260,7 @@ public class PrimaryController {
         // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
         // Todo: update
         fileControlButtons = new ArrayList<>(Arrays.asList(outputDirectory, chooseDirButton, clearDirButton));
-        menuControlButtons = new ArrayList<>(Arrays.asList(menuLogLevel, menuOutputFormat, menuAddFiles, menuRemoveFile,
+        menuControlButtons = new ArrayList<>(Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuSavePrefs, menuResetPrefs, menuOverwrite, menuChooseDirectory,
                 menuResetDirectory, menuTempDirectory));
         createLogControl();
@@ -676,10 +670,11 @@ public class PrimaryController {
             System.out.println("Error encountered" + e);
             return;
         }
+        scene.setFill(Color.TRANSPARENT);
         Stage stage = new Stage();
         stage.setScene(scene);
         stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.UNDECORATED);
+        stage.initStyle(StageStyle.TRANSPARENT);
         stage.initOwner(jobList.getScene().getWindow());
         stage.setResizable(false);
 

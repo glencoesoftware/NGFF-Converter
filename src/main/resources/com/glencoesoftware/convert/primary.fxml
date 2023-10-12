@@ -30,10 +30,6 @@
                <MenuItem fx:id="menuSavePrefs" mnemonicParsing="false" onAction="#savePrefs" text="Save settings as defaults" />
                <MenuItem fx:id="menuResetPrefs" mnemonicParsing="false" onAction="#resetPrefs" text="Clear saved settings" />
            </Menu>
-           <Menu mnemonicParsing="false" text="View">
-               <Menu fx:id="menuLogLevel" mnemonicParsing="false" text="Log Level" />
-               <MenuItem mnemonicParsing="false" onAction="#displayLog" text="Show Logs" />
-           </Menu>
            <Menu mnemonicParsing="false" text="Help">
                <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="bioformats2raw help" />
                <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="raw2ometiff help" />

@@ -49,6 +49,7 @@ dependencies {
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.4'
     implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.4'
     implementation group: 'ch.qos.logback', name: 'logback-access', version: '1.4.4'
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.2'
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"

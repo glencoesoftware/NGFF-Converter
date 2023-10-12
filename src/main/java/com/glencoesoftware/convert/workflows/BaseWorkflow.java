@@ -129,6 +129,11 @@ public abstract class BaseWorkflow {
         Output outputTask = (Output) this.tasks.get(this.tasks.size() - 1);
         return outputTask.getOverwrite();
     }
+
+    public File getWorkingDirectory() {
+        Output outputTask = (Output) this.tasks.get(this.tasks.size() - 1);
+        return outputTask.getWorkingDirectory();
+    }
     public void respondToUpdate() {
         JobState.status finalStatus = READY;
         statusText = "";

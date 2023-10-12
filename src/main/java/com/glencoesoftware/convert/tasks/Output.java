@@ -2,13 +2,11 @@ package com.glencoesoftware.convert.tasks;
 
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import org.controlsfx.control.ToggleSwitch;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,16 +17,18 @@ import java.util.Objects;
 
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 
+// Virtual task to allow configuration of the output file destination and other misc options
 public class Output extends BaseTask {
-    // Virtual task to enable display of global config and cleanup of intermediates
     private boolean overwrite = false;
     private ArrayList<Node> standardSettings;
-    private CheckBox overwriteBox;
-    private CheckBox logBox;
+    private ToggleSwitch overwriteBox;
+    private ToggleSwitch logBox;
 
     private boolean logToFile = false;
     private TextField logFile;
     private TextField outputPath;
+
+    private TextField workingDirectory;
 
 
     public Output(BaseWorkflow parent) {
@@ -54,6 +54,10 @@ public class Output extends BaseTask {
         }
         // Use whatever path the user specified instead
         return new File(logFile.getText());
+    }
+
+    public File getWorkingDirectory() {
+        return new File(workingDirectory.getText());
     }
 
     public void setOutput(String basePath) {
@@ -107,13 +111,29 @@ public class Output extends BaseTask {
         // Generate standard controls
         standardSettings = new ArrayList<>();
         outputPath = new TextField();
-        HBox outputControl = new HBox(5, new Label("Output file: "), outputPath);
-        standardSettings.add(outputControl);
-        overwriteBox = new CheckBox("Overwrite existing file");
-        standardSettings.add(overwriteBox);
-        logBox = new CheckBox("Log to file");
+        standardSettings.add(
+            getSettingContainer(outputPath, "Output File",
+                    """
+            Path to the final output file on disk.
+            Use this option to change file name and/or location.
+            """
+            ));
+
+        overwriteBox = new ToggleSwitch();
+        standardSettings.add(getSettingContainer(
+                overwriteBox,
+                "Overwrite Existing Files",
+                "Choose whether existing files at the path above will be overwritten"
+                ));
+
+        logBox = new ToggleSwitch();
         logBox.selectedProperty().addListener((e, oldValue, newValue) -> logToFile = newValue);
-        standardSettings.add(logBox);
+        standardSettings.add(getSettingContainer(
+                logBox,
+                "Log to File",
+                "If enabled, execution logs will also be recorded into the specified text file."
+        ));
+
         logFile = new TextField(defaultLogFileName);
         logFile.setEditable(false);
         logFile.onMouseClickedProperty().set(e -> {
@@ -127,10 +147,33 @@ public class Output extends BaseTask {
                 logFile.setText(selectedFile.getAbsolutePath());
             }
         });
-        HBox logFileBox = new HBox(5, new Label("Log file"), logFile);
-        logFileBox.setAlignment(Pos.CENTER_LEFT);
-        standardSettings.add(logFileBox);
+        standardSettings.add(getSettingContainer(
+                logFile,
+                "Log File Location",
+                "Choose the path to the file where execution logs will be saved to."
+        ));
 
+        workingDirectory = new TextField();
+        workingDirectory.setEditable(false);
+        workingDirectory.onMouseClickedProperty().set(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Choose working directory");
+            File newDir = directoryChooser.showDialog(parent.controller.jobList.getScene().getWindow());
+            if (newDir != null) {
+                workingDirectory.setText(newDir.getAbsolutePath());
+            }
+        });
+        standardSettings.add(getSettingContainer(
+                workingDirectory,
+                "Working Directory",
+                """
+            The converter may generate intermediate files during a conversion.
+            This setting specifies where those should be stored (default = your OS's temp folder).
+            These files are automatically cleaned up after tasks finish, but you may want to alter this setting
+            if you have limited drive space available.
+            """
+        ));
+        // TODO: Make workingdirectory the one true working directory
 
     }
 
