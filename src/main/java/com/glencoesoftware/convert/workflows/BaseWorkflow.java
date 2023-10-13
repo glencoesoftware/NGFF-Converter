@@ -139,7 +139,7 @@ public abstract class BaseWorkflow {
         statusText = "";
         loop: for (BaseTask task : this.tasks) {
             task.updateStatus();
-            System.out.println("New status for "+ task.getName()  + " is " + task.getStatusString());
+            System.out.println("New status for "+ task.name  + " is " + task.getStatusString());
             switch (task.status) {
                 case READY -> System.out.println("Job queued");
                 case RUNNING, FAILED -> {
@@ -149,7 +149,7 @@ public abstract class BaseWorkflow {
                 case COMPLETED, QUEUED -> finalStatus = task.status;
                 case WARNING -> {
                     finalStatus = task.status;
-                    statusText = "Issue with %s:\n%s".formatted(task.getName(), task.warningMessage);
+                    statusText = "Issue with %s:\n%s".formatted(task.name, task.warningMessage);
                     break loop;
                 }
             }
@@ -204,7 +204,7 @@ public abstract class BaseWorkflow {
     }
 
     public void prepareGUI() {
-        for (BaseTask task : this.tasks) task.prepareWidgets();
+        for (BaseTask task : this.tasks) task.prepareForDisplay();
     }
 
     public void execute(){

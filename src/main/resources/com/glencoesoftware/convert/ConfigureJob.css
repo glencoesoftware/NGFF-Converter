@@ -116,6 +116,10 @@
     -fx-fill: black;
 }
 
+.help-icon {
+    -fx-fill: primary;
+}
+
 #configureJob {
     -fx-background-radius: 10px;
     -fx-padding: 20px;

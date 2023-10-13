@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert.tables;
 
+import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
@@ -45,15 +46,19 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         stopRunning.setTooltip(new Tooltip("Stop execution"));
         stopRunning.setOnAction(evt -> {
             // Stop an ongoing run
-            BaseWorkflow subject = getTableRow().getItem();
-            System.out.println("Would halt execution of " + subject.firstInput.getName());
+            try {
+                App.controller.runCancel();
+            } catch (InterruptedException e) {
+                System.out.println("Failed to stop " + e);
+                throw new RuntimeException(e);
+            }
+            // Todo: stop single task?
         });
 
         configureTasks.setGraphic(configureIcon);
         configureTasks.setTooltip(new Tooltip("Configure job settings"));
         configureTasks.setOnAction(evt -> {
             BaseWorkflow subject = getTableRow().getItem();
-            System.out.println("Would configure " + subject.firstInput.getName());
             subject.controller.displaySettingsDialog(FXCollections.observableArrayList(subject), 0);
         });
 
@@ -61,7 +66,6 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         resetJob.setTooltip(new Tooltip("Reset job to run again"));
         resetJob.setOnAction(evt -> {
             BaseWorkflow subject = getTableRow().getItem();
-            System.out.println("Would reset " + subject.firstInput.getName());
             subject.reset();
             getTableView().refresh();
         });

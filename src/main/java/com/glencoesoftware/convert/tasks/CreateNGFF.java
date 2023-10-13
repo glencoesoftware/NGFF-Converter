@@ -3,6 +3,7 @@ package com.glencoesoftware.convert.tasks;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
+import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.google.common.base.Splitter;
@@ -30,64 +31,282 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.UnaryOperator;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import static java.util.stream.Collectors.joining;
 
 // Run bioformats2raw on a file
 public class CreateNGFF extends BaseTask{
 
-    public final Converter converter = new Converter();
+    public Converter converter = new Converter();
+
+    public static String name = "Convert to NGFF";
+
+    public static final Preferences taskPreferences = Preferences.userRoot().node(name);
+    public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
+        DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, SCALE_FORMAT_STRING,
+        FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE, ZLIB_LEVEL,
+        MAX_CACHED_TILES, MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
+        READER_OPTS, OUTPUT_OPTS, EXTRA_READERS
+    }
+
 
     private final Class<?>[] allReaders = converter.getExtraReaders();
 
-    private ArrayList<Node> standardSettings;
-    private ArrayList<Node> advancedSettings;
-    private ChoiceBox<String> logLevel;
-    private TextField maxWorkers;
-    private ChoiceBox<ZarrCompression> compression;
-    private TextField tileHeight;
-    private TextField tileWidth;
-    private TextField resolutions;
-    private TextField series;
-    private ChoiceBox<DimensionOrder> dimensionOrder;
-    private ChoiceBox<Downsampling> downsampling;
-    private TextField minImageSize;
-    private ToggleSwitch useExistingResolutions;
-    private TextField chunkDepth;
-    private TextField scaleFormatString;
-    private TextField scaleFormatCSV;
-    private TextField fillValue;
-    private VBox compressionPropertiesBox;
-    private ChoiceBox<String> compressorBloscCname;
-    private TextField compressorBloscClevel;
-    private TextField compressorBloscBlockSize;
-    private ChoiceBox<String> compressorBloscShuffle;
-    private TextField compressorZlibLevel;
+    private static final ArrayList<Node> standardSettings = new ArrayList<>();
+    private static final ArrayList<Node> advancedSettings = new ArrayList<>();
+    private static final ChoiceBox<String> logLevel;
+    private static final TextField maxWorkers;
+    private static final ChoiceBox<ZarrCompression> compression;
+    private static final TextField tileHeight;
+    private static final TextField tileWidth;
+    private static final TextField resolutions;
+    private static final TextField series;
+    private static final ChoiceBox<DimensionOrder> dimensionOrder;
+    private static final ChoiceBox<Downsampling> downsampling;
+    private static final TextField minImageSize;
+    private static final ToggleSwitch useExistingResolutions;
+    private static final TextField chunkDepth;
+    private static final TextField scaleFormatString;
+    private static final TextField scaleFormatCSV;
+    private static final TextField fillValue;
+    private static final VBox compressionPropertiesBox;
+    private static final ChoiceBox<String> compressorBloscCname;
+    private static final TextField compressorBloscClevel;
+    private static final TextField compressorBloscBlockSize;
+    private static final ChoiceBox<String> compressorBloscShuffle;
+    private static final TextField compressorZlibLevel;
 
-    private TextField maxCachedTiles;
-    private ToggleSwitch disableMinMax;
-    private ToggleSwitch disableHCS;
-    private ToggleSwitch nested;
-    private ToggleSwitch noOMEMeta;
-    private ToggleSwitch noRoot;
+    private static final TextField maxCachedTiles;
+    private static final ToggleSwitch disableMinMax;
+    private static final ToggleSwitch disableHCS;
+    private static final ToggleSwitch nested;
+    private static final ToggleSwitch noOMEMeta;
+    private static final ToggleSwitch noRoot;
+    private static final TextField pyramidName;
+    private static final ToggleSwitch keepMemos;
+    private static final TextField memoDirectory;
 
-    private TextField pyramidName;
-    private ToggleSwitch keepMemos;
-    private TextField memoDirectory;
+    private static final TextField readerOptions;
+    private static final TextField outputOptions;
 
-    private TextField readerOptions;
-    private TextField outputOptions;
-
-    private ListView<Class<?>> extraReaders;
+    private static final ListView<Class<?>> extraReaders;
     private final HashSet<Class<?>> desiredReaders = new HashSet<>();
+
+    public String getName() { return name; }
 
     public CreateNGFF(BaseWorkflow parent) {
         super(parent);
+        // Load the preferences stored as defaults
+        applyDefaults();
     }
 
-    public String getName() {
-        return "Convert to NGFF";
+    // Load settings from this instance's converter into the static widgets
+    public void prepareForDisplay() {
+        // Link widgets to this instance
+        bindWidgets();
+
+        // Populate setting values
+        logLevel.setValue(converter.getLogLevel());
+        maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
+        compression.setValue(converter.getCompression());
+        tileHeight.setText(String.valueOf(converter.getTileHeight()));
+        tileWidth.setText(String.valueOf(converter.getTileWidth()));
+        resolutions.setText(String.valueOf(converter.getResolutions()));
+        series.setText(converter.getSeriesList().stream().map(String::valueOf)
+                .collect(joining(",")));
+        dimensionOrder.setValue(converter.getDimensionOrder());
+        downsampling.setValue(converter.getDownsampling());
+        minImageSize.setText(String.valueOf(converter.getMinImageSize()));
+        useExistingResolutions.setSelected(converter.getReuseExistingResolutions());
+        chunkDepth.setText(String.valueOf(converter.getChunkDepth()));
+        scaleFormatString.setText(converter.getScaleFormat());
+        Path csvPath = converter.getAdditionalScaleFormatCSV();
+        if (csvPath == null) {
+            scaleFormatCSV.setText(null);
+        } else {
+            scaleFormatCSV.setText(csvPath.toString());
+        }
+        fillValue.setText(String.valueOf(converter.getFillValue()));
+        Map<String, Object> compressionProps = converter.getCompressionProperties();
+        if (compressionProps.containsKey("cname")) {
+            compressorBloscCname.setValue((String) compressionProps.get("cname"));
+        } else {
+            compressorBloscCname.setValue("lz4");
+        }
+        if (compressionProps.containsKey("blocksize")) {
+            compressorBloscBlockSize.setText(String.valueOf(compressionProps.get("blocksize")));
+        } else {
+            compressorBloscBlockSize.setText("0");
+        }
+        if (compressionProps.containsKey("clevel")) {
+            compressorBloscClevel.setText(String.valueOf(compressionProps.get("clevel")));
+        } else {
+            compressorBloscClevel.setText("5");
+        }
+        if (compressionProps.containsKey("shuffle")) {
+            // Auto = -1, No = 0, Byte = 1, Bit = 2. So add 1 to get an index for the choicebox
+            compressorBloscShuffle.getSelectionModel().select((int) compressionProps.get("shuffle") + 1);
+        } else {
+            compressorBloscShuffle.getSelectionModel().select(2);
+        }
+        if (compressionProps.containsKey("level")) {
+            compressorZlibLevel.setText(String.valueOf(compressionProps.get("level")));
+        } else {
+            compressorZlibLevel.setText("1");
+        }
+
+        maxCachedTiles.setText(String.valueOf(converter.getMaxCachedTiles()));
+        disableMinMax.setSelected(converter.getCalculateOMEROMetadata());
+        disableHCS.setSelected(converter.getNoHCS());
+        nested.setSelected(converter.getNested());
+        noOMEMeta.setSelected(converter.getNoOMEMeta());
+        noRoot.setSelected(converter.getNoRootGroup());
+        pyramidName.setText(converter.getPyramidName());
+        keepMemos.setSelected(converter.getKeepMemoFiles());
+        File memoDir = converter.getMemoDirectory();
+        if (memoDir == null) {
+            memoDirectory.setText(null);
+        } else {
+            memoDirectory.setText(memoDir.getAbsolutePath());
+        }
+        readerOptions.setText(String.join(",", converter.getReaderOptions()));
+        Map<String, String> outputOpts = converter.getOutputOptions();
+        if (outputOpts == null) {
+            outputOptions.setText(null);
+        } else {
+            outputOptions.setText(outputOpts.entrySet()
+                    .stream()
+                    .map(Object::toString)
+                    .collect(joining(",")));
+        }
+        extraReaders.setItems(FXCollections.observableArrayList(allReaders));
+        extraReaders.setMinHeight(extraReaders.getItems().size() * 24 + 10);
+        extraReaders.layout();
     }
+
+    // Bind callbacks for static widgets to this specific class instance
+    private void bindWidgets() {
+        // Extra readers should manipulate the instance-specific desiredReaders list.
+        extraReaders.setCellFactory(list -> new CheckBoxListCell<>(item -> {
+            BooleanProperty observable = new SimpleBooleanProperty(desiredReaders.contains(item));
+            observable.addListener((obs, wasSelected, isNowSelected) -> {
+                        if (isNowSelected) desiredReaders.add(item);
+                        else desiredReaders.remove(item);
+                    }
+            );
+            return observable;
+        }) {
+            @Override
+            public void updateItem(Class<?> item, boolean empty) {
+                super.updateItem(item, empty);
+                if (item != null) {
+                    String name = item.getName();
+                    setText(name.substring(name.lastIndexOf(".") + 1));
+                }
+            }
+        });
+    }
+
+    // Save settings from widgets into the converter's values
+    public void applySettings() {
+        System.out.println("Applying settings for " + name);
+        converter.setLogLevel(logLevel.getValue());
+        converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
+        converter.setCompression(compression.getValue());
+        converter.setTileHeight(Integer.parseInt(tileHeight.getText()));
+        converter.setTileWidth(Integer.parseInt(tileWidth.getText()));
+
+        if (!resolutions.getText().isEmpty()) {
+            converter.setResolutions(Integer.parseInt(resolutions.getText()));
+        }
+        if (!series.getText().isEmpty()) {
+            converter.setSeriesList(Arrays.stream(series.getText().split(",")).map(Integer::parseInt).toList());
+        }
+        converter.setDimensionOrder(dimensionOrder.getValue());
+        converter.setDownsampling(downsampling.getValue());
+        converter.setMinImageSize(Integer.parseInt(minImageSize.getText()));
+        converter.setReuseExistingResolutions(useExistingResolutions.isSelected());
+        converter.setChunkDepth(Integer.parseInt(chunkDepth.getText()));
+        converter.setScaleFormat(scaleFormatString.getText());
+        if (scaleFormatCSV.getText() != null) {
+            converter.setAdditionalScaleFormatCSV(Paths.get(scaleFormatCSV.getText()));
+        }
+        if (!fillValue.getText().isEmpty()) {
+            converter.setFillValue(Short.valueOf(fillValue.getText()));
+        }
+        Map<String, Object> compressionProps = getCompressionProps();
+        converter.setCompressionProperties(compressionProps);
+
+        converter.setMaxCachedTiles(Integer.parseInt(maxCachedTiles.getText()));
+        converter.setCalculateOMEROMetadata(disableMinMax.isSelected());
+        converter.setNoHCS(disableHCS.isSelected());
+
+        converter.setUnnested(!nested.isSelected());
+        converter.setNoOMEMeta(noOMEMeta.isSelected());
+        converter.setNoRootGroup(noRoot.isSelected());
+        if (pyramidName.getText() != null) {
+            converter.setPyramidName(pyramidName.getText());
+        }
+        converter.setKeepMemoFiles(keepMemos.isSelected());
+        if (memoDirectory.getText() != null) {
+            converter.setMemoDirectory(new File(memoDirectory.getText()));
+        }
+        if (readerOptions.getText() != null) {
+            converter.setReaderOptions(Arrays.stream(readerOptions.getText().split(",")).toList());
+        }
+        if (outputOptions.getText() != null) {
+            converter.setOutputOptions(Splitter.on(",")
+                    .withKeyValueSeparator("=")
+                    .split(outputOptions.getText()));
+        }
+        converter.setExtraReaders(desiredReaders.toArray(new Class<?>[0]));
+
+    }
+
+    // Duplicate settings from another supplied instance (except input/output)
+    public void cloneValues(BaseTask sourceInstance) {
+        if (!(sourceInstance instanceof CreateNGFF source)) {
+            System.out.println("Incorrect input type");
+            return;
+        }
+        converter.setLogLevel(source.converter.getLogLevel());
+        converter.setMaxWorkers(source.converter.getMaxWorkers());
+        converter.setCompression(source.converter.getCompression());
+        converter.setTileHeight(source.converter.getTileHeight());
+        converter.setTileWidth(source.converter.getTileWidth());
+        converter.setResolutions(source.converter.getResolutions());
+        converter.setSeriesList(source.converter.getSeriesList());
+        converter.setDimensionOrder(source.converter.getDimensionOrder());
+        converter.setDownsampling(source.converter.getDownsampling());
+        converter.setMinImageSize(source.converter.getMinImageSize());
+        converter.setReuseExistingResolutions(source.converter.getReuseExistingResolutions());
+        converter.setChunkDepth(source.converter.getChunkDepth());
+        converter.setScaleFormat(source.converter.getScaleFormat());
+        converter.setAdditionalScaleFormatCSV(source.converter.getAdditionalScaleFormatCSV());
+        converter.setFillValue(source.converter.getFillValue());
+        converter.setCompressionProperties(source.converter.getCompressionProperties());
+        converter.setMaxCachedTiles(source.converter.getMaxCachedTiles());
+        converter.setCalculateOMEROMetadata(source.converter.getCalculateOMEROMetadata());
+        converter.setNoHCS(source.converter.getNoHCS());
+        converter.setUnnested(!source.converter.getNested());
+        converter.setNoOMEMeta(source.converter.getNoOMEMeta());
+        converter.setNoRootGroup(source.converter.getNoRootGroup());
+        converter.setPyramidName(source.converter.getPyramidName());
+        converter.setKeepMemoFiles(source.converter.getKeepMemoFiles());
+        converter.setMemoDirectory(source.converter.getMemoDirectory());
+        converter.setReaderOptions(source.converter.getReaderOptions());
+        converter.setOutputOptions(source.converter.getOutputOptions());
+        converter.setExtraReaders(source.converter.getExtraReaders());
+
+        desiredReaders.clear();
+        desiredReaders.addAll(source.desiredReaders);
+
+        // Todo: Handle null return values
+
+    }
+
 
     public void setOutput(String basePath) {
         this.output = Paths.get(
@@ -139,8 +358,8 @@ public class CreateNGFF extends BaseTask{
         }
     }
 
-    public void generateNodes() {
-        if (standardSettings != null) return;
+    // Generate settings widgets
+    static {
         UnaryOperator<TextFormatter.Change> integerFilter = change -> {
             String newText = change.getControlNewText();
             if (newText.matches("([1-9][0-9]*)?")) {
@@ -164,9 +383,6 @@ public class CreateNGFF extends BaseTask{
             }
             return null;
         };
-
-        standardSettings = new ArrayList<>();
-        advancedSettings = new ArrayList<>();
 
         logLevel = new ChoiceBox<>(FXCollections.observableArrayList("OFF", "ERROR", "WARN",
                 "INFO", "DEBUG", "TRACE", "ALL"));
@@ -317,7 +533,7 @@ public class CreateNGFF extends BaseTask{
             fileChooser.setTitle("Choose Scale Format CSV File");
             fileChooser.getExtensionFilters().add(
                     new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-            File selectedFile = fileChooser.showOpenDialog(parent.controller.jobList.getScene().getWindow());
+            File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
             if (selectedFile != null) {
                 scaleFormatCSV.setText(selectedFile.getAbsolutePath());
             }
@@ -429,7 +645,7 @@ public class CreateNGFF extends BaseTask{
         memoDirectory.onMouseClickedProperty().set(e -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setTitle("Choose memo file directory");
-            File newDir = directoryChooser.showDialog(parent.controller.jobList.getScene().getWindow());
+            File newDir = directoryChooser.showDialog(App.getScene().getWindow());
             if (newDir != null) {
                 memoDirectory.setText(newDir.getAbsolutePath());
             }
@@ -497,7 +713,6 @@ public class CreateNGFF extends BaseTask{
 
         compression.getSelectionModel().selectedIndexProperty().addListener(
                 (observableValue, number, number2) -> {
-                    System.out.println("Detected " + observableValue + number + "  " + number2);
                     compressionPropertiesBox.getChildren().clear();
                     switch (compression.getItems().get((Integer) number2)) {
                         case blosc -> {
@@ -547,26 +762,6 @@ public class CreateNGFF extends BaseTask{
 
         extraReaders = new ListView<>();
 
-        extraReaders.setCellFactory(list -> new CheckBoxListCell<>(item -> {
-            BooleanProperty observable = new SimpleBooleanProperty(desiredReaders.contains(item));
-            observable.addListener((obs, wasSelected, isNowSelected) -> {
-                        if (isNowSelected) desiredReaders.add(item);
-                        else desiredReaders.remove(item);
-                    }
-            );
-            return observable;
-        }) {
-            @Override
-            public void updateItem(Class<?> item, boolean empty) {
-                super.updateItem(item, empty);
-                if (item != null) {
-                    String name = item.getName();
-                    setText(name.substring(name.lastIndexOf(".") + 1));
-                }
-            }
-        });
-        desiredReaders.addAll(FXCollections.observableArrayList(allReaders));
-
         advancedSettings.add(getSettingContainer(
                 extraReaders,
                 "Extra Readers",
@@ -575,240 +770,189 @@ public class CreateNGFF extends BaseTask{
 
     }
 
-    public void updateNodes() {
-        logLevel.setValue(converter.getLogLevel());
-        maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
-        compression.setValue(converter.getCompression());
-        tileHeight.setText(String.valueOf(converter.getTileHeight()));
-        tileWidth.setText(String.valueOf(converter.getTileWidth()));
-        resolutions.setText(String.valueOf(converter.getResolutions()));
-        series.setText(converter.getSeriesList().stream().map(String::valueOf)
-                .collect(joining(",")));
-        dimensionOrder.setValue(converter.getDimensionOrder());
-        downsampling.setValue(converter.getDownsampling());
-        minImageSize.setText(String.valueOf(converter.getMinImageSize()));
-        useExistingResolutions.setSelected(converter.getReuseExistingResolutions());
-        chunkDepth.setText(String.valueOf(converter.getChunkDepth()));
-        scaleFormatString.setText(converter.getScaleFormat());
-        Path csvPath = converter.getAdditionalScaleFormatCSV();
-        if (csvPath == null) {
-            scaleFormatCSV.setText(null);
-        } else {
-            scaleFormatCSV.setText(csvPath.toString());
-        }
-        // Todo: Solve this conflict
-        fillValue.setText(String.valueOf(converter.getFillValue()));
-        Map<String, Object> compressionProps = converter.getCompressionProperties();
-        if (compressionProps.containsKey("cname")) {
-            compressorBloscCname.setValue((String) compressionProps.get("cname"));
-        } else {
-            compressorBloscCname.setValue("lz4");
-        }
-        if (compressionProps.containsKey("blocksize")) {
-            compressorBloscBlockSize.setText((String) compressionProps.get("blocksize"));
-        } else {
-            compressorBloscBlockSize.setText("0");
-        }
-        if (compressionProps.containsKey("clevel")) {
-            compressorBloscClevel.setText((String) compressionProps.get("clevel"));
-        } else {
-            compressorBloscClevel.setText("5");
-        }
-        if (compressionProps.containsKey("shuffle")) {
-            // Auto = -1, No = 0, Byte = 1, Bit = 2. So add 1 to get an index for the choicebox
-            compressorBloscShuffle.getSelectionModel().select((int) compressionProps.get("shuffle") + 1);
-        } else {
-            compressorBloscShuffle.getSelectionModel().select(2);
-        }
-        if (compressionProps.containsKey("level")) {
-            compressorZlibLevel.setText((String) compressionProps.get("level"));
-        } else {
-            compressorZlibLevel.setText("1");
-        }
-
-        maxCachedTiles.setText(String.valueOf(converter.getMaxCachedTiles()));
-        disableMinMax.setSelected(converter.getCalculateOMEROMetadata());
-        disableHCS.setSelected(converter.getNoHCS());
-        nested.setSelected(converter.getNested());
-        noOMEMeta.setSelected(converter.getNoOMEMeta());
-        noRoot.setSelected(converter.getNoRootGroup());
-        pyramidName.setText(converter.getPyramidName());
-        keepMemos.setSelected(converter.getKeepMemoFiles());
-        File memoDir = converter.getMemoDirectory();
-        if (memoDir == null) {
-            memoDirectory.setText(null);
-        } else {
-            memoDirectory.setText(memoDir.getAbsolutePath());
-        }
-        readerOptions.setText(String.join(",", converter.getReaderOptions()));
-        Map<String, String> outputOpts = converter.getOutputOptions();
-        if (outputOpts == null) {
-            outputOptions.setText(null);
-        } else {
-            outputOptions.setText(outputOpts.entrySet()
-                    .stream()
-                    .map(Object::toString)
-                    .collect(joining(",")));
-        }
-        extraReaders.setItems(FXCollections.observableArrayList(allReaders));
-        extraReaders.setMinHeight(extraReaders.getItems().size() * 24 + 10);
-        extraReaders.layout();
-    }
-
     public ArrayList<Node> getStandardSettings() {
-        if (this.standardSettings == null) {
-            generateNodes();
-        }
-        updateNodes();
-        return this.standardSettings;
+        return standardSettings;
     }
     public ArrayList<Node> getAdvancedSettings() {
-
-        if (this.advancedSettings == null) {
-            generateNodes();
-        }
-        return this.advancedSettings;
+        return advancedSettings;
     }
-
-
-    public void applySettings() {
-        System.out.println("Applying settings for " + getName());
-        converter.setLogLevel(logLevel.getValue());
-        converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
-        converter.setCompression(compression.getValue());
-        converter.setTileHeight(Integer.parseInt(tileHeight.getText()));
-        converter.setTileWidth(Integer.parseInt(tileWidth.getText()));
-
-        if (!resolutions.getText().isEmpty()) {
-            converter.setResolutions(Integer.parseInt(resolutions.getText()));
-        }
-        if (!series.getText().isEmpty()) {
-            converter.setSeriesList(Arrays.stream(series.getText().split(",")).map(Integer::parseInt).toList());
-        }
-        converter.setDimensionOrder(dimensionOrder.getValue());
-        converter.setDownsampling(downsampling.getValue());
-        converter.setMinImageSize(Integer.parseInt(minImageSize.getText()));
-        converter.setReuseExistingResolutions(useExistingResolutions.isSelected());
-        converter.setChunkDepth(Integer.parseInt(chunkDepth.getText()));
-        converter.setScaleFormat(scaleFormatString.getText());
-        if (scaleFormatCSV.getText() != null) {
-            converter.setAdditionalScaleFormatCSV(Paths.get(scaleFormatCSV.getText()));
-        }
-        if (!fillValue.getText().isEmpty()) {
-            converter.setFillValue(Short.valueOf(fillValue.getText()));
-        }
-        Map<String, Object> compressionProps = getCompressionProps();
-        converter.setCompressionProperties(compressionProps);
-
-        converter.setMaxCachedTiles(Integer.parseInt(maxCachedTiles.getText()));
-        converter.setCalculateOMEROMetadata(disableMinMax.isSelected());
-        converter.setNoHCS(disableHCS.isSelected());
-
-        converter.setUnnested(!nested.isSelected());
-        converter.setNoOMEMeta(noOMEMeta.isSelected());
-        converter.setNoRootGroup(noRoot.isSelected());
-        if (pyramidName.getText() != null) {
-            converter.setPyramidName(pyramidName.getText());
-        }
-        converter.setKeepMemoFiles(keepMemos.isSelected());
-        if (memoDirectory.getText() != null) {
-            converter.setMemoDirectory(new File(memoDirectory.getText()));
-        }
-        if (readerOptions.getText() != null) {
-            converter.setReaderOptions(Arrays.stream(readerOptions.getText().split(",")).toList());
-        }
-        if (outputOptions.getText() != null) {
-            converter.setOutputOptions(Splitter.on(",")
-                    .withKeyValueSeparator("=")
-                    .split(outputOptions.getText()));
-        }
-        converter.setExtraReaders(desiredReaders.toArray(new Class<?>[0]));
-
-    }
-
-
 
     private Map<String, Object> getCompressionProps() {
         Map<String, Object> compressionProps = new HashMap<>();
         switch (compression.getValue()) {
             case blosc -> {
-                if (compressorBloscCname.getValue() != null) {
+                if (compressorBloscCname.getValue() != null)
                     compressionProps.put("cname", compressorBloscCname.getValue());
-                }
-                if (compressorBloscClevel.getText() != null) {
-                    compressionProps.put("clevel", compressorBloscClevel.getText());
-                }
-                if (compressorBloscBlockSize.getText() != null) {
-                    compressionProps.put("blocksize", compressorBloscBlockSize.getText());
-                }
-                if (compressorBloscShuffle.getValue() != null) {
-                    // Auto = -1, No = 0, Byte = 1, Bit = 2. So subtract 1 to convert
+                if (compressorBloscClevel.getText() != null)
+                    compressionProps.put("clevel", Integer.parseInt(compressorBloscClevel.getText()));
+                if (compressorBloscBlockSize.getText() != null)
+                    compressionProps.put("blocksize", Integer.parseInt(compressorBloscBlockSize.getText()));
+                // Auto = -1, No = 0, Byte = 1, Bit = 2. So subtract 1 to convert
+                if (compressorBloscShuffle.getValue() != null)
                     compressionProps.put("shuffle", compressorBloscShuffle.getSelectionModel().getSelectedIndex() - 1);
-                }
             }
             case zlib -> {
-                if (compressorZlibLevel.getText() != null) {
-                    compressionProps.put("level", compressorZlibLevel.getText());
-                }
+                if (compressorZlibLevel.getText() != null)
+                    compressionProps.put("level", Integer.parseInt(compressorZlibLevel.getText()));
             }
-
         }
         return compressionProps;
     }
 
+    public void setDefaults() throws BackingStoreException {
+        taskPreferences.clear();
+        taskPreferences.put(prefKeys.LOG_LEVEL.name(), converter.getLogLevel());
+        taskPreferences.putInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers());
+        taskPreferences.put(prefKeys.COMPRESSION.name(), converter.getCompression().name());
+        taskPreferences.putInt(prefKeys.TILE_HEIGHT.name(), converter.getTileHeight());
+        taskPreferences.putInt(prefKeys.TILE_WIDTH.name(), converter.getTileWidth());
+        if (converter.getResolutions() != null) {
+            taskPreferences.putInt(prefKeys.RESOLUTIONS.name(), converter.getResolutions());
+        }
+        taskPreferences.put(prefKeys.SERIES.name(), converter.getSeriesList()
+                .stream().map(String::valueOf).collect(joining(",")));
+        taskPreferences.put(prefKeys.DIMENSION_ORDER.name(), converter.getDimensionOrder().name());
+        taskPreferences.put(prefKeys.DOWNSAMPLING.name(), converter.getDownsampling().name());
+        taskPreferences.putInt(prefKeys.MIN_IMAGE_SIZE.name(), converter.getMinImageSize());
+        taskPreferences.putBoolean(prefKeys.REUSE_RES.name(), converter.getReuseExistingResolutions());
+        taskPreferences.putInt(prefKeys.CHUNK_DEPTH.name(), converter.getChunkDepth());
+        taskPreferences.put(prefKeys.SCALE_FORMAT_STRING.name(), converter.getScaleFormat());
+        // For now we won't save task-specific paths as defaults?
+        // taskPreferences.put(prefKeys.SCALE_FORMAT_CSV.name(), converter.getAdditionalScaleFormatCSV().toString());
+        if (converter.getFillValue() != null) {
+            taskPreferences.putInt(prefKeys.FILL_VALUE.name(), converter.getFillValue());
+        }
 
-    public void setDefaults() {
-        return;
+        Map<String, Object> compressionProps = converter.getCompressionProperties();
+        taskPreferences.remove(prefKeys.BLOSC_CNAME.name());
+        taskPreferences.remove(prefKeys.BLOSC_CLEVEL.name());
+        taskPreferences.remove(prefKeys.BLOSC_BLOCKSIZE.name());
+        taskPreferences.remove(prefKeys.BLOSC_SHUFFLE.name());
+        taskPreferences.remove(prefKeys.ZLIB_LEVEL.name());
+        if (converter.getCompression() == ZarrCompression.blosc) {
+            taskPreferences.put(prefKeys.BLOSC_CNAME.name(), (String) compressionProps.get("cname"));
+            taskPreferences.putInt(prefKeys.BLOSC_CLEVEL.name(), (Integer) compressionProps.get("clevel"));
+            taskPreferences.putInt(prefKeys.BLOSC_BLOCKSIZE.name(), (Integer) compressionProps.get("blocksize"));
+            taskPreferences.putInt(prefKeys.BLOSC_SHUFFLE.name(), (Integer) compressionProps.get("shuffle"));
+        } else if (converter.getCompression() == ZarrCompression.zlib) {
+            taskPreferences.putInt(prefKeys.ZLIB_LEVEL.name(), (Integer) compressionProps.get("level"));
+        }
+        taskPreferences.putInt(prefKeys.MAX_CACHED_TILES.name(), converter.getMaxCachedTiles());
+
+        taskPreferences.putBoolean(prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata());
+        taskPreferences.putBoolean(prefKeys.HCS.name(), converter.getNoHCS());
+        taskPreferences.putBoolean(prefKeys.NESTED.name(), converter.getNested());
+        taskPreferences.putBoolean(prefKeys.OME_META.name(), converter.getNoOMEMeta());
+        taskPreferences.putBoolean(prefKeys.NO_ROOT.name(), converter.getNoRootGroup());
+        if (converter.getPyramidName() != null) {
+            taskPreferences.put(prefKeys.PYRAMID_NAME.name(), converter.getPyramidName());
+        }
+        taskPreferences.putBoolean(prefKeys.KEEP_MEMOS.name(), converter.getKeepMemoFiles());
+        if (converter.getMemoDirectory() != null) {
+            taskPreferences.put(prefKeys.MEMO_DIR.name(), converter.getMemoDirectory().getAbsolutePath());
+        }
+        taskPreferences.put(prefKeys.READER_OPTS.name(), String.join(",", converter.getReaderOptions()));
+        Map<String, String> outputOpts = converter.getOutputOptions();
+        if (outputOpts != null) {
+            taskPreferences.put(prefKeys.OUTPUT_OPTS.name(), (outputOpts.entrySet()
+                    .stream()
+                    .map(Object::toString)
+                    .collect(joining(","))));
+        }
+        taskPreferences.put(prefKeys.EXTRA_READERS.name(), desiredReaders.stream().map(Class::getName).collect(joining(",")));
+        taskPreferences.flush();
     }
 
     public void applyDefaults() {
-        return;
-    }
+        converter.setLogLevel(taskPreferences.get(prefKeys.LOG_LEVEL.name(), converter.getLogLevel()));
+        converter.setMaxWorkers(taskPreferences.getInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers()));
+        converter.setCompression(ZarrCompression.valueOf(
+                taskPreferences.get(prefKeys.COMPRESSION.name(), converter.getCompression().name())));
+        converter.setTileHeight(taskPreferences.getInt(prefKeys.TILE_HEIGHT.name(), converter.getTileHeight()));
+        converter.setTileWidth(taskPreferences.getInt(prefKeys.TILE_WIDTH.name(), converter.getTileWidth()));
+        if (taskPreferences.get(prefKeys.RESOLUTIONS.name(), null) != null)
+            converter.setResolutions(taskPreferences.getInt(prefKeys.RESOLUTIONS.name(), 0));
 
-    public void cloneValues(BaseTask sourceInstance) {
-        if (!(sourceInstance instanceof CreateNGFF source)) {
-            System.out.println("Incorrect input type");
-            return;
+        String seriesList = taskPreferences.get(prefKeys.SERIES.name(), null);
+        if (seriesList != null && !seriesList.isEmpty()) {
+            converter.setSeriesList(Arrays.stream(series.getText().split(",")).map(Integer::parseInt).toList());
         }
-        if (this.standardSettings == null) {
-            generateNodes();
+
+        converter.setDimensionOrder(DimensionOrder.valueOf(taskPreferences.get(prefKeys.DIMENSION_ORDER.name(),
+                converter.getDimensionOrder().name())));
+        converter.setDownsampling(Downsampling.valueOf(taskPreferences.get(prefKeys.DOWNSAMPLING.name(),
+                converter.getDownsampling().name())));
+        converter.setMinImageSize(taskPreferences.getInt(prefKeys.MIN_IMAGE_SIZE.name(), converter.getMinImageSize()));
+        converter.setReuseExistingResolutions(taskPreferences.getBoolean(
+                prefKeys.REUSE_RES.name(), converter.getReuseExistingResolutions()));
+        converter.setChunkDepth(taskPreferences.getInt(prefKeys.CHUNK_DEPTH.name(), converter.getChunkDepth()));
+        converter.setScaleFormat(taskPreferences.get(prefKeys.SCALE_FORMAT_STRING.name(), converter.getScaleFormat()));
+        // Scale format CSV not saved
+        if (taskPreferences.get(prefKeys.FILL_VALUE.name(), null) != null)
+            converter.setFillValue((short) taskPreferences.getInt(prefKeys.FILL_VALUE.name(), 0));
+
+        Map<String, Object> compressionProps = converter.getCompressionProperties();
+        if (converter.getCompression() == ZarrCompression.blosc) {
+            compressionProps.put("cname", taskPreferences.get(prefKeys.BLOSC_CNAME.name(), "lz4"));
+            compressionProps.put("clevel", taskPreferences.getInt(prefKeys.BLOSC_CLEVEL.name(), 5 ));
+            compressionProps.put("blocksize", taskPreferences.getInt(prefKeys.BLOSC_BLOCKSIZE.name(), 0));
+            compressionProps.put("shuffle", taskPreferences.getInt(prefKeys.BLOSC_SHUFFLE.name(), 1));
+        } else if (converter.getCompression() == ZarrCompression.zlib) {
+            compressionProps.put("level", taskPreferences.getInt(prefKeys.ZLIB_LEVEL.name(),1));
         }
-        logLevel.setValue(source.logLevel.getValue());
-        maxWorkers.setText(source.maxWorkers.getText());
-        compression.setValue(source.compression.getValue());
-        tileHeight.setText(source.tileHeight.getText());
-        tileWidth.setText(source.tileWidth.getText());
-        resolutions.setText(source.resolutions.getText());
-        series.setText(source.series.getText());
-        dimensionOrder.setValue(source.dimensionOrder.getValue());
-        downsampling.setValue(source.downsampling.getValue());
-        minImageSize.setText(source.minImageSize.getText());
-        useExistingResolutions.setSelected(source.useExistingResolutions.isSelected());
-        chunkDepth.setText(source.chunkDepth.getText());
-        scaleFormatString.setText(source.scaleFormatString.getText());
-        scaleFormatCSV.setText(source.scaleFormatCSV.getText());
-        fillValue.setText(source.fillValue.getText());
-        compressorBloscCname.setValue(source.compressorBloscCname.getValue());
-        compressorBloscClevel.setText(source.compressorBloscClevel.getText());
-        compressorBloscBlockSize.setText(source.compressorBloscBlockSize.getText());
-        compressorBloscShuffle.setValue(source.compressorBloscShuffle.getValue());
-        compressorZlibLevel.setText(source.compressorZlibLevel.getText());
-        maxCachedTiles.setText(source.maxCachedTiles.getText());
-        disableMinMax.setSelected(source.disableMinMax.isSelected());
-        disableHCS.setSelected(source.disableHCS.isSelected());
-        nested.setSelected(source.nested.isSelected());
-        noOMEMeta.setSelected(source.noOMEMeta.isSelected());
-        noRoot.setSelected(source.noRoot.isSelected());
-        pyramidName.setText(source.pyramidName.getText());
-        keepMemos.setSelected(source.keepMemos.isSelected());
-        memoDirectory.setText(source.memoDirectory.getText());
-        readerOptions.setText(source.readerOptions.getText());
-        outputOptions.setText(source.outputOptions.getText());
-        extraReaders.setItems(source.extraReaders.getItems());
+        converter.setCompressionProperties(compressionProps);
+
+        converter.setMaxCachedTiles(taskPreferences.getInt(prefKeys.MAX_CACHED_TILES.name(),
+                converter.getMaxCachedTiles()));
+
+        converter.setCalculateOMEROMetadata(taskPreferences.getBoolean(
+                prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata()));
+        converter.setNoHCS(taskPreferences.getBoolean(prefKeys.HCS.name(), converter.getNoHCS()));
+        converter.setUnnested(!taskPreferences.getBoolean(prefKeys.NESTED.name(), converter.getNested()));
+        converter.setNoOMEMeta(taskPreferences.getBoolean(prefKeys.OME_META.name(), converter.getNoOMEMeta()));
+        converter.setNoRootGroup(taskPreferences.getBoolean(prefKeys.NO_ROOT.name(), converter.getNoRootGroup()));
+        converter.setPyramidName(taskPreferences.get(prefKeys.PYRAMID_NAME.name(), converter.getPyramidName()));
+        converter.setKeepMemoFiles(taskPreferences.getBoolean(
+                prefKeys.KEEP_MEMOS.name(), converter.getKeepMemoFiles()));
+        String memoDir = taskPreferences.get(prefKeys.MEMO_DIR.name(), null);
+        if (memoDir != null) {
+            converter.setMemoDirectory(new File(memoDir));
+        }
+
+        converter.setReaderOptions(Arrays.stream(
+                taskPreferences.get(prefKeys.READER_OPTS.name(),
+                        String.join(",", converter.getReaderOptions())).split(",")).toList());
+
+        String outputOpts = taskPreferences.get(prefKeys.OUTPUT_OPTS.name(), null);
+        if (outputOpts != null && !outputOpts.isEmpty()) {
+            converter.setOutputOptions(Splitter.on(",")
+                    .withKeyValueSeparator("=")
+                    .split(outputOpts));
+        }
+
+        String readers = taskPreferences.get(prefKeys.EXTRA_READERS.name(), null);
         desiredReaders.clear();
-        desiredReaders.addAll(source.desiredReaders);
+        if (readers == null) desiredReaders.addAll(FXCollections.observableArrayList(allReaders));
+        else {
+            desiredReaders.addAll(Arrays.stream(readers.split(",")).map((String s) -> {
+                try {
+                    return Class.forName(s);
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error("Did not find class for extra reader " + s);
+                    return null;
+                }
+            }).toList());
+        }
     }
 
+    public void resetToDefaults() {
+        resetConverter();
+        applyDefaults();
+    }
 
+    public void resetConverter() {
+        // Todo: Revise once b2r resetters are implemented
+        converter = new Converter();
+    }
 
 }

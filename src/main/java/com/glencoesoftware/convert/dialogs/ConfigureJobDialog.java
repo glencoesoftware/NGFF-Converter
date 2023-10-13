@@ -10,10 +10,15 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.prefs.BackingStoreException;
 
 public class ConfigureJobDialog {
+
+    private final ch.qos.logback.classic.Logger LOGGER =
+            (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(this.getClass());
 
     private boolean multiMode = false;
 
@@ -166,15 +171,27 @@ public class ConfigureJobDialog {
     }
     @FXML
     private void restoreDefaults() {
-
+        for (BaseWorkflow job: jobs) {
+            for (BaseTask task : job.tasks) {
+                task.resetToDefaults();
+                task.updateStatus();
+            }
+        }
+        this.jobs.get(0).prepareGUI();
     }
     @FXML
     private void setDefaults() {
-
+        for (BaseTask task : tasks) {
+            try {
+                task.setDefaults();
+            } catch (BackingStoreException e) {
+                LOGGER.error("Failed to set defaults: " + e);
+            }
+        }
     }
     @FXML
     private void applyToAll() {
-
+        // Todo: Write this
     }
 
 }

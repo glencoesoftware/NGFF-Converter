@@ -134,9 +134,12 @@ public class PrimaryController {
 
     public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, ARGS, DEFAULT_FORMAT, SHOW_FORMAT_DLG};
 
-    public final Preferences userPreferences = Preferences.userRoot();
+    public static final Preferences userPreferences = Preferences.userRoot();
 
     private AddFilesDialog addFilesDialog;
+
+    private Stage jobSettingsStage;
+    private ConfigureJobDialog jobSettingsController;
 
     public ChangeListener<Number> taskWatcher = new ChangeListener<>() {
         @Override
@@ -212,7 +215,6 @@ public class PrimaryController {
 
         // Monitor the job list and display tasks when a job is clicked.
         jobList.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            System.out.println("New selection detected " + newSelection);
             if (oldSelection != null) {
                 oldSelection.currentStage.removeListener(taskWatcher);
             }
@@ -619,6 +621,7 @@ public class PrimaryController {
     private void resetPrefs() throws BackingStoreException {
         userPreferences.clear();
         userPreferences.flush();
+        // Todo: Apply to task prefs too
     }
 
     @FXML
@@ -661,27 +664,28 @@ public class PrimaryController {
     }
 
     public void displaySettingsDialog(ObservableList<BaseWorkflow> jobs, int taskIndex){
-        FXMLLoader fxmlLoader = new FXMLLoader();
-        fxmlLoader.setLocation(App.class.getResource("ConfigureJob.fxml"));
-        Scene scene;
-        try {
-            scene = new Scene(fxmlLoader.load());
-        } catch (IOException e) {
-            System.out.println("Error encountered" + e);
-            return;
+        if (jobSettingsStage == null) {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            fxmlLoader.setLocation(App.class.getResource("ConfigureJob.fxml"));
+            Scene scene;
+            try {
+                scene = new Scene(fxmlLoader.load());
+            } catch (IOException e) {
+                System.out.println("Error encountered" + e);
+                return;
+            }
+            scene.setFill(Color.TRANSPARENT);
+            jobSettingsStage = new Stage();
+            jobSettingsStage.setScene(scene);
+            jobSettingsStage.initModality(Modality.APPLICATION_MODAL);
+            jobSettingsStage.initStyle(StageStyle.TRANSPARENT);
+            jobSettingsStage.initOwner(jobList.getScene().getWindow());
+            jobSettingsStage.setResizable(false);
+            jobSettingsController = fxmlLoader.getController();
         }
-        scene.setFill(Color.TRANSPARENT);
-        Stage stage = new Stage();
-        stage.setScene(scene);
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initStyle(StageStyle.TRANSPARENT);
-        stage.initOwner(jobList.getScene().getWindow());
-        stage.setResizable(false);
-
-        ConfigureJobDialog controller = fxmlLoader.getController();
 //        ObservableList<BaseWorkflow> jobs = jobList.getSelectionModel().getSelectedItems();
-        controller.initData(jobs, taskIndex);
-        stage.show();
+        jobSettingsController.initData(jobs, taskIndex);
+        jobSettingsStage.show();
     }
 
     public void runCompleted() {
@@ -703,10 +707,15 @@ public class PrimaryController {
         worker.interrupted = true;
         runnerThread.interrupt();
         runnerThread.join();
-//        jobList.getItems().forEach((job) -> {
-//            if (job.status == workflowStatus.RUNNING) {
-//                job.status = workflowStatus.FAILED;
-//            }});
+        jobList.getItems().forEach((job) -> {
+            if (job.status.get() == JobState.status.RUNNING) {
+                job.status.set(JobState.status.FAILED);
+                for (BaseTask task: job.tasks) {
+                    switch (task.status) {
+                        case RUNNING, QUEUED -> task.status = JobState.status.FAILED;
+                    }
+                }
+            }});
         jobList.refresh();
         runCompleted();
     }

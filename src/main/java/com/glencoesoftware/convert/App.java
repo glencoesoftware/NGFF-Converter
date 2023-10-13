@@ -23,8 +23,9 @@ import java.util.Objects;
  */
 public class App extends Application {
 
-    private static Scene scene;
-    private static PrimaryController controller;
+    public static Scene scene;
+
+    public static PrimaryController controller;
 
     @Override
     public void start(Stage stage) throws IOException {

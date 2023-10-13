@@ -14,36 +14,80 @@ import org.controlsfx.control.ToggleSwitch;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.function.UnaryOperator;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 // Run raw2ometiff on a file
 public class CreateTiff extends BaseTask {
 
-    private final PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
+    private PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
+
+    public static String name = "Convert to TIFF";
+
+    public static final Preferences taskPreferences = Preferences.userRoot().node(name);
+    public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, LEGACY, RGB, SPLIT, COMPRESSION_OPTS}
+
+    private static final ArrayList<Node> standardSettings = new ArrayList<>();
+
+    private static final ArrayList<Node> advancedSettings = new ArrayList<>();
+
+    private static final ChoiceBox<CompressionType> compression;
+
+    private static final ChoiceBox<String> logLevel;
+    private static final ToggleSwitch legacy;
+    private static final TextField maxWorkers;
+    private static final TextField compressionQuality;
+
+    private static final ToggleSwitch rgb;
+
+    private static final ToggleSwitch split;
+
+    public String getName() { return name; }
 
     public CreateTiff(BaseWorkflow parent) {
         super(parent);
+        // Load the preferences stored as defaults
+        applyDefaults();
     }
 
-    public String getName() {
-        return "Convert to TIFF";
+    // Load settings from this instance's converter into the static widgets
+    public void prepareForDisplay() {
+        // Populate setting values
+        logLevel.getSelectionModel().select(converter.getLogLevel());
+        maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
+        compression.setValue(converter.getCompression());
+        rgb.setSelected(converter.getRGB());
+        split.setSelected(converter.getSplitTIFFs());
+        legacy.setSelected(converter.getLegacyTIFF());
+        CodecOptions opts = converter.getCompressionOptions();
+        if (opts != null) {
+            compressionQuality.setText(String.valueOf(opts.quality));
+        } else {
+            compressionQuality.clear();
+        }
+        converter.setCompressionOptions(CodecOptions.getDefaultOptions());
     }
 
-    private ArrayList<Node> standardSettings;
 
-    private ArrayList<Node> advancedSettings;
-
-
-    private ChoiceBox<CompressionType> compression;
-
-    private ChoiceBox<String> logLevel;
-    private ToggleSwitch legacy;
-    private TextField maxWorkers;
-    private TextField compressionQuality;
-
-    private ToggleSwitch rgb;
-
-    private ToggleSwitch split;
-
+    // Save settings from widgets into the converter's values
+    public void applySettings() {
+        System.out.println("Applying settings for " + name);
+        converter.setLogLevel(logLevel.getValue());
+        converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
+        converter.setCompression(compression.getValue());
+        converter.setLegacyTIFF(legacy.isSelected());
+        converter.setRGB(rgb.isSelected());
+        converter.setSplitTIFFs(split.isSelected());
+        if (compression.getValue() == CompressionType.JPEG_2000) {
+            CodecOptions codec = JPEG2000CodecOptions.getDefaultOptions();
+            if (!compressionQuality.getText().isEmpty()) {
+                codec.quality = Double.parseDouble(compressionQuality.getText());
+            }
+            converter.setCompressionOptions(codec);
+        } else {
+            converter.setCompressionOptions(null);
+        }
+    }
 
     public void setOutput(String basePath) {
         this.output = Paths.get(basePath, this.outputName + ".ome.tiff").toFile();
@@ -79,12 +123,9 @@ public class CreateTiff extends BaseTask {
         }
     }
 
-    public void generateNodes() {
-        if (standardSettings != null) return;
-        // Generate standard controls
-        standardSettings = new ArrayList<>();
-        advancedSettings = new ArrayList<>();
 
+    // Generate standard controls
+    static {
         UnaryOperator<TextFormatter.Change> integerFilter = change -> {
             String newText = change.getControlNewText();
             if (newText.matches("([1-9][0-9]*)?")) {
@@ -171,66 +212,44 @@ public class CreateTiff extends BaseTask {
 
     }
 
-    public void updateNodes() {
-        logLevel.getSelectionModel().select("WARN");
-        maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
-        compression.setValue(converter.getCompression());
-        rgb.setSelected(converter.getRGB());
-        split.setSelected(converter.getSplitTIFFs());
-        legacy.setSelected(converter.getLegacyTIFF());
-        CodecOptions opts = converter.getCompressionOptions();
-        if (opts != null) {
-            compressionQuality.setText(String.valueOf(opts.quality));
-        } else {
-            compressionQuality.setText(null);
-        }
-        converter.setCompressionOptions(CodecOptions.getDefaultOptions());
-    }
-
 
     public ArrayList<Node> getStandardSettings() {
-        if (this.standardSettings == null) {
-            generateNodes();
-        }
-        updateNodes();
-        return this.standardSettings;
+        return standardSettings;
     }
 
     public ArrayList<Node> getAdvancedSettings() {
-        if (this.advancedSettings == null) {
-            generateNodes();
-        }
-        return this.advancedSettings;
-    }
-
-    public void applySettings() {
-        System.out.println("Applying settings for " + getName());
-        converter.setLogLevel(logLevel.getValue());
-        converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
-        converter.setCompression(compression.getValue());
-
-        converter.setLegacyTIFF(legacy.isSelected());
-        converter.setRGB(rgb.isSelected());
-        converter.setSplitTIFFs(split.isSelected());
-
-        if (compression.getValue() == CompressionType.JPEG_2000) {
-            CodecOptions codec = JPEG2000CodecOptions.getDefaultOptions();
-            if (!compressionQuality.getText().isEmpty()) {
-                codec.quality = Double.parseDouble(compressionQuality.getText());
-            }
-            converter.setCompressionOptions(codec);
-        } else {
-            converter.setCompressionOptions(null);
-        }
+        return advancedSettings;
     }
 
 
-    public void setDefaults() {
-        return;
+    public void setDefaults() throws BackingStoreException {
+        taskPreferences.clear();
+        taskPreferences.put(prefKeys.LOG_LEVEL.name(), converter.getLogLevel());
+        taskPreferences.putInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers());
+        taskPreferences.put(prefKeys.COMPRESSION.name(), converter.getCompression().name());
+        taskPreferences.putBoolean(prefKeys.LEGACY.name(), converter.getLegacyTIFF());
+        taskPreferences.putBoolean(prefKeys.RGB.name(), converter.getRGB());
+        taskPreferences.putBoolean(prefKeys.SPLIT.name(), converter.getSplitTIFFs());
+        taskPreferences.putDouble(prefKeys.COMPRESSION_OPTS.name(), converter.getCompressionOptions().quality);
+        taskPreferences.flush();
     }
 
     public void applyDefaults() {
-        return;
+        converter.setLogLevel(taskPreferences.get(prefKeys.LOG_LEVEL.name(), converter.getLogLevel()));
+        converter.setMaxWorkers(taskPreferences.getInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers()));
+        converter.setCompression(CompressionType.lookup(
+                taskPreferences.get(prefKeys.COMPRESSION.name(), converter.getCompression().name())));
+        converter.setLegacyTIFF(taskPreferences.getBoolean(prefKeys.LEGACY.name(), converter.getLegacyTIFF()));
+        converter.setRGB(taskPreferences.getBoolean(prefKeys.RGB.name(), converter.getRGB()));
+        converter.setSplitTIFFs(taskPreferences.getBoolean(prefKeys.SPLIT.name(), converter.getSplitTIFFs()));
+        CodecOptions codec = null;
+        if (converter.getCompression() == CompressionType.JPEG_2000) {
+            codec = JPEG2000CodecOptions.getDefaultOptions();
+            if (!compressionQuality.getText().isEmpty()) {
+                codec.quality = taskPreferences.getDouble(
+                        prefKeys.COMPRESSION_OPTS.name(), converter.getCompressionOptions().quality);
+            }}
+        converter.setCompressionOptions(codec);
     }
 
     public void cloneValues(BaseTask sourceInstance) {
@@ -238,16 +257,23 @@ public class CreateTiff extends BaseTask {
             System.out.println("Incorrect input type");
             return;
         }
-        if (this.standardSettings == null) {
-            generateNodes();
-        }
-        logLevel.setValue(source.logLevel.getValue());
-        maxWorkers.setText(source.maxWorkers.getText());
-        compression.setValue(source.compression.getValue());
-        legacy.setSelected(source.legacy.isSelected());
-        rgb.setSelected(source.rgb.isSelected());
-        split.setSelected(source.split.isSelected());
-        compressionQuality.setText(source.compressionQuality.getText());
+        converter.setLogLevel(source.converter.getLogLevel());
+        converter.setMaxWorkers(source.converter.getMaxWorkers());
+        converter.setCompression(source.converter.getCompression());
+        converter.setLegacyTIFF(source.converter.getLegacyTIFF());
+        converter.setRGB(source.converter.getRGB());
+        converter.setSplitTIFFs(source.converter.getSplitTIFFs());
+        converter.setCompressionOptions(source.converter.getCompressionOptions());
+    }
+
+    public void resetToDefaults() {
+        resetConverter();
+        applyDefaults();
+    }
+
+    public void resetConverter() {
+        // Todo: Revise once r2o resetters are implemented
+        converter = new PyramidFromDirectoryWriter();
     }
 
 }
