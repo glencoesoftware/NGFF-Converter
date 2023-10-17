@@ -31,12 +31,21 @@ public abstract class BaseTask {
 
     public String warningMessage = "";
 
+    protected final ProgressBar progressBar = new ProgressBar();
+    protected final Label progressLabel = new Label("Running", progressBar);
+
     abstract public String getName();
 
     public BaseTask(BaseWorkflow parent) {
         this.parent = parent;
         // We want some basic log messages to always show
         LOGGER.setLevel(Level.INFO);
+        progressLabel.setContentDisplay(ContentDisplay.TOP);
+        progressBar.setMaxWidth(95);
+    }
+
+    public Label getProgressWidget() {
+        return progressLabel;
     }
 
     public File getInput(){

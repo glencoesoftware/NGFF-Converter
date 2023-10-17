@@ -33,5 +33,12 @@ public class ButtonTableCell extends TableCell<BaseTask, Void> {
     public void updateItem(Void item, boolean empty) {
         super.updateItem(item, empty);
         setGraphic(empty ? null : configureButton);
+        if (empty) return;
+        BaseTask current = getTableView().getItems().get(getIndex());
+        switch (current.status) {
+            case RUNNING, QUEUED, COMPLETED, FAILED -> configureButton.setDisable(true);
+            case READY, WARNING -> configureButton.setDisable(false);
+        }
+
     }
 }

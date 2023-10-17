@@ -14,7 +14,7 @@
            </BorderPane.margin>
            <Menu mnemonicParsing="false" text="File">
                <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
-               <MenuItem fx:id="menuOutputFormat" mnemonicParsing="false" text="Configure output format" onAction="#configureDefaultFormat" />
+               <MenuItem fx:id="menuOutputFormat" mnemonicParsing="false" onAction="#configureDefaultFormat" text="Configure output format" />
                <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing files" />
                <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
                <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
@@ -27,7 +27,6 @@
                <MenuItem fx:id="menuRemoveFile" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
                <MenuItem fx:id="menuClearFinished" mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
                <MenuItem fx:id="menuClearAll" mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />
-               <MenuItem fx:id="menuSavePrefs" mnemonicParsing="false" onAction="#savePrefs" text="Save settings as defaults" />
                <MenuItem fx:id="menuResetPrefs" mnemonicParsing="false" onAction="#resetPrefs" text="Clear saved settings" />
            </Menu>
            <Menu mnemonicParsing="false" text="Help">
@@ -106,10 +105,10 @@
                            <padding>
                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
-                           <ProgressBar progress="0.35" HBox.hgrow="ALWAYS" />
+                           <ProgressBar fx:id="progressBar" progress="0" HBox.hgrow="ALWAYS" />
                            <Label text="00:00:00" HBox.hgrow="NEVER" />
                        </HBox>
-                       <TableView fx:id="taskList" VBox.vgrow="ALWAYS">
+                       <TableView fx:id="taskList" fixedCellSize="75.0" VBox.vgrow="ALWAYS">
                            <columns>
                                <TableColumn fx:id="taskNameColumn" editable="false" maxWidth="-Infinity" minWidth="100.0" prefWidth="125.0" resizable="false" sortable="false" style="-fx-alignment: CENTER-LEFT;" text="Name" />
                                <TableColumn fx:id="taskStatusColumn" editable="false" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Status" />

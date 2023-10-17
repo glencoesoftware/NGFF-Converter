@@ -27,7 +27,16 @@ import static com.glencoesoftware.convert.JobState.status.READY;
 public abstract class BaseWorkflow {
 
     // Keep a reference to the parent controller
-    public PrimaryController controller = null;
+    public PrimaryController controller;
+
+    public BaseWorkflow(PrimaryController parentController) {
+        controller = parentController;
+        status.addListener((i, o, n) -> {
+            // Update job/task display when jobs update
+            controller.jobList.refresh();
+            controller.taskList.refresh();
+        });
+    }
 
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
 
@@ -258,7 +267,10 @@ public abstract class BaseWorkflow {
         textAreaStream.forceFlush();
         rootLogger.detachAppender(logBoxAppender);
         if (fileAppender != null) rootLogger.detachAppender(fileAppender);
-        this.status.set(JobState.status.COMPLETED);
+        if (this.currentStage.get() != -1) {
+            // Workflow wasn't aborted
+            status.set(JobState.status.COMPLETED);
+        }
         this.currentStage.set(-1);
     }
 

@@ -49,17 +49,21 @@ public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
                 this.mainLabel.setText("Completed");
                 this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 this.labelTooltip.setText("Task successful");
-                this.container.getChildren().add(this.mainLabel);
+                this.container.getChildren().add(mainLabel);
             }
             case RUNNING -> {
-                this.mainLabel.setText("00:00:10");
-                this.container.getChildren().addAll(this.progressBar, this.mainLabel);
+                this.container.getChildren().addAll(current.getProgressWidget());
             }
             case WARNING -> {
                 this.mainLabel.setText("Warning");
                 this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 this.labelTooltip.setText(current.warningMessage);
-                this.container.getChildren().add(this.mainLabel);
+                this.container.getChildren().add(mainLabel);
+            }
+            case FAILED -> {
+                this.mainLabel.setText("Failed");
+                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
+                this.container.getChildren().add(mainLabel);
             }
             default -> {
                 this.mainLabel.setText("Ready");

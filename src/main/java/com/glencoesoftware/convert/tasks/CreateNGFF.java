@@ -5,6 +5,7 @@ import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
+import com.glencoesoftware.convert.tasks.progress.NGFFProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.google.common.base.Splitter;
 import javafx.beans.property.BooleanProperty;
@@ -340,6 +341,12 @@ public class CreateNGFF extends BaseTask{
     public void run() {
         // Apply GUI configurations first
         setupIO();
+
+        System.out.println("Setting progress up");
+        NGFFProgressListener listener = new NGFFProgressListener(progressBar, progressLabel, converter);
+        converter.setProgressListener(listener);
+        System.out.println("set progressbar listener");
+
         LOGGER.info("Running bioformats2raw");
         this.status = JobState.status.RUNNING;
         try {
@@ -355,6 +362,8 @@ public class CreateNGFF extends BaseTask{
         } catch (Exception e) {
             LOGGER.error("NGFF creation failed - " + e);
             this.status = JobState.status.FAILED;
+        } finally {
+            listener.stop();
         }
     }
 
@@ -785,7 +794,7 @@ public class CreateNGFF extends BaseTask{
                     compressionProps.put("cname", compressorBloscCname.getValue());
                 if (compressorBloscClevel.getText() != null)
                     compressionProps.put("clevel", Integer.parseInt(compressorBloscClevel.getText()));
-                if (compressorBloscBlockSize.getText() != null)
+                if (compressorBloscBlockSize.getText() != null && !compressorBloscBlockSize.getText().isEmpty())
                     compressionProps.put("blocksize", Integer.parseInt(compressorBloscBlockSize.getText()));
                 // Auto = -1, No = 0, Byte = 1, Bit = 2. So subtract 1 to convert
                 if (compressorBloscShuffle.getValue() != null)

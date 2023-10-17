@@ -17,6 +17,9 @@ import com.glencoesoftware.convert.dialogs.AddFilesDialog;
 import com.glencoesoftware.convert.dialogs.ConfigureJobDialog;
 import com.glencoesoftware.convert.tables.*;
 import com.glencoesoftware.convert.tasks.BaseTask;
+import com.glencoesoftware.convert.tasks.CreateNGFF;
+import com.glencoesoftware.convert.tasks.CreateTiff;
+import com.glencoesoftware.convert.tasks.Output;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.convert.workflows.ConvertToNGFF;
 import com.glencoesoftware.convert.workflows.ConvertToTiff;
@@ -30,20 +33,16 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.*;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.input.*;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
@@ -105,7 +104,6 @@ public class PrimaryController {
     public MenuItem menuRemoveFile;
     public MenuItem menuClearFinished;
     public MenuItem menuClearAll;
-    public MenuItem menuSavePrefs;
     public MenuItem menuResetPrefs;
     public MenuBar menuBar;
 
@@ -140,6 +138,11 @@ public class PrimaryController {
 
     private Stage jobSettingsStage;
     private ConfigureJobDialog jobSettingsController;
+
+    private Stage addFilesStage;
+    private AddFilesDialog addFilesController;
+
+    public ProgressBar progressBar;
 
     public ChangeListener<Number> taskWatcher = new ChangeListener<>() {
         @Override
@@ -263,10 +266,9 @@ public class PrimaryController {
         // Todo: update
         fileControlButtons = new ArrayList<>(Arrays.asList(outputDirectory, chooseDirButton, clearDirButton));
         menuControlButtons = new ArrayList<>(Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
-                menuClearFinished, menuClearAll, menuSavePrefs, menuResetPrefs, menuOverwrite, menuChooseDirectory,
+                menuClearFinished, menuClearAll, menuResetPrefs, menuOverwrite, menuChooseDirectory,
                 menuResetDirectory, menuTempDirectory));
-        createLogControl();
-
+        initSecondaryDialogs();
     }
 
     private void dividerResized() {
@@ -275,7 +277,42 @@ public class PrimaryController {
         taskNameColumn.setMinWidth(Math.max(taskList.getWidth() - 150, 100));
     }
 
-    private void createLogControl() throws IOException {
+    private void displayAddFilesDialog() {
+        // Todo: only show if needed.
+//        addFilesController.outputFormat.setValue()
+        if (addFilesStage.getOwner() == null) {
+            addFilesStage.initOwner(App.getScene().getWindow());
+        }
+        addFilesStage.show();
+    }
+
+    private void initSecondaryDialogs() throws IOException {
+        // Add Files Window
+        FXMLLoader fileLoader = new FXMLLoader();
+        fileLoader.setLocation(App.class.getResource("AddFiles.fxml"));
+        Scene fileScene = new Scene(fileLoader.load());
+        fileScene.setFill(Color.TRANSPARENT);
+        addFilesStage = new Stage();
+        addFilesStage.setScene(fileScene);
+        addFilesStage.initModality(Modality.APPLICATION_MODAL);
+        addFilesStage.initStyle(StageStyle.TRANSPARENT);
+        addFilesStage.setResizable(false);
+        addFilesController = fileLoader.getController();
+
+        // Job settings window
+        FXMLLoader settingsLoader = new FXMLLoader();
+        settingsLoader.setLocation(App.class.getResource("ConfigureJob.fxml"));
+        Scene jobScene = new Scene(settingsLoader.load());
+        jobScene.setFill(Color.TRANSPARENT);
+        jobSettingsStage = new Stage();
+        jobSettingsStage.setScene(jobScene);
+        jobSettingsStage.initModality(Modality.APPLICATION_MODAL);
+        jobSettingsStage.initStyle(StageStyle.TRANSPARENT);
+        jobSettingsStage.setResizable(false);
+        jobSettingsController = settingsLoader.getController();
+
+        // Log window
+        // Todo: replace this
         FXMLLoader logLoader = new FXMLLoader();
         logLoader.setLocation(getClass().getResource("LogWindow.fxml"));
         Scene scene = new Scene(logLoader.load());
@@ -284,11 +321,15 @@ public class PrimaryController {
         consoleWindow.setScene(scene);
         textAreaStream = logControl.stream;
         logControl.setParent(this);
+
     }
 
     @FXML
     private void configureDefaultFormat() {
-        addFilesDialog.show(this);
+        if (addFilesStage.getOwner() == null) {
+            addFilesStage.initOwner(App.getScene().getWindow());
+        }
+        addFilesStage.show();
     }
 
 
@@ -367,14 +408,8 @@ public class PrimaryController {
 
     @FXML
     private void configureSelected() {
-        // Todo: Write this
-        System.out.println("Status is:");
-        for (BaseWorkflow job : jobList.getItems()) {
-            System.out.println("Job " + job.getName() + job.getSelected().getValue());
-        }
         displaySettingsDialog(FXCollections.observableArrayList(
                 jobList.getItems().stream().filter(job -> job.getSelected().getValue()).toList()), 0);
-
     }
 
     @FXML
@@ -488,7 +523,10 @@ public class PrimaryController {
 
     @FXML
     private void addFilesToList(List<File> files) {
-        OutputMode desiredFormat = addFilesDialog.show(this);
+        displayAddFilesDialog();
+        // Todo: fetch defaults
+//        OutputMode desiredFormat = addFilesDialog.desiredFormat;
+        OutputMode desiredFormat = OutputMode.TIFF;
         // Handle user cancel
         if (desiredFormat == null) { return; };
 
@@ -620,19 +658,14 @@ public class PrimaryController {
     @FXML
     private void resetPrefs() throws BackingStoreException {
         userPreferences.clear();
+        CreateNGFF.taskPreferences.clear();
+        CreateTiff.taskPreferences.clear();
+        Output.taskPreferences.clear();
         userPreferences.flush();
-        // Todo: Apply to task prefs too
+        CreateNGFF.taskPreferences.flush();
+        CreateTiff.taskPreferences.flush();
+        Output.taskPreferences.flush();
     }
-
-    @FXML
-    private void savePrefs() throws BackingStoreException {
-//        userPreferences.put(prefName.FORMAT.name(), outputFormat.getValue());
-//        userPreferences.put(prefName.LOG_LEVEL.name(), logLevel.getValue());
-//        userPreferences.putBoolean(prefName.OVERWRITE.name(), wantOverwrite.isSelected());
-        userPreferences.put(prefName.OUTPUT_FOLDER.name(), outputDirectory.getText());
-//        userPreferences.put(prefName.ARGS.name(), extraParams.getText());
-        userPreferences.flush();
-    };
 
     @FXML
     public Runnable displayLog() {
@@ -658,32 +691,16 @@ public class PrimaryController {
         stage.setScene(scene);
         stage.setAlwaysOnTop(true);
         stage.initModality(Modality.WINDOW_MODAL);
-        stage.initOwner(jobList.getScene().getWindow());
+        stage.initOwner(App.getScene().getWindow());
         stage.setResizable(false);
         stage.show();
     }
 
     public void displaySettingsDialog(ObservableList<BaseWorkflow> jobs, int taskIndex){
-        if (jobSettingsStage == null) {
-            FXMLLoader fxmlLoader = new FXMLLoader();
-            fxmlLoader.setLocation(App.class.getResource("ConfigureJob.fxml"));
-            Scene scene;
-            try {
-                scene = new Scene(fxmlLoader.load());
-            } catch (IOException e) {
-                System.out.println("Error encountered" + e);
-                return;
-            }
-            scene.setFill(Color.TRANSPARENT);
-            jobSettingsStage = new Stage();
-            jobSettingsStage.setScene(scene);
-            jobSettingsStage.initModality(Modality.APPLICATION_MODAL);
-            jobSettingsStage.initStyle(StageStyle.TRANSPARENT);
-            jobSettingsStage.initOwner(jobList.getScene().getWindow());
-            jobSettingsStage.setResizable(false);
-            jobSettingsController = fxmlLoader.getController();
+        if (jobSettingsStage.getOwner() == null) {
+            jobSettingsStage.initOwner(App.getScene().getWindow());
         }
-//        ObservableList<BaseWorkflow> jobs = jobList.getSelectionModel().getSelectedItems();
+        jobSettingsStage.initOwner(App.getScene().getWindow());
         jobSettingsController.initData(jobs, taskIndex);
         jobSettingsStage.show();
     }

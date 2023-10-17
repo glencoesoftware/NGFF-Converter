@@ -3,8 +3,10 @@ package com.glencoesoftware.convert.tasks;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -13,7 +15,6 @@ import org.controlsfx.control.ToggleSwitch;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.prefs.BackingStoreException;
@@ -26,25 +27,55 @@ public class Output extends BaseTask {
 
     public static String name = "Output";
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
-    public enum prefKeys {OVERWRITE, LOG_TO_FILE, LOG_LOCATION, WORKING_DIR}
+    public enum prefKeys {OVERWRITE, LOG_CHOICE, LOG_LOCATION, WORKING_CHOICE, WORKING_DIR, OUTPUT_CHOICE, OUTPUT_DIR}
 
-    // Variables storing true settings for this instance
+    public enum outputLocationType {
+        INPUT_FOLDER("Same folder as input"),
+        CUSTOM_FOLDER("Custom directory");
+        private String label;
+        outputLocationType(String label) { this.label = label; }
+        public String toString() { return label; }
+    }
+
+    public enum logFileType {
+        DISABLED("Disabled"),
+        OUTPUT_FOLDER("Same folder as output"),
+        CUSTOM_FOLDER("Custom directory");
+        private String label;
+        logFileType(String label) { this.label = label; }
+        public String toString() { return label; }
+    }
+
+    public enum workingDirectoryType {
+        SYSTEM_TEMP("System temporary directory"),
+        OUTPUT_FOLDER("Same folder as output"),
+        CUSTOM_FOLDER("Custom directory");
+        private String label;
+        workingDirectoryType(String label) { this.label = label; }
+        public String toString() { return label; }
+    }
+
+    // Variables storing true settings for this instance. n.b. this.input and this.output arise from BaseTask.
     private boolean overwrite = false;
-    private boolean logToFile = false;
+
+    private outputLocationType outputLocation = outputLocationType.INPUT_FOLDER;
+    private File outputFolder = null;
+    private logFileType logToFile = logFileType.DISABLED;
     private File logFileLocation = null;
-    private File workingDirectoryLocation = null;
+
+    private workingDirectoryType workingDirectoryLocation = workingDirectoryType.SYSTEM_TEMP;
+    private File trueWorkingDirectory = null;
 
     // Static widget settings for display
     private static final ArrayList<Node> standardSettings = new ArrayList<>();
-    private static final ToggleSwitch overwriteBox;
-    private static final ToggleSwitch logBox;
-    private static final TextField logFile;
-    private static final TextField outputPath;
-    private static final TextField workingDirectory;
-
-    private static ChangeListener<Boolean> logWatcher; // Current listener bound to the widget
-
-
+    private static final ToggleSwitch overwriteBox = new ToggleSwitch();
+    private static final ChoiceBox<outputLocationType> outputChoice = new ChoiceBox<>();
+    private static final TextField outputDirectory = new TextField();
+    private static final TextField outputFileName = new TextField();
+    private static final ChoiceBox<workingDirectoryType> workingDirectoryChoice = new ChoiceBox<>();
+    private static final TextField workingDirectoryField = new TextField();
+    private static final ChoiceBox<logFileType> logChoice = new ChoiceBox<>();
+    private static final TextField logDirectory = new TextField();
 
     public String getName() { return name; }
 
@@ -55,60 +86,91 @@ public class Output extends BaseTask {
         applyDefaults();
     }
 
+    private void updateOutput() {
+        if (outputLocation == outputLocationType.INPUT_FOLDER)
+            this.output = new File(parent.firstInput.getParent(), this.output.getName());
+        else this.output = new File(outputFolder, this.output.getName());
+    };
+
+    public void applyOutputToWidgets() {
+        outputDirectory.setText(this.output.getParent());
+        outputFileName.setText(this.output.getName());
+        if (parent.firstInput.getParent().equals(this.output.getParent())) outputChoice.setValue(outputLocationType.INPUT_FOLDER);
+        else outputChoice.setValue(outputLocationType.CUSTOM_FOLDER);
+    }
+
+    public void setOutputFromWidgets() {
+        if (outputChoice.getValue() == outputLocationType.INPUT_FOLDER)
+            this.output = new File(parent.firstInput.getParent(), outputFileName.getText());
+        else this.output = new File(outputDirectory.getText(), outputFileName.getText());
+    }
+
     public void prepareForDisplay() {
         bindWidgets();
-        // Todo: set output properly
-
-//        setOutput(new File(outputPath.getText()).getParent());
-
-        outputPath.setText(this.output.getAbsolutePath());
+        applyOutputToWidgets();
         overwriteBox.setSelected(overwrite);
-        logBox.setSelected(logToFile);
-        if (logFileLocation == null) {
-            logFile.setText(defaultLogFileName);
-        } else {
-            logFile.setText(logFileLocation.getAbsolutePath());
-        }
-        if (workingDirectoryLocation == null) {
-            workingDirectory.setText("");
-        } else {
-            workingDirectory.setText(workingDirectoryLocation.getAbsolutePath());
-        }
-
+        logChoice.setValue(logToFile);
+        if (logFileLocation != null) logDirectory.setText(logFileLocation.getAbsolutePath());
+        workingDirectoryChoice.setValue(workingDirectoryLocation);
+        if (trueWorkingDirectory != null) workingDirectoryField.setText(trueWorkingDirectory.getAbsolutePath());
     }
 
     // Attach this instance to the static widgets
     private void bindWidgets() {
-        // Remove any old listener and set a new one
-        if (logWatcher != null) logBox.selectedProperty().removeListener(logWatcher);
-        logWatcher = (e, oldValue, newValue) -> logToFile = newValue;
-        logBox.selectedProperty().addListener(logWatcher);
+        // This File choosers in particular is instance-specific
+        outputFileName.onMouseClickedProperty().set(e -> {
+                    FileChooser fileChooser = new FileChooser();
+                    fileChooser.setInitialDirectory(this.output);
+                    fileChooser.setTitle("Set output file");
+                    if (parent instanceof ConvertToTiff) {
+                        fileChooser.getExtensionFilters().addAll(
+                                new FileChooser.ExtensionFilter("OME-TIFF Files", "*.ome.tiff", "*.ome.tif"),
+                                new FileChooser.ExtensionFilter("TIFF Files", "*.tif", "*.tiff"));
+                    } else fileChooser.getExtensionFilters().add(
+                            new FileChooser.ExtensionFilter("NGFF Files", "*.zarr", "*.ngff"));
+
+                    File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
+                    if (selectedFile != null) {
+                        if (selectedFile.getParent().equals(input.getParent()))
+                            outputChoice.getSelectionModel().select(0);
+                        else outputChoice.getSelectionModel().select(1);
+                        outputDirectory.setText(selectedFile.getParent());
+                        outputFileName.setText(selectedFile.getName());
+                    }
+                });
     }
 
     public void applySettings() {
-        System.out.println("Applying settings for " + name);
-
-        parent.setOverwrite(overwriteBox.selectedProperty().get());
+        outputLocation = outputChoice.getValue();
+        String outputText = outputDirectory.getText();
+        if (outputText == null || outputLocation == outputLocationType.INPUT_FOLDER) outputFolder = null;
+        else outputFolder = new File(outputText);
         overwrite = overwriteBox.selectedProperty().get();
 
-        // Todo: set output properly
+        logToFile = logChoice.getValue();
+        switch (logToFile) {
+            case DISABLED -> logFileLocation = null;
+            case OUTPUT_FOLDER -> logFileLocation = output.getParentFile();
+            case CUSTOM_FOLDER -> {
+                String txt = logDirectory.getText();
+                if (txt == null || txt.isEmpty()) logFileLocation = output.getParentFile();
+                else logFileLocation = new File(txt);
+            }
+        }
 
-        setOutput(new File(outputPath.getText()).getParent());
+        workingDirectoryLocation = workingDirectoryChoice.getValue();
+        String txt = workingDirectoryField.getText();
+        if (txt == null || txt.isEmpty()) trueWorkingDirectory = null;
+        else trueWorkingDirectory = new File(txt);
 
+        updateOutput();
     }
 
 
     public File getLogFile() {
-        if (!logToFile) return null;
-        if (Objects.equals(logFile.getText(), defaultLogFileName)) {
-            // Stick .log on the end of the target file
-            return new File(output.getAbsolutePath() + ".log");
+        if (logToFile == logFileType.DISABLED) return null;
+        return new File(logFileLocation, "%s.log".formatted(output.getName()));
         }
-        // Use whatever path the user specified instead
-        return new File(logFile.getText());
-    }
-
-
 
     public void setOverwrite(boolean overwrite) {
         this.overwrite = overwrite;
@@ -119,15 +181,37 @@ public class Output extends BaseTask {
     }
 
     public File getWorkingDirectory() {
-        return new File(workingDirectory.getText());
+        switch (workingDirectoryLocation) {
+            case SYSTEM_TEMP -> { try {
+                return Files.createTempDirectory("ngff-converter").toFile();
+            } catch (IOException e) {
+                System.out.println("Failed to get temp dir");
+                throw new RuntimeException(e);
+            }}
+            case OUTPUT_FOLDER -> {
+                return output.getParentFile();
+            }
+            case CUSTOM_FOLDER -> {
+                if (trueWorkingDirectory != null) return trueWorkingDirectory;
+                else return output.getParentFile();
+            }
+            default -> {
+                System.out.println("Oops" + workingDirectoryLocation);
+                return null;
+            }
+        }
     }
 
     public void setOutput(String basePath) {
-        // Todo: Conform to desired workflow output type
-        this.output = Paths.get(basePath, this.input.getName()).toFile();
+        this.outputFolder = new File(basePath);
+        if (basePath.equals(parent.firstInput.getAbsolutePath()))
+            outputLocation = outputLocationType.INPUT_FOLDER;
+        else outputLocation = outputLocationType.CUSTOM_FOLDER;
+        updateOutput();
         this.parent.finalOutput = this.output;
         // Get the previous task and update it's output
-        this.parent.tasks.get(this.parent.tasks.size() - 2).output = this.output;
+        // Disabled for now, we copy over
+            // this.parent.tasks.get(this.parent.tasks.size() - 2).output = this.output;
     }
 
     public void updateStatus() {
@@ -146,17 +230,14 @@ public class Output extends BaseTask {
         }
     }
 
-    private void setupIO() {
-        this.output = this.input;
-    }
-
     public void run() {
         // Apply GUI configurations first
-        setupIO();
+        updateOutput();
         this.status = JobState.status.RUNNING;
         LOGGER.info("Saving final output file");
         try {
             if (!Objects.equals(this.input.getAbsolutePath(), this.output.getAbsolutePath())) {
+                // Todo: Check this works with NGFF
                 Files.copy(this.input.toPath(), this.output.toPath(), ATOMIC_MOVE);
             }
             this.status = JobState.status.COMPLETED;
@@ -166,75 +247,119 @@ public class Output extends BaseTask {
         }
     }
 
-    private static final String defaultLogFileName = "<Output File Name>.log";
-
     // Generate widgets
     static {
         // Generate standard controls
-        outputPath = new TextField();
+        // Todo: Group items in containers
+        outputChoice.getItems().setAll(outputLocationType.values());
+        outputChoice.getSelectionModel().selectedIndexProperty().addListener((e, oldVal, newVal) -> {
+            System.out.println("Got output trigger" + newVal);
+            outputDirectory.getParent().setVisible(newVal.intValue() != 0);
+            outputDirectory.getParent().setManaged(newVal.intValue() != 0);
+        }
+        );
         standardSettings.add(
-            getSettingContainer(outputPath, "Output File",
-                    """
-            Path to the final output file on disk.
-            Use this option to change file name and/or location.
-            """
-            ));
+                getSettingContainer(outputChoice, "Output location",
+                        """
+                Where to save the resulting files. Choose whether to export
+                resulting files into the same directory as the source file,
+                or to a specified folder.
+                """
+                ));
+        // Todo: Improve directory browser widgets
 
-        overwriteBox = new ToggleSwitch();
+        outputDirectory.onMouseClickedProperty().set(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Choose output directory");
+            File newDir = directoryChooser.showDialog(App.getScene().getWindow());
+            if (newDir != null) {
+                outputDirectory.setText(newDir.getAbsolutePath());
+            }
+        });
+        standardSettings.add(
+                getSettingContainer(outputDirectory, "Output directory",
+                        """
+                Folder where resulting files will be saved.
+                Note that this is not the file name.
+                """
+                ));
+        standardSettings.add(
+        getSettingContainer(outputFileName, "Output file name",
+                """
+        Name of the file to be exported.
+        """
+        ));
+
         standardSettings.add(getSettingContainer(
                 overwriteBox,
                 "Overwrite Existing Files",
                 "Choose whether existing files at the path above will be overwritten"
                 ));
 
-        logBox = new ToggleSwitch();
+        logChoice.getItems().setAll(logFileType.values());
+        logChoice.getSelectionModel().selectedIndexProperty().addListener((e, oldVal, newVal) -> {
+                logDirectory.getParent().setVisible(newVal.intValue() == 2);
+                logDirectory.getParent().setManaged(newVal.intValue() == 2);
+                }
+        );
         standardSettings.add(getSettingContainer(
-                logBox,
+                logChoice,
                 "Log to File",
-                "If enabled, execution logs will also be recorded into the specified text file."
+                """
+                        If enabled, execution logs will also be recorded into a text file.
+                        The file will be named <output_file_name>.log
+                        
+                        Regardless of this setting, logs are captured in the viewer within NGFF-Converter
+                        """
         ));
 
-        logFile = new TextField(defaultLogFileName);
-        logFile.setEditable(false);
-        logFile.onMouseClickedProperty().set(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Set log file");
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Log Files", "*.log"),
-                    new FileChooser.ExtensionFilter("Text Files", "*.txt"));
-            File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
-            if (selectedFile != null) {
-                logFile.setText(selectedFile.getAbsolutePath());
-            }
-        });
-        standardSettings.add(getSettingContainer(
-                logFile,
-                "Log File Location",
-                "Choose the path to the file where execution logs will be saved to."
-        ));
-
-        workingDirectory = new TextField();
-        workingDirectory.setEditable(false);
-        workingDirectory.onMouseClickedProperty().set(e -> {
+        logDirectory.onMouseClickedProperty().set(e -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choose working directory");
+            directoryChooser.setTitle("Choose log directory");
             File newDir = directoryChooser.showDialog(App.getScene().getWindow());
             if (newDir != null) {
-                workingDirectory.setText(newDir.getAbsolutePath());
+                logDirectory.setText(newDir.getAbsolutePath());
             }
         });
-        standardSettings.add(getSettingContainer(
-                workingDirectory,
-                "Working Directory",
+        standardSettings.add(
+                getSettingContainer(logDirectory, "Log file location",
+                        """
+                Folder in which to save log files.
                 """
-            The converter may generate intermediate files during a conversion.
-            This setting specifies where those should be stored (default = your OS's temp folder).
-            These files are automatically cleaned up after tasks finish, but you may want to alter this setting
-            if you have limited drive space available.
-            """
-        ));
-        // TODO: Make workingdirectory the one true working directory
+                ));
 
+        workingDirectoryChoice.getItems().setAll(workingDirectoryType.values());
+        workingDirectoryChoice.getSelectionModel().selectedIndexProperty().addListener((i, o, v) -> {
+                workingDirectoryField.getParent().setVisible(v.intValue() == 2);
+                workingDirectoryField.getParent().setManaged(v.intValue() == 2);
+                });
+        standardSettings.add(
+                getSettingContainer(workingDirectoryChoice, "Working directory location",
+                        """
+                Some conversion stages will produce temporary intermediate files.
+                
+                This setting controls where those files are written.
+                
+                Temporary files are cleaned up after conversion finishes.
+                """
+                ));
+
+        workingDirectoryField.onMouseClickedProperty().set(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Choose working directory");
+            // Todo: Fix
+//            directoryChooser.setInitialDirectory(getWorkingDirectory());
+            File newDir = directoryChooser.showDialog(App.getScene().getWindow());
+            if (newDir != null) {
+                workingDirectoryField.setText(newDir.getAbsolutePath());
+            }
+        });
+        standardSettings.add(
+                getSettingContainer(workingDirectoryField, "Working directory",
+                        """
+                Folder in which to write temporary files.
+                """
+                ));
     }
 
 
@@ -248,25 +373,55 @@ public class Output extends BaseTask {
 
     public void setDefaults() throws BackingStoreException {
         taskPreferences.clear();
+
+        taskPreferences.put(prefKeys.OUTPUT_CHOICE.name(), outputLocation.label);
+        if (outputLocation == outputLocationType.CUSTOM_FOLDER)
+            taskPreferences.put(prefKeys.OUTPUT_DIR.name(), outputFolder.getAbsolutePath());
+
         taskPreferences.putBoolean(prefKeys.OVERWRITE.name(), overwrite);
-        taskPreferences.putBoolean(prefKeys.LOG_TO_FILE.name(), logToFile);
-        if (logFileLocation != null) {
-            taskPreferences.put(prefKeys.LOG_LOCATION.name(), logFileLocation.getParent());
-        }
-        if (workingDirectoryLocation != null) {
-            taskPreferences.put(prefKeys.WORKING_DIR.name(), workingDirectoryLocation.getAbsolutePath());
-        }
+
+        // Log settings
+        taskPreferences.put(prefKeys.LOG_CHOICE.name(), logToFile.label);
+        if (logToFile == logFileType.CUSTOM_FOLDER)
+            taskPreferences.put(prefKeys.LOG_LOCATION.name(), logFileLocation.getAbsolutePath());
+
+
+        // Working dir
+        taskPreferences.put(prefKeys.WORKING_CHOICE.name(), workingDirectoryLocation.label);
+        if (workingDirectoryLocation == workingDirectoryType.CUSTOM_FOLDER)
+            taskPreferences.put(prefKeys.WORKING_DIR.name(), trueWorkingDirectory.getAbsolutePath());
+
         taskPreferences.flush();
     }
 
     public void applyDefaults() {
+        // Output settings
+        outputLocation = outputLocationType.valueOf(
+                taskPreferences.get(prefKeys.OUTPUT_CHOICE.name(), outputLocationType.INPUT_FOLDER.name()));
+        String outputFolderDefault = taskPreferences.get(prefKeys.OUTPUT_DIR.name(), null);
+        if (outputFolderDefault == null) outputFolder = null;
+        else outputFolder = new File(outputFolderDefault);
+
+        if (input != null) updateOutput();
+
         overwrite = taskPreferences.getBoolean(prefKeys.OVERWRITE.name(), false);
-        logToFile = taskPreferences.getBoolean(prefKeys.LOG_TO_FILE.name(), false);
-        // Todo: Call proper workingdir path
-        String logPath = taskPreferences.get(prefKeys.LOG_LOCATION.name(), null);
-        if (logPath != null) logFileLocation = new File(logPath);
-        String workingPath = taskPreferences.get(prefKeys.WORKING_DIR.name(), null);
-        if (workingPath != null) workingDirectoryLocation = new File(workingPath);
+
+        // Log settings
+        logToFile = logFileType.valueOf(taskPreferences.get(prefKeys.LOG_CHOICE.name(), logFileType.DISABLED.name()));
+        String logLocation = taskPreferences.get(prefKeys.LOG_LOCATION.name(), null);
+        if (logLocation != null) logFileLocation = new File(logLocation);
+        else logFileLocation = null;
+
+        // Working dir
+        workingDirectoryLocation = workingDirectoryType.valueOf(taskPreferences.get(prefKeys.WORKING_CHOICE.name(),
+                workingDirectoryType.SYSTEM_TEMP.name()));
+        String workingDir = taskPreferences.get(prefKeys.WORKING_DIR.name(), null);
+        if (workingDir == null) trueWorkingDirectory = null;
+        else trueWorkingDirectory = new File(workingDir);
+
+        // Now update to respect the initial mode choice
+        trueWorkingDirectory = getWorkingDirectory();
+
     }
 
     public void cloneValues(BaseTask sourceInstance) {

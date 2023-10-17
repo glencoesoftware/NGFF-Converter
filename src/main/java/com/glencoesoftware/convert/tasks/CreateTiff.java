@@ -1,6 +1,8 @@
 package com.glencoesoftware.convert.tasks;
 
 import com.glencoesoftware.convert.JobState;
+import com.glencoesoftware.convert.tasks.progress.NGFFProgressListener;
+import com.glencoesoftware.convert.tasks.progress.TiffProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.pyramid.CompressionType;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
@@ -101,6 +103,8 @@ public class CreateTiff extends BaseTask {
     public void run() {
         // Apply GUI configurations first
         setupIO();
+        TiffProgressListener listener = new TiffProgressListener(progressBar, progressLabel, converter);
+        converter.setProgressListener(listener);
         LOGGER.info("Running raw2ometiff");
         this.status = JobState.status.RUNNING;
         try {
@@ -110,6 +114,8 @@ public class CreateTiff extends BaseTask {
         } catch (Exception e) {
             this.status = JobState.status.FAILED;
             LOGGER.error("TIFF creation failed - " + e);
+        } finally {
+            listener.stop();
         }
     }
 

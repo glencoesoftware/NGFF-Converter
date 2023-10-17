@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.controlsfx.control.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<BorderPane fx:id="configureJob" prefHeight="400.0" prefWidth="440.0" stylesheets="@ConfigureJob.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AddFilesDialog">
+   <top>
+      <VBox BorderPane.alignment="CENTER">
+         <HBox alignment="CENTER">
+            <HBox.margin>
+               <Insets />
+            </HBox.margin>
+            <Label fx:id="mainLabel" alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" text="Choose Output Options" HBox.hgrow="ALWAYS" />
+            <Button contentDisplay="GRAPHIC_ONLY" maxHeight="32.0" maxWidth="32.0" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" prefWidth="32.0" styleClass="close-button">
+               <graphic>
+                  <FontIcon iconColor="black" iconLiteral="bi-x" iconSize="30" styleClass="close-icon" />
+               </graphic>
+            </Button>
+         </HBox>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </VBox>
+   </top>
+   <bottom>
+      <HBox spacing="10.0" BorderPane.alignment="CENTER">
+         <Region styleClass="hbox" HBox.hgrow="ALWAYS" />
+
+         <Button cancelButton="true" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" styleClass="minor-button" text="Cancel">
+            <padding>
+               <Insets left="12.0" right="12.0" />
+            </padding></Button>
+         <Button defaultButton="true" mnemonicParsing="false" onAction="#applySettings" prefHeight="32.0" styleClass="major-button" text="Apply">
+            <padding>
+               <Insets left="12.0" right="12.0" />
+            </padding></Button>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </HBox>
+   </bottom>
+   <center>
+      <VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0" BorderPane.alignment="CENTER">
+         <children>
+            <VBox spacing="5.0">
+               <children>
+                  <Label contentDisplay="RIGHT" styleClass="setting-label" text="Output format">
+                     <graphic>
+                        <FontIcon iconLiteral="bi-question-circle" iconSize="14" strokeType="OUTSIDE" strokeWidth="0.0" />
+                     </graphic>
+                     <tooltip>
+                        <Tooltip text="Empty Tooltip" />
+                     </tooltip></Label>
+                  <ChoiceBox fx:id="outputFormat" maxWidth="1.7976931348623157E308" />
+               </children>
+            </VBox>
+            <VBox layoutX="10.0" layoutY="10.0" spacing="5.0">
+               <children>
+                  <Label contentDisplay="RIGHT" styleClass="setting-label" text="Output Directory">
+                     <graphic>
+                        <FontIcon iconLiteral="bi-question-circle" iconSize="14" strokeType="OUTSIDE" strokeWidth="0.0" />
+                     </graphic>
+                     <tooltip>
+                        <Tooltip text="Empty Tooltip" />
+                     </tooltip>
+                  </Label>
+                  <ChoiceBox fx:id="outputLocation" maxWidth="1.7976931348623157E308" />
+                  <TextField fx:id="customOutputDir" />
+               </children>
+            </VBox>
+            <VBox layoutX="10.0" layoutY="66.0" spacing="5.0">
+               <children>
+                  <Label contentDisplay="RIGHT" styleClass="setting-label" text="Overwrite existing files">
+                     <graphic>
+                        <FontIcon iconLiteral="bi-question-circle" iconSize="14" strokeType="OUTSIDE" strokeWidth="0.0" />
+                     </graphic>
+                     <tooltip>
+                        <Tooltip text="Empty Tooltip" />
+                     </tooltip>
+                  </Label>
+                  <ToggleSwitch fx:id="overwriteToggle" contentDisplay="RIGHT" graphicTextGap="0.0" />
+               </children>
+            </VBox>
+            <CheckBox fx:id="wantDefault" mnemonicParsing="false" text="Set as defaults">
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin></CheckBox>
+            <CheckBox fx:id="shouldShow" layoutX="10.0" layoutY="208.0" mnemonicParsing="false" text="Don't show this again" />
+            <Label text="(You can view this options later using the File menu)" />
+         </children></VBox>
+   </center>
+</BorderPane>

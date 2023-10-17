@@ -1,14 +1,17 @@
 package com.glencoesoftware.convert.dialogs;
 
 import com.glencoesoftware.convert.PrimaryController;
+import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.*;
+import org.controlsfx.control.ToggleSwitch;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -16,6 +19,20 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 public class AddFilesDialog {
+
+    @FXML
+    public ChoiceBox<BaseWorkflow> outputFormat;
+    @FXML
+    public ChoiceBox<String> outputLocation;
+    @FXML
+    public TextField customOutputDir;
+    @FXML
+    public ToggleSwitch overwriteToggle;
+    @FXML
+    public CheckBox wantDefault;
+    @FXML
+    public CheckBox shouldShow;
+
 
     private final Dialog<String> dialog;
 
@@ -77,9 +94,9 @@ public class AddFilesDialog {
         });
     }
 
-    public PrimaryController.OutputMode show(PrimaryController parent) {
+    public PrimaryController.OutputMode show(PrimaryController parent, boolean force) {
         Preferences prefs = parent.userPreferences;
-        boolean shouldShow = prefs.getBoolean(PrimaryController.prefName.SHOW_FORMAT_DLG.name(), true);
+        boolean shouldShow = force || prefs.getBoolean(PrimaryController.prefName.SHOW_FORMAT_DLG.name(), true);
         String choice = prefs.get(PrimaryController.prefName.DEFAULT_FORMAT.name(), "OME-NGFF");
         if (shouldShow) {
             if (dialog.getOwner() == null) {
@@ -114,6 +131,18 @@ public class AddFilesDialog {
         }
         // User cancelled the dialog or chose nothing??
         return null;
+    }
+
+    @FXML
+    private void onClose() {
+        Stage stage = (Stage) outputFormat.getScene().getWindow();
+        stage.close();
+    }
+
+    @FXML
+    private void applySettings() {
+        // Todo: make this dialog work
+        onClose();
     }
 }
 
