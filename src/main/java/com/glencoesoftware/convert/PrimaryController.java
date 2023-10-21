@@ -8,10 +8,6 @@
 package com.glencoesoftware.convert;
 
 import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.convert.dialogs.AddFilesDialog;
 import com.glencoesoftware.convert.dialogs.ConfigureJobDialog;
@@ -49,7 +45,6 @@ import javafx.stage.*;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
@@ -72,7 +67,6 @@ public class PrimaryController {
     @FXML
     public Label jobsText;
     public Label tasksText;
-    public TextField outputDirectory;
     public TableView<BaseWorkflow> jobList;
     public TableColumn<BaseWorkflow, Boolean> workflowSelectionColumn;
     public TableColumn<BaseWorkflow, String> workflowNameColumn;
@@ -86,7 +80,6 @@ public class PrimaryController {
     public Label fileListHelpText;
     public SplitPane jobsPane;
     public Button addJobButton;
-    public Button clearButton;
     public Button chooseDirButton;
     public Button clearDirButton;
     public Button runJobsButton;
@@ -94,12 +87,7 @@ public class PrimaryController {
     public Button removeSelectedButton;
     public VBox jobsBox;
     public MenuItem menuOutputFormat;
-    public CheckMenuItem menuOverwrite;
-    public CheckMenuItem wantLogToFile;
     public MenuItem menuRun;
-    public MenuItem menuChooseDirectory;
-    public MenuItem menuResetDirectory;
-    public MenuItem menuTempDirectory;
     public MenuItem menuAddFiles;
     public MenuItem menuRemoveFile;
     public MenuItem menuClearFinished;
@@ -107,34 +95,21 @@ public class PrimaryController {
     public MenuItem menuResetPrefs;
     public MenuBar menuBar;
 
-    private Stage consoleWindow;
     private Stage b2rHelpWindow;
     private Stage r2oHelpWindow;
     public boolean isRunning = false;
     private Thread runnerThread;
     private WorkflowRunner worker;
-    private ArrayList<Control> fileControlButtons;
     private ArrayList<MenuItem> menuControlButtons;
-    public TextAreaStream textAreaStream;
-    public ToggleGroup logLevelGroup;
-    public ToggleGroup outputFormatGroup;
-    public FileAppender<ILoggingEvent> fileAppender;
-    public File tempDirectory;
-
-    // We keep a record of whether the console has been displayed to the user before.
-    // If it hasn't we open it if a conversion fails.
-    public boolean logShown = false;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
 
     public final String defaultOutputText = "<Same as input>";
 
-    public enum prefName {FORMAT, LOG_LEVEL, OVERWRITE, OUTPUT_FOLDER, ARGS, DEFAULT_FORMAT, SHOW_FORMAT_DLG};
+    public enum prefName {OUTPUT_FOLDER, DEFAULT_FORMAT, SHOW_FORMAT_DLG}
 
     public static final Preferences userPreferences = Preferences.userRoot();
-
-    private AddFilesDialog addFilesDialog;
 
     private Stage jobSettingsStage;
     private ConfigureJobDialog jobSettingsController;
@@ -151,20 +126,6 @@ public class PrimaryController {
         }
     };
 
-
-    public enum OutputMode {
-        TIFF("OME-TIFF", ".ome.tiff"),
-        NGFF("OME-NGFF", ".zarr");
-
-        OutputMode(String displayName, String extension) {
-            this.displayName = displayName;
-            this.extension = extension;
-        }
-        public String getDisplayName() { return this.displayName; }
-        public String getExtension() { return this.extension; }
-        private final String displayName;
-        private final String extension;
-    }
 
     @FXML
     public void initialize() throws IOException {
@@ -241,9 +202,6 @@ public class PrimaryController {
         // Disable entry selection on the task list
         taskList.setSelectionModel(null);
 
-        // Create the file addition dialog
-        addFilesDialog = new AddFilesDialog();
-
         FontIcon addIcon = new FontIcon("bi-plus");
         FontIcon removeIcon = new FontIcon("bi-dash");
         FontIcon clearIcon = new FontIcon("bi-x");
@@ -254,36 +212,36 @@ public class PrimaryController {
         clearIcon.setIconSize(20);
         finishedIcon.setIconSize(20);
         addJobButton.setGraphic(addIcon);
-        ObservableList<String> logModes = FXCollections.observableArrayList("Debug", "Info", "Warn", "Error",
-                "Trace", "All", "Off");
-        outputDirectory.setText(userPreferences.get(prefName.OUTPUT_FOLDER.name(), defaultOutputText));
-        outputDirectory.setTooltip(new Tooltip("Directory to save converted files to.\n" +
-                "Applies to new files added to the list."));
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
 
         // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
         // Todo: update
-        fileControlButtons = new ArrayList<>(Arrays.asList(outputDirectory, chooseDirButton, clearDirButton));
         menuControlButtons = new ArrayList<>(Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
-                menuClearFinished, menuClearAll, menuResetPrefs, menuOverwrite, menuChooseDirectory,
-                menuResetDirectory, menuTempDirectory));
+                menuClearFinished, menuClearAll, menuResetPrefs));
         initSecondaryDialogs();
     }
 
     private void dividerResized() {
         // Adjust Name column sizes as the divider is moved
-        workflowNameColumn.setMinWidth(Math.max(jobList.getWidth() - 390, 120));
+        workflowNameColumn.setMinWidth(Math.max(jobList.getWidth() - 370, 120));
         taskNameColumn.setMinWidth(Math.max(taskList.getWidth() - 150, 100));
     }
 
-    private void displayAddFilesDialog() {
-        // Todo: only show if needed.
-//        addFilesController.outputFormat.setValue()
-        if (addFilesStage.getOwner() == null) {
-            addFilesStage.initOwner(App.getScene().getWindow());
+    private boolean displayAddFilesDialog() {
+        addFilesController.prepareForDisplay();
+        if (!addFilesController.shouldNotShow.isSelected()) {
+            showStage(addFilesStage);
+            addFilesStage.hide();
+            addFilesStage.showAndWait();
+            if (addFilesController.shouldProceed) {
+                addFilesController.handlePostDisplay();
+                return true;
+            }
+            return false;
         }
-        addFilesStage.show();
+        return true;
+
     }
 
     private void initSecondaryDialogs() throws IOException {
@@ -311,25 +269,29 @@ public class PrimaryController {
         jobSettingsStage.setResizable(false);
         jobSettingsController = settingsLoader.getController();
 
-        // Log window
-        // Todo: replace this
-        FXMLLoader logLoader = new FXMLLoader();
-        logLoader.setLocation(getClass().getResource("LogWindow.fxml"));
-        Scene scene = new Scene(logLoader.load());
-        LogController logControl = logLoader.getController();
-        consoleWindow = new Stage();
-        consoleWindow.setScene(scene);
-        textAreaStream = logControl.stream;
-        logControl.setParent(this);
+    }
 
+    // Moves a stage to the middle of the main program window and displays it.
+    public void showStage(Stage subject) {
+        Window primary = App.getScene().getWindow();
+        if (subject.getOwner() == null) {
+            subject.initOwner(primary);
+        }
+        subject.show();
+        subject.setX(primary.getX() + (primary.getWidth() / 2) - (subject.getWidth() / 2));
+        subject.setY(primary.getY() + (primary.getHeight() / 2) - (subject.getHeight() / 2));
     }
 
     @FXML
     private void configureDefaultFormat() {
-        if (addFilesStage.getOwner() == null) {
-            addFilesStage.initOwner(App.getScene().getWindow());
+        // Todo: make space for table scrollbars
+        addFilesController.prepareForDisplay();
+        showStage(addFilesStage);
+        addFilesStage.hide();
+        addFilesStage.showAndWait();
+        if (addFilesController.shouldProceed) {
+            addFilesController.handlePostDisplay();
         }
-        addFilesStage.show();
     }
 
 
@@ -413,52 +375,6 @@ public class PrimaryController {
     }
 
     @FXML
-    private void chooseOutputDirectory() {
-        Stage stage = (Stage) outputDirectory.getScene().getWindow();
-        DirectoryChooser outputDirectoryChooser = new DirectoryChooser();
-        outputDirectoryChooser.setTitle("Choose output directory");
-        File newDir = outputDirectoryChooser.showDialog(stage);
-        if (newDir != null) {
-            outputDirectory.setText(newDir.getAbsolutePath());
-        }
-        updateJobIO();
-    }
-
-    @FXML
-    private void chooseTemporaryDirectory(){
-        if (tempDirectory != null) {
-            tempDirectory = null;
-            menuTempDirectory.setText("Choose Temporary Directory");
-            LOGGER.info("Temporary intermediate files will be stored in the same folder as the final output.");
-            return;
-        }
-        Stage stage = (Stage) outputDirectory.getScene().getWindow();
-        DirectoryChooser outputDirectoryChooser = new DirectoryChooser();
-        outputDirectoryChooser.setTitle("Choose temporary directory for zarr intermediates");
-        File tempDir = outputDirectoryChooser.showDialog(stage);
-        if (tempDir != null) {
-            tempDirectory = tempDir;
-            menuTempDirectory.setText("Reset Temporary Directory");
-            LOGGER.info("Zarr intermediates will be temporarily written to " + tempDir);
-        }
-        updateJobIO();
-    }
-
-    private void updateJobIO() {
-        for (BaseWorkflow job : jobList.getItems()) {
-            String outBase = getOutputBaseDirectory(job.firstInput);
-            String temporaryStorage = getWorkingDirectory(job.firstInput);
-            job.calculateIO(job.firstInput.getAbsolutePath(), outBase, temporaryStorage);
-        }
-    }
-
-    @FXML
-    private void resetOutputDirectory() {
-        outputDirectory.setText(defaultOutputText);
-        updateJobIO();
-    }
-
-    @FXML
     private void handleSelectionChange() {
         HashSet<String> selectedTypes = new HashSet<>();
         boolean allowConfig = true;
@@ -480,7 +396,7 @@ public class PrimaryController {
             if (allowConfig && selectedTypes.size() < 2) {
                 configureSelectedButton.setVisible(true);
             }
-        };
+        }
     }
     @FXML
     private void handleFileDragOver(DragEvent event) {
@@ -505,30 +421,12 @@ public class PrimaryController {
         event.consume();
     }
 
-    public String getOutputBaseDirectory(File sourceFile) {
-        if (outputDirectory.getText().equals(defaultOutputText)) {
-            return sourceFile.getParent();
-        } else {
-            return outputDirectory.getText();
-        }
-    }
-
-    public String getWorkingDirectory(File sourceFile) {
-        if (tempDirectory != null) {
-            return tempDirectory.getAbsolutePath();
-        } else {
-            return getOutputBaseDirectory(sourceFile);
-        }
-    }
-
     @FXML
     private void addFilesToList(List<File> files) {
-        displayAddFilesDialog();
-        // Todo: fetch defaults
-//        OutputMode desiredFormat = addFilesDialog.desiredFormat;
-        OutputMode desiredFormat = OutputMode.TIFF;
-        // Handle user cancel
-        if (desiredFormat == null) { return; };
+        boolean wantProceed = displayAddFilesDialog();
+        // Handle if user cancelled
+        if (!wantProceed) return;
+        String desiredFormat = addFilesController.getOutputFormat();
 
         Queue<File> fileQueue = new LinkedList<>(files);
         List<BaseWorkflow> jobs = jobList.getItems();
@@ -553,18 +451,14 @@ public class PrimaryController {
                 LOGGER.debug("File already in queue: " + file.getName());
                 continue;
             }
-            String outBase = getOutputBaseDirectory(file);
-            String temporaryStorage = getWorkingDirectory(file);
             BaseWorkflow job;
-            switch (desiredFormat) {
-                case TIFF -> job = new ConvertToTiff(this);
-                case NGFF -> job = new ConvertToNGFF(this);
-                default -> {
-                    System.out.println("Invalid format " + desiredFormat);
-                    return;
-                }
+            if (desiredFormat.equals(ConvertToNGFF.getDisplayName())) {
+                job = new ConvertToNGFF(this);
+            } else {
+                job = new ConvertToTiff(this);
             }
-            job.calculateIO(filePath, outBase, temporaryStorage);
+
+            job.calculateIO(filePath);
             jobs.add(job);
         }
     }
@@ -586,74 +480,6 @@ public class PrimaryController {
         jobList.getItems().addAll(new_list);
     }
 
-    @FXML
-    public void toggleFileLogging() {
-        if (fileAppender == null) {
-            Stage stage = (Stage) jobList.getScene().getWindow();
-            FileChooser outputFileChooser = new FileChooser();
-            outputFileChooser.setInitialFileName("ngff-converter.log");
-            outputFileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-                    "Log file",".log"));
-            outputFileChooser.setTitle("Choose where to save logs");
-            File newOutput = outputFileChooser.showSaveDialog(stage);
-            if (newOutput != null) {
-                String logFile = newOutput.getAbsolutePath();
-                LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-                PatternLayoutEncoder ple = new PatternLayoutEncoder();
-                ple.setPattern("%date [%thread] %-5level %logger{36} - %msg%n");
-                ple.setContext(lc);
-                ple.start();
-                fileAppender = new FileAppender<>();
-                fileAppender.setFile(logFile);
-                fileAppender.setEncoder(ple);
-                fileAppender.setContext(lc);
-                fileAppender.start();
-                ch.qos.logback.classic.Logger rootLogger =
-                        (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-                rootLogger.addAppender(fileAppender);
-//                logFileButton.setText("Stop logging to file");
-                wantLogToFile.setSelected(true);
-            } else {
-                wantLogToFile.setSelected(false);
-            }
-        } else if (wantLogToFile.isSelected()) {
-            fileAppender.start();
-//            logFileButton.setText("Stop logging to file");
-        } else {
-            fileAppender.stop();
-//            logFileButton.setText("Resume logging to file");
-        }
-    }
-
-    @FXML
-    private void toggleOverwrite() {
-        boolean overwrite = menuOverwrite.isSelected();
-        List<JobState.status> doNotChange = Arrays.asList(JobState.status.COMPLETED,
-                JobState.status.FAILED, JobState.status.RUNNING);
-        jobList.getItems().forEach((item) -> {
-            if (doNotChange.contains(item.status.get())) { return; }
-            if ((!overwrite) && item.finalOutput.exists()) {
-                item.status.set(JobState.status.WARNING);
-            } else {
-                item.status.set(JobState.status.QUEUED);
-            }
-        });
-        jobList.refresh();
-    }
-
-    @FXML
-    private void overwriteMenu() {
-        toggleOverwrite();
-    }
-
-//    @FXML
-//    private void updateLogLevel() {
-//        if (logLevelGroup == null) return;
-//        String val = logLevel.getValue();
-//        int idx = logLevel.getItems().indexOf(val);
-//        logLevelGroup.selectToggle(logLevelGroup.getToggles().get(idx));
-//    }
-
 
     @FXML
     private void resetPrefs() throws BackingStoreException {
@@ -667,13 +493,6 @@ public class PrimaryController {
         Output.taskPreferences.flush();
     }
 
-    @FXML
-    public Runnable displayLog() {
-        consoleWindow.show();
-        consoleWindow.toFront();
-        logShown = true;
-        return null;
-    }
 
     @FXML
     private void displayAbout() throws IOException {
@@ -697,22 +516,15 @@ public class PrimaryController {
     }
 
     public void displaySettingsDialog(ObservableList<BaseWorkflow> jobs, int taskIndex){
-        if (jobSettingsStage.getOwner() == null) {
-            jobSettingsStage.initOwner(App.getScene().getWindow());
-        }
-        jobSettingsStage.initOwner(App.getScene().getWindow());
         jobSettingsController.initData(jobs, taskIndex);
-        jobSettingsStage.show();
+        showStage(jobSettingsStage);
     }
 
     public void runCompleted() {
         runJobsButton.setText("Run Conversions");
         menuRun.setText("Run Conversions");
         isRunning = false;
-        fileControlButtons.forEach((control -> control.setDisable(false)));
         menuControlButtons.forEach((control -> control.setDisable(false)));
-        // Print anything left in the console buffer.
-        textAreaStream.forceFlush();
     }
 
     @FXML
@@ -759,22 +571,7 @@ public class PrimaryController {
             double neededSpace = entry.getValue();
             double freeSpace = new File(drive.toString()).getFreeSpace();
             if (freeSpace < neededSpace) {
-                Alert alert = new Alert(Alert.AlertType.WARNING,
-                        String.format("""
-                                Output files from conversion may be larger than available disk space on drive %s
-                                
-                                Required: ~%,dMB | Free: %,dMB\s
-                                
-                                Do you want to continue?""",
-                                drive,
-                                (long) neededSpace / 1048576,
-                                (long) freeSpace / 1048576),
-                        ButtonType.YES,
-                        ButtonType.NO);
-                alert.setTitle("NGFF-Converter");
-                alert.setHeaderText("Possible storage space issue");
-
-                Optional<ButtonType> result = alert.showAndWait();
+                Optional<ButtonType> result = warnLowDriveSpace(drive, (long) neededSpace, (long) freeSpace);
                 if (result.isPresent() && result.get() == ButtonType.YES){
                     LOGGER.info("User opted to continue despite disk space warning");
                 } else {
@@ -783,7 +580,6 @@ public class PrimaryController {
                 }}
             }
 
-        fileControlButtons.forEach((control -> control.setDisable(true)));
         menuControlButtons.forEach((control -> control.setDisable(true)));
         runJobsButton.setText("Stop Conversions");
         menuRun.setText("Stop Conversions");
@@ -795,6 +591,25 @@ public class PrimaryController {
         runnerThread = new Thread(worker, "Converter");
         runnerThread.setDaemon(true);
         runnerThread.start();
+    }
+
+    private static Optional<ButtonType> warnLowDriveSpace(Path drive, long neededSpace, long freeSpace) {
+        Alert alert = new Alert(Alert.AlertType.WARNING,
+                String.format("""
+                        Output files from conversion may be larger than available disk space on drive %s
+                        
+                        Required: ~%,dMB | Free: %,dMB\s
+                        
+                        Do you want to continue?""",
+                        drive,
+                        neededSpace / 1048576,
+                        freeSpace / 1048576),
+                ButtonType.YES,
+                ButtonType.NO);
+        alert.setTitle("NGFF-Converter");
+        alert.setHeaderText("Possible storage space issue");
+
+        return alert.showAndWait();
     }
 
 

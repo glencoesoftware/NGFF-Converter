@@ -70,7 +70,7 @@ public abstract class BaseTask {
     }
 
     // Set output to be in the directory specified
-    abstract public void setOutput(String basePath);
+    abstract public void calculateOutput(String basePath);
 
     // Execute the task
     abstract public void run();

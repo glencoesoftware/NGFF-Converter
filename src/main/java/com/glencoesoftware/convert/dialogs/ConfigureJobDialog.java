@@ -2,6 +2,7 @@ package com.glencoesoftware.convert.dialogs;
 
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -13,6 +14,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.BackingStoreException;
 
 public class ConfigureJobDialog {
@@ -191,7 +193,20 @@ public class ConfigureJobDialog {
     }
     @FXML
     private void applyToAll() {
-        // Todo: Write this
+        BaseWorkflow thisJob = currentTask.parent;
+        List<BaseWorkflow> allJobs = currentTask.parent.controller.jobList.getItems();
+        int count = 0;
+        for (BaseWorkflow job: allJobs) {
+            if (job == thisJob) {
+                continue;
+            }
+            if (job.getClass().equals( thisJob.getClass())) {
+                LOGGER.info("Cloning values from " + thisJob.getName());
+                job.cloneSettings(thisJob);
+                count++;
+                }
+            };
+        System.out.println("Copied values to " + count + " instances");
     }
 
 }

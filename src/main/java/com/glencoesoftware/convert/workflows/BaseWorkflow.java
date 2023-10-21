@@ -6,6 +6,7 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import com.glencoesoftware.convert.*;
+import com.glencoesoftware.convert.dialogs.LogDisplayDialog;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.Output;
 import javafx.beans.property.*;
@@ -78,8 +79,6 @@ public abstract class BaseWorkflow {
 
     public File finalOutput = null;
 
-    public String workingDirectory = null;
-
     public String getInput() {
         if (firstInput == null) {
             return null;
@@ -102,11 +101,11 @@ public abstract class BaseWorkflow {
 
     private Stage consoleWindow;
     private TextAreaStream textAreaStream;
-    private LogController logControl;
+    private LogDisplayDialog logControl;
 
     private void createLogControl() throws IOException {
         FXMLLoader logLoader = new FXMLLoader();
-        logLoader.setLocation(App.class.getResource("LogWindow.fxml"));
+        logLoader.setLocation(App.class.getResource("LogDisplay.fxml"));
         Scene scene = new Scene(logLoader.load());
         logControl = logLoader.getController();
         consoleWindow = new Stage();
@@ -166,29 +165,17 @@ public abstract class BaseWorkflow {
         status.set(finalStatus);
     }
 
-    public void calculateIO(String inputPath, String outputBasePath, String workingDir) {
+    public void calculateIO(String inputPath) {
         // Run through each task and determine the input/output file paths to feed into each-other.
-        this.workingDirectory = workingDir;
-        String targetDir = workingDir;
         this.firstInput = new File(inputPath);
         File workingInput = this.firstInput;
-        for (int i = 0; i < this.tasks.size(); i++) {
-            if (i == this.tasks.size() - 2) {
-                // This is the last "real" task, use the final output destination rather than the temp dir
-                targetDir = outputBasePath;
-            }
-            BaseTask task = this.tasks.get(i);
-            if (task instanceof Output) {
-                // This is the virtual output task that lets the user configure output names.
-                // Carry forward i/o from last task
-                task.input = workingInput;
-                task.output = workingInput;
-            } else {
-                task.setInput(workingInput);
-                task.setOutput(targetDir);
-            }
+        File workingDir = getWorkingDirectory();
+        for (BaseTask task: tasks) {
+            task.setInput(workingInput);
+            task.calculateOutput(workingDir.getAbsolutePath());
             workingInput = task.getOutput();
         }
+
         this.finalOutput = workingInput;
         if (this.finalOutput.exists() && !canOverwrite()) {
             this.status.set(JobState.status.WARNING);
@@ -270,6 +257,8 @@ public abstract class BaseWorkflow {
         if (this.currentStage.get() != -1) {
             // Workflow wasn't aborted
             status.set(JobState.status.COMPLETED);
+            logBoxAppender.stop();
+            if (fileAppender != null) fileAppender.stop();
         }
         this.currentStage.set(-1);
     }
@@ -295,4 +284,19 @@ public abstract class BaseWorkflow {
         fileAppender.start();
         return fileAppender;
     }
-}
+
+    // Copy setting values from supplied instance to this one
+    public void cloneSettings(BaseWorkflow sourceInstance) {
+        if (!(sourceInstance.getClass() == this.getClass())) {
+            LOGGER.error("Cannot clone a different workflow");
+            return;
+        }
+        for (int i = 0; i < tasks.size(); i++) {
+            BaseTask localTask = tasks.get(i);
+            BaseTask sourceTask = sourceInstance.tasks.get(i);
+            localTask.cloneValues(sourceTask);
+        }
+
+    }
+
+    }

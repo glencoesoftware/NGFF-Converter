@@ -3,6 +3,7 @@ package com.glencoesoftware.convert.tables;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 
@@ -80,6 +81,8 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
 
         container = new HBox(5);
         container.setAlignment(Pos.CENTER);
+        // Add a bit of spacing on the right for the scrollbar
+        container.setPadding(new Insets(0,10,0,0));
     }
 
     @Override

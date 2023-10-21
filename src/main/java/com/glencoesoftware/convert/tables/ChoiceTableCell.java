@@ -32,8 +32,7 @@ public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
                 newWorkflow = new ConvertToNGFF(thisWorkflow.controller);
             }
 
-            newWorkflow.calculateIO(thisWorkflow.firstInput.getAbsolutePath(), thisWorkflow.finalOutput.getParent(),
-                    thisWorkflow.workingDirectory);
+            newWorkflow.calculateIO(thisWorkflow.firstInput.getAbsolutePath());
             System.out.println("Changed workflow");
             items.set(index, newWorkflow);
         });

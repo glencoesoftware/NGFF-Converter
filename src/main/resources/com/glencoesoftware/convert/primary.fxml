@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <top>
        <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
            <BorderPane.margin>
@@ -15,11 +15,6 @@
            <Menu mnemonicParsing="false" text="File">
                <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
                <MenuItem fx:id="menuOutputFormat" mnemonicParsing="false" onAction="#configureDefaultFormat" text="Configure output format" />
-               <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing files" />
-               <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
-               <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
-               <MenuItem fx:id="menuResetDirectory" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
-               <MenuItem fx:id="menuTempDirectory" mnemonicParsing="false" onAction="#chooseTemporaryDirectory" text="Choose Temporary Directory" />
                <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
            </Menu>
            <Menu mnemonicParsing="false" text="Edit">
@@ -47,6 +42,7 @@
                </ImageView>
                <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
                <Button fx:id="addJobButton" mnemonicParsing="false" onAction="#addFiles" text="Add job(s)" />
+               <Button fx:id="runJobsButton" mnemonicParsing="false" onAction="#runConvert" text="Run conversions" />
            </HBox>
            <StackPane onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" style="-fx-background-color: white; -fx-border-color: grey;" VBox.vgrow="ALWAYS">
                <SplitPane fx:id="jobsPane" dividerPositions="0.7" style="-fx-background-color: white;">
@@ -76,10 +72,10 @@
                        </HBox>
                        <TableView fx:id="jobList" editable="true" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onKeyPressed="#listKeyHandler" VBox.vgrow="ALWAYS">
                            <columns>
-                               <TableColumn fx:id="workflowSelectionColumn" maxWidth="20.0" minWidth="20.0" onEditCommit="#handleSelectionChange" prefWidth="20.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" />
+                               <TableColumn fx:id="workflowSelectionColumn" maxWidth="25.0" minWidth="25.0" onEditCommit="#handleSelectionChange" prefWidth="25.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" />
                                <TableColumn fx:id="workflowNameColumn" editable="false" maxWidth="-Infinity" minWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER-LEFT;" text="File name" />
                                <TableColumn fx:id="workflowFormatColumn" minWidth="120.0" prefWidth="120.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Format" />
-                               <TableColumn fx:id="workflowStatusColumn" editable="false" prefWidth="125.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Status" />
+                               <TableColumn fx:id="workflowStatusColumn" editable="false" prefWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Status" />
                                <TableColumn fx:id="workflowActionColumn" editable="false" prefWidth="125.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Actions" />
                            </columns>
                            <columnResizePolicy>
@@ -131,35 +127,4 @@
            </StackPane>
        </VBox>
    </center>
-    <bottom>
-        <HBox alignment="CENTER">
-            <Label alignment="CENTER_RIGHT" text="Output Folder" textAlignment="RIGHT" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="NEVER">
-                <padding>
-                    <Insets right="5.0" />
-                </padding>
-                <HBox.margin>
-                    <Insets left="10.0" />
-                </HBox.margin>
-            </Label>
-            <TextField fx:id="outputDirectory" promptText="Choose an output directory" text="&lt;Same as input&gt;" HBox.hgrow="ALWAYS">
-                <HBox.margin>
-                    <Insets right="5.0" />
-                </HBox.margin>
-            </TextField>
-            <Button fx:id="chooseDirButton" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Browse" HBox.hgrow="NEVER" />
-            <Button fx:id="clearDirButton" graphicTextGap="2.0" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset" textAlignment="CENTER" HBox.hgrow="NEVER">
-                <HBox.margin>
-                    <Insets left="3.0" right="3.0" />
-                </HBox.margin>
-            </Button>
-            <Region HBox.hgrow="ALWAYS">
-            <HBox.margin>
-               <Insets bottom="5.0" top="5.0" />
-            </HBox.margin></Region>
-            <Button fx:id="runJobsButton" mnemonicParsing="false" onAction="#runConvert" text="Run conversions" />
-         <BorderPane.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
-         </BorderPane.margin>
-        </HBox>
-    </bottom>
 </BorderPane>

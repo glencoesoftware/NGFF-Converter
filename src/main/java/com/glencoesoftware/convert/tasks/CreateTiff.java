@@ -91,7 +91,7 @@ public class CreateTiff extends BaseTask {
         }
     }
 
-    public void setOutput(String basePath) {
+    public void calculateOutput(String basePath) {
         this.output = Paths.get(basePath, this.outputName + ".ome.tiff").toFile();
     }
 

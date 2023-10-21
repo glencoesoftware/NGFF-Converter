@@ -1,148 +1,101 @@
 package com.glencoesoftware.convert.dialogs;
 
-import com.glencoesoftware.convert.PrimaryController;
-import com.glencoesoftware.convert.workflows.BaseWorkflow;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import com.glencoesoftware.convert.tasks.Output;
+import com.glencoesoftware.convert.workflows.ConvertToNGFF;
+import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.*;
-import org.controlsfx.control.ToggleSwitch;
+import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.ArrayList;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import static com.glencoesoftware.convert.PrimaryController.prefName.DEFAULT_FORMAT;
+import static com.glencoesoftware.convert.PrimaryController.prefName.SHOW_FORMAT_DLG;
+import static com.glencoesoftware.convert.tasks.BaseTask.getSettingContainer;
+
 public class AddFilesDialog {
 
+    private final ch.qos.logback.classic.Logger LOGGER =
+            (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(this.getClass());
+
+    public static final Preferences userPreferences = Preferences.userRoot();
+
     @FXML
-    public ChoiceBox<BaseWorkflow> outputFormat;
+    private final ChoiceBox<String> workflowChoiceBox = new ChoiceBox<>();
     @FXML
-    public ChoiceBox<String> outputLocation;
-    @FXML
-    public TextField customOutputDir;
-    @FXML
-    public ToggleSwitch overwriteToggle;
+    private VBox settingsPanel;
     @FXML
     public CheckBox wantDefault;
     @FXML
-    public CheckBox shouldShow;
+    public CheckBox shouldNotShow;
+    @FXML
+    private Label finalLabel;
+
+    public boolean shouldProceed = false;
+
+    private final VBox workflowChoiceContainer = getSettingContainer(workflowChoiceBox,
+            "Output format", "Choose the target format for output");
 
 
-    private final Dialog<String> dialog;
-
-
-    private final ChoiceBox<String> workflows;
-    private final CheckBox setDefault;
-    private final CheckBox doNotShowAgain;
-
-    public AddFilesDialog() {
-
-        dialog = new Dialog<>();
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.initStyle(StageStyle.UNDECORATED);
-
-        ButtonType save = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-        //Add buttons to the dialog pane
-        dialog.getDialogPane().getButtonTypes().addAll(cancel, save);
-        dialog.getDialogPane().setPrefSize(350,250);
-
-        Insets spacer = new Insets(0, 0, 10, 0);
-
-        Label title = new Label("Choose output format");
-        title.setFont(Font.font("ARIEL", FontWeight.BOLD, 28));
-        title.setPadding(spacer);
-        title.setMinWidth(Control.USE_PREF_SIZE);
-
-        ObservableList<String> options = FXCollections.observableArrayList();
-
-        for (PrimaryController.OutputMode mode : PrimaryController.OutputMode.values()) {
-            options.add(mode.getDisplayName());
-        }
-
-
-        workflows = new ChoiceBox<>(options);
-        workflows.setValue(options.get(0));
-        workflows.setMinWidth(330);
-        workflows.setMaxWidth(Double.MAX_VALUE);
-
-        setDefault = new CheckBox("Set this format as my default");
-        setDefault.setMinWidth(Control.USE_PREF_SIZE);
-
-        doNotShowAgain = new CheckBox("Don't ask me this again");
-        doNotShowAgain.setMinWidth(Control.USE_PREF_SIZE);
-        doNotShowAgain.setPadding(spacer);
-        Label explainer = new Label("(You can always change this later under the File menu)");
-        explainer.setPadding(spacer);
-        explainer.setMinWidth(Control.USE_PREF_SIZE);
-
-        VBox container = new VBox(10, title, workflows, setDefault, doNotShowAgain, explainer);
-        container.setFillWidth(true);
-        container.setPadding(new Insets(10));
-        dialog.getDialogPane().getChildren().add(container);
-
-        // Only return a result if "OK" was clicked
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton.getButtonData() != ButtonBar.ButtonData.OK_DONE) { return null; }
-            return workflows.getValue();
-        });
+    public void initialize() {
+        workflowChoiceBox.getItems().setAll(ConvertToNGFF.getDisplayName(), ConvertToTiff.getDisplayName());
+        workflowChoiceBox.setValue(userPreferences.get(DEFAULT_FORMAT.name(), ConvertToNGFF.getDisplayName()));
     }
 
-    public PrimaryController.OutputMode show(PrimaryController parent, boolean force) {
-        Preferences prefs = parent.userPreferences;
-        boolean shouldShow = force || prefs.getBoolean(PrimaryController.prefName.SHOW_FORMAT_DLG.name(), true);
-        String choice = prefs.get(PrimaryController.prefName.DEFAULT_FORMAT.name(), "OME-NGFF");
-        if (shouldShow) {
-            if (dialog.getOwner() == null) {
-                dialog.initOwner(parent.jobList.getScene().getWindow());
-            }
-            workflows.setValue(choice);
-            Optional<String> result = dialog.showAndWait();
-            if (result.isEmpty()) { return null; }
-            choice = result.get();
-            if (setDefault.isSelected()) {
-                prefs.put(PrimaryController.prefName.DEFAULT_FORMAT.name(), choice);
-                try {
-                    prefs.flush();
-                } catch (BackingStoreException e) {
-                    System.out.println("Unable to write preference" + e);
-                }
-            }
-            if (doNotShowAgain.isSelected()) {
-                prefs.putBoolean(PrimaryController.prefName.SHOW_FORMAT_DLG.name(), false);
-                try {
-                    prefs.flush();
-                } catch (BackingStoreException e) {
-                    System.out.println("Unable to write preference" + e);
-                }
+    public void prepareForDisplay() {
+        // Get standard settings and apply defaults
+        workflowChoiceBox.setValue(userPreferences.get(DEFAULT_FORMAT.name(), ConvertToNGFF.getDisplayName()));
+        ArrayList<Node> settings = Output.getAddFilesSettings();
+        Output.resetWidgets();
+        settingsPanel.getChildren().clear();
+        settingsPanel.getChildren().add(workflowChoiceContainer);
+        settingsPanel.getChildren().addAll(settings);
+        settingsPanel.getChildren().addAll(wantDefault, shouldNotShow, finalLabel);
+        shouldNotShow.setSelected(userPreferences.getBoolean(SHOW_FORMAT_DLG.name(), false));
+        shouldProceed = false;
+    }
+
+    public void handlePostDisplay() {
+        if (wantDefault.isSelected()) {
+            userPreferences.put(DEFAULT_FORMAT.name(), workflowChoiceBox.getValue());
+            try {
+                userPreferences.flush();
+                Output.setDefaultsFromWidgets();
+            } catch (BackingStoreException e) {
+                LOGGER.error("Failed to flush settings " + e);
             }
         }
-        // There is probably a better way to do this
-        for (PrimaryController.OutputMode mode : PrimaryController.OutputMode.values()) {
-            if (Objects.equals(mode.getDisplayName(), choice)) {
-                return mode;
+        wantDefault.setSelected(false);
+        if (shouldNotShow.isSelected() != userPreferences.getBoolean(SHOW_FORMAT_DLG.name(), false)) {
+            userPreferences.putBoolean(SHOW_FORMAT_DLG.name(), shouldNotShow.isSelected());
+            try {
+                userPreferences.flush();
+            } catch (BackingStoreException e) {
+                LOGGER.error("Failed to flush settings");
             }
         }
-        // User cancelled the dialog or chose nothing??
-        return null;
     }
 
     @FXML
     private void onClose() {
-        Stage stage = (Stage) outputFormat.getScene().getWindow();
+        Stage stage = (Stage) settingsPanel.getScene().getWindow();
         stage.close();
     }
 
     @FXML
-    private void applySettings() {
-        // Todo: make this dialog work
+    private void onApply() {
+        // Todo: Keyboard shortcuts
+        shouldProceed = true;
         onClose();
+    }
+
+    public String getOutputFormat() {
+        return workflowChoiceBox.getValue();
     }
 }
 

@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox alignment="CENTER" prefHeight="500.0" prefWidth="600.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.LogController">
+<VBox alignment="CENTER" prefHeight="500.0" prefWidth="600.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.LogDisplayDialog">
       <Label fx:id="title" pickOnBounds="false" text="Execution Logs">
          <font>
             <Font name="System Bold" size="14.0" />

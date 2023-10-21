@@ -8,7 +8,6 @@ package com.glencoesoftware.convert.tasks.progress;
  * missing please request a copy by contacting info@glencoesoftware.com
  */
 
-import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.IProgressListener;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.animation.AnimationTimer;

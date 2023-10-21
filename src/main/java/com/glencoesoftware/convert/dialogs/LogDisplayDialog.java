@@ -4,26 +4,27 @@
  * file you can find at the root of the distribution bundle.  If the file is
  * missing please request a copy by contacting info@glencoesoftware.com
  */
-package com.glencoesoftware.convert;
+package com.glencoesoftware.convert.dialogs;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import com.glencoesoftware.convert.PrimaryController;
+import com.glencoesoftware.convert.TextAreaAppender;
+import com.glencoesoftware.convert.TextAreaStream;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.Button;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 
-public class LogController {
+public class LogDisplayDialog {
 
     @FXML
     public TextArea logBox;
     public TextAreaStream stream;
-    public Button logFileButton;
     public PrimaryController parentController;
     public Label title;
 
@@ -56,13 +57,6 @@ public class LogController {
 
     public void setParent(PrimaryController parent) {
         parentController = parent;
-    }
-
-    public void onToggleLogging() {
-        if (parentController.fileAppender != null) {
-            parentController.wantLogToFile.setSelected(!parentController.wantLogToFile.isSelected());
-        }
-        parentController.toggleFileLogging();
     }
 
     @FXML
