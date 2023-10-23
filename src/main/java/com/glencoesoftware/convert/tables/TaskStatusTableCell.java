@@ -12,63 +12,52 @@ import javafx.scene.paint.Paint;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
-    private final ProgressBar progressBar = new ProgressBar(0.5);
-
     private final Label mainLabel = new Label();
 
     private final Tooltip labelTooltip = new Tooltip("Ready");
 
     private final HBox container = new HBox();
 
-    private final FontIcon finishedIcon = new FontIcon("bi-check");
-
-    private final FontIcon pendingIcon = new FontIcon("bi-circle-fill");
-    private final FontIcon warningIcon = new FontIcon("bi-exclamation-triangle-fill");
-
     {
         container.setAlignment(Pos.CENTER);
         mainLabel.setTooltip(labelTooltip);
-        finishedIcon.setIconSize(20);
-        pendingIcon.setIconSize(12);
-        warningIcon.setIconSize(20);
-        finishedIcon.setIconColor(Paint.valueOf("GREEN"));
-        pendingIcon.setIconColor(Paint.valueOf("BLUE"));
-        warningIcon.setIconColor(Paint.valueOf("ORANGE"));
+        mainLabel.getStyleClass().add("status-cell");
     }
 
     @Override
     public void updateItem(Void item, boolean empty) {
         super.updateItem(item, empty);
-        setGraphic(empty ? null : this.container);
+        setGraphic(empty ? null : container);
         if (empty) return;
-        this.container.getChildren().clear();
+        container.getChildren().clear();
         BaseTask current = getTableView().getItems().get(getIndex());
         labelTooltip.setText("Task OK");
         switch (current.status) {
             case COMPLETED -> {
-                this.mainLabel.setText("Completed");
-                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
-                this.labelTooltip.setText("Task successful");
-                this.container.getChildren().add(mainLabel);
+                mainLabel.setText("Completed");
+                mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
+                labelTooltip.setText("Task successful");
+                container.getChildren().add(mainLabel);
             }
             case RUNNING -> {
-                this.container.getChildren().addAll(current.getProgressWidget());
+                container.getChildren().addAll(current.getProgressWidget());
             }
             case WARNING -> {
-                this.mainLabel.setText("Warning");
-                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
-                this.labelTooltip.setText(current.warningMessage);
-                this.container.getChildren().add(mainLabel);
+                mainLabel.setText("Warning");
+                mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
+                labelTooltip.setText(current.warningMessage);
+                container.getChildren().add(mainLabel);
             }
             case FAILED -> {
-                this.mainLabel.setText("Failed");
-                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
-                this.container.getChildren().add(mainLabel);
+                mainLabel.setText("Failed");
+                labelTooltip.setText("Task Failed");
+                mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
+                container.getChildren().add(mainLabel);
             }
             default -> {
-                this.mainLabel.setText("Ready");
-                this.mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
-                this.container.getChildren().add(mainLabel);
+                mainLabel.setText("Ready");
+                mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
+                container.getChildren().add(mainLabel);
             }
         }
     }

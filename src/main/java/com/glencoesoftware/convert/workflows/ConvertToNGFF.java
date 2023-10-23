@@ -7,10 +7,12 @@ import com.glencoesoftware.convert.tasks.Output;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.io.File;
+
 public class ConvertToNGFF extends BaseWorkflow {
 
-    public ConvertToNGFF(PrimaryController controller) {
-        super(controller);
+    public ConvertToNGFF(PrimaryController controller, File input) {
+        super(controller, input);
         ObservableList<BaseTask> tasks = FXCollections.observableArrayList();
         tasks.addAll(new CreateNGFF(this), new Output(this));
         this.setTasks(tasks);

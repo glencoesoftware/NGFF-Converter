@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert.tables;
 
+import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.convert.workflows.ConvertToNGFF;
 import com.glencoesoftware.convert.workflows.ConvertToTiff;
@@ -14,6 +15,7 @@ public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
     private final ComboBox<String> options = new ComboBox<>();
 
     {
+        options.getStyleClass().add("workflow-choice");
         options.getItems().addAll(ConvertToTiff.getDisplayName(), ConvertToNGFF.getDisplayName());
         options.setOnAction(ext -> {
             int index = getIndex();
@@ -26,13 +28,13 @@ public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
             BaseWorkflow newWorkflow;
             if (options.getValue().equals("OME-TIFF")) {
                 System.out.println("Switching to tiff");
-                newWorkflow = new ConvertToTiff(thisWorkflow.controller);
+                newWorkflow = new ConvertToTiff(thisWorkflow.controller, thisWorkflow.firstInput);
             } else {
                 System.out.println("Switching to NGFF");
-                newWorkflow = new ConvertToNGFF(thisWorkflow.controller);
+                newWorkflow = new ConvertToNGFF(thisWorkflow.controller, thisWorkflow.firstInput);
             }
 
-            newWorkflow.calculateIO(thisWorkflow.firstInput.getAbsolutePath());
+            newWorkflow.calculateIO();
             System.out.println("Changed workflow");
             items.set(index, newWorkflow);
         });
@@ -44,5 +46,12 @@ public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
         super.updateItem(item, empty);
         options.setValue(item);
         setGraphic(empty ? null : options);
+        if (empty) return;
+        BaseWorkflow current = getTableView().getItems().get(getIndex());
+        JobState.status state = current.status.get();
+        if (state != JobState.status.READY && state != JobState.status.WARNING) {
+            // Can't change workflow of a completed job
+            setGraphic(new Label(item));
+        }
     }
 }

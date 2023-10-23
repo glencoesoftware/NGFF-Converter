@@ -5,15 +5,16 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" stylesheets="@primary.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <top>
        <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
            <BorderPane.margin>
                <Insets bottom="10.0" />
            </BorderPane.margin>
            <Menu mnemonicParsing="false" text="File">
-               <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
+               <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run job(s)" />
                <MenuItem fx:id="menuOutputFormat" mnemonicParsing="false" onAction="#configureDefaultFormat" text="Configure output format" />
                <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
            </Menu>
@@ -37,12 +38,21 @@
                <VBox.margin>
                    <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
                </VBox.margin>
-               <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+               <ImageView fitHeight="40.0" pickOnBounds="true" preserveRatio="true">
                    <Image url="@logo.png" />
                </ImageView>
                <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-               <Button fx:id="addJobButton" mnemonicParsing="false" onAction="#addFiles" text="Add job(s)" />
-               <Button fx:id="runJobsButton" mnemonicParsing="false" onAction="#runConvert" text="Run conversions" />
+               <Button fx:id="addJobButton" mnemonicParsing="false" onAction="#addFiles" styleClass="minor-button" text="Add job(s)">
+                    <graphic>
+                        <FontIcon iconColor="black" iconLiteral="bi-plus" iconSize="20" styleClass="text-button-icon" />
+                    </graphic>
+               </Button>
+               <Button fx:id="runJobsButton" disable="true" mnemonicParsing="false" onAction="#runConvert" styleClass="major-button" text="Run job(s)">
+                   <graphic>
+                       <FontIcon fx:id="runJobsButtonIcon" iconColor="black" iconLiteral="bi-play-fill" iconSize="20" styleClass="text-button-icon" />
+                   </graphic>
+
+               </Button>
            </HBox>
            <StackPane onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" style="-fx-background-color: white; -fx-border-color: grey;" VBox.vgrow="ALWAYS">
                <SplitPane fx:id="jobsPane" dividerPositions="0.7" style="-fx-background-color: white;">
@@ -51,7 +61,7 @@
                            <padding>
                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
-                           <Label fx:id="jobsText" text="Jobs">
+                           <Label fx:id="jobsText" styleClass="heading" text="Jobs">
                                <font>
                                    <Font name="System Bold" size="20.0" />
                                </font>
@@ -64,17 +74,17 @@
                            <padding>
                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
-                           <Button fx:id="removeSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#removeSelected" text="Remove Selected" textAlignment="CENTER" />
-                           <Button fx:id="configureSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#configureSelected" text="Configure Selected" textAlignment="CENTER" />
+                           <Button fx:id="removeSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#removeSelected" styleClass="minor-button" text="Remove Selected" textAlignment="CENTER" />
+                           <Button fx:id="configureSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#configureSelected" styleClass="minor-button" text="Configure Selected" textAlignment="CENTER" />
                            <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-                           <Button layoutX="479.0" layoutY="15.0" mnemonicParsing="false" onAction="#clearFinished" text="Clear Completed" textAlignment="CENTER" />
+                           <Button layoutX="479.0" layoutY="15.0" mnemonicParsing="false" onAction="#clearFinished" styleClass="minor-button" text="Clear Completed" textAlignment="CENTER" />
 
                        </HBox>
-                       <TableView fx:id="jobList" editable="true" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onKeyPressed="#listKeyHandler" VBox.vgrow="ALWAYS">
+                       <TableView fx:id="jobList" editable="true" fixedCellSize="40.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onKeyPressed="#listKeyHandler" VBox.vgrow="ALWAYS">
                            <columns>
                                <TableColumn fx:id="workflowSelectionColumn" maxWidth="25.0" minWidth="25.0" onEditCommit="#handleSelectionChange" prefWidth="25.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" />
                                <TableColumn fx:id="workflowNameColumn" editable="false" maxWidth="-Infinity" minWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER-LEFT;" text="File name" />
-                               <TableColumn fx:id="workflowFormatColumn" minWidth="120.0" prefWidth="120.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Format" />
+                               <TableColumn fx:id="workflowFormatColumn" minWidth="125.0" prefWidth="120.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Format" />
                                <TableColumn fx:id="workflowStatusColumn" editable="false" prefWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Status" />
                                <TableColumn fx:id="workflowActionColumn" editable="false" prefWidth="125.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Actions" />
                            </columns>
@@ -88,21 +98,20 @@
                            <padding>
                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
-                           <Label fx:id="tasksText" text="Tasks" textOverrun="CENTER_ELLIPSIS">
+                           <Label fx:id="tasksText" styleClass="heading" text="Tasks" textOverrun="CENTER_ELLIPSIS">
                                <font>
                                    <Font name="System Bold" size="20.0" />
                                </font>
                            </Label>
                        </HBox>
-                       <HBox alignment="CENTER_RIGHT" minHeight="36.0" prefHeight="36.0" spacing="5.0">
+                       <HBox alignment="CENTER" minHeight="36.0" prefHeight="36.0" spacing="5.0">
                            <VBox.margin>
                                <Insets />
                            </VBox.margin>
                            <padding>
                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
-                           <ProgressBar fx:id="progressBar" progress="0" HBox.hgrow="ALWAYS" />
-                           <Label text="00:00:00" HBox.hgrow="NEVER" />
+                     <Label fx:id="taskNameText" styleClass="subheading" />
                        </HBox>
                        <TableView fx:id="taskList" fixedCellSize="75.0" VBox.vgrow="ALWAYS">
                            <columns>

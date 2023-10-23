@@ -30,13 +30,14 @@ public abstract class BaseWorkflow {
     // Keep a reference to the parent controller
     public PrimaryController controller;
 
-    public BaseWorkflow(PrimaryController parentController) {
+    public BaseWorkflow(PrimaryController parentController, File input) {
         controller = parentController;
         status.addListener((i, o, n) -> {
             // Update job/task display when jobs update
             controller.jobList.refresh();
             controller.taskList.refresh();
         });
+        firstInput = input;
     }
 
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
@@ -128,6 +129,7 @@ public abstract class BaseWorkflow {
     }
 
     public void setOverwrite(boolean shouldOverwrite) {
+        // Todo: apply output overwrite bool properly
         for (BaseTask task : this.tasks) {
             task.setOverwrite(shouldOverwrite);
         }
@@ -157,7 +159,7 @@ public abstract class BaseWorkflow {
                 case COMPLETED, QUEUED -> finalStatus = task.status;
                 case WARNING -> {
                     finalStatus = task.status;
-                    statusText = "Issue with %s:\n%s".formatted(task.name, task.warningMessage);
+                    statusText = "Issue with %s:\n%s".formatted(task.getName(), task.warningMessage);
                     break loop;
                 }
             }
@@ -165,9 +167,8 @@ public abstract class BaseWorkflow {
         status.set(finalStatus);
     }
 
-    public void calculateIO(String inputPath) {
+    public void calculateIO() {
         // Run through each task and determine the input/output file paths to feed into each-other.
-        this.firstInput = new File(inputPath);
         File workingInput = this.firstInput;
         File workingDir = getWorkingDirectory();
         for (BaseTask task: tasks) {

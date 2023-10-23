@@ -17,9 +17,12 @@ public class ButtonTableCell extends TableCell<BaseTask, Void> {
 
 
     {
-        cog.setIconSize(20);
-        cog.setIconColor(Paint.valueOf("BLUE"));
+        cog.setIconSize(16);
+        cog.getStyleClass().add("icon-graphic");
+        configureButton.getStyleClass().add("icon-button");
         configureButton.setGraphic(cog);
+        configureButton.setPrefWidth(32);
+        configureButton.setPrefHeight(32);
 
         configureButton.setOnAction(ext -> {
             BaseTask task = getTableView().getItems().get(getIndex());

@@ -12,26 +12,8 @@ public class WorkflowStatusTableCell extends TableCell<BaseWorkflow, Void> {
 
     private final Label mainLabel = new Label();
 
-
-    private final FontIcon finishedIcon = new FontIcon("bi-check");
-
-    private final FontIcon pendingIcon = new FontIcon("bi-circle-fill");
-    private final FontIcon runningIcon = new FontIcon("bi-circle-fill");
-    private final FontIcon failedIcon = new FontIcon("bi-circle-fill");
-    private final FontIcon warningIcon = new FontIcon("bi-circle-fill");
-
-
     {
-        finishedIcon.setIconSize(10);
-        pendingIcon.setIconSize(10);
-        runningIcon.setIconSize(10);
-        failedIcon.setIconSize(10);
-        warningIcon.setIconSize(10);
-        finishedIcon.setIconColor(Paint.valueOf("GREEN"));
-        pendingIcon.setIconColor(Paint.valueOf("BLUE"));
-        runningIcon.setIconColor(Paint.valueOf("GREEN"));
-        failedIcon.setIconColor(Paint.valueOf("RED"));
-        warningIcon.setIconColor(Paint.valueOf("ORANGE"));
+        mainLabel.getStyleClass().add("status-cell");
     }
 
     @Override

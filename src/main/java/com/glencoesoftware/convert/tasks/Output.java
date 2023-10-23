@@ -4,7 +4,6 @@ import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.convert.workflows.ConvertToTiff;
-import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -12,11 +11,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import org.apache.commons.io.FileUtils;
 import org.controlsfx.control.ToggleSwitch;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.prefs.BackingStoreException;
@@ -106,6 +107,8 @@ public class Output extends BaseTask {
     }
 
     public void setOutputFromWidgets() {
+        // Can only do this if input was already set
+        if (input == null) return;
         if (outputChoice.getValue() == outputLocationType.INPUT_FOLDER)
             this.output = new File(parent.firstInput.getParent(), outputFileName.getText());
         else this.output = new File(outputDirectory.getText(), outputFileName.getText());
@@ -151,6 +154,7 @@ public class Output extends BaseTask {
         String outputText = outputDirectory.getText();
         if (outputText == null || outputLocation == outputLocationType.INPUT_FOLDER) outputFolder = null;
         else outputFolder = new File(outputText);
+        setOutputFromWidgets();
         overwrite = overwriteBox.selectedProperty().get();
 
         logToFile = logChoice.getValue();
@@ -169,7 +173,7 @@ public class Output extends BaseTask {
         if (txt == null || txt.isEmpty()) trueWorkingDirectory = null;
         else trueWorkingDirectory = new File(txt);
         // Recalculate job IO in case the user switched temp directory
-        if (input != null) parent.calculateIO(parent.firstInput.getAbsolutePath());
+        if (input != null) parent.calculateIO();
     }
 
 
@@ -195,11 +199,10 @@ public class Output extends BaseTask {
                 throw new RuntimeException(e);
             }}
             case OUTPUT_FOLDER -> {
-                return output.getParentFile();
+                return getOutputFolder();
             }
             case CUSTOM_FOLDER -> {
-                if (trueWorkingDirectory != null) return trueWorkingDirectory;
-                else return output.getParentFile();
+                return trueWorkingDirectory;
             }
             default -> {
                 System.out.println("Oops" + workingDirectoryLocation);
@@ -213,11 +216,24 @@ public class Output extends BaseTask {
 
         // If we're not calling this for the first time (output exists), make sure we copy over any custom filename
         String sourceName;
-        if (this.output == null) sourceName = this.input.getName();
-        else sourceName = this.output.getName();
-        if (outputLocation == outputLocationType.INPUT_FOLDER)
-            this.output = new File(parent.firstInput.getParent(), sourceName);
-        else this.output = new File(outputFolder, sourceName);
+        if (output == null) sourceName = input.getName();
+        else sourceName = output.getName();
+        this.output = new File(getOutputFolder(), sourceName);
+    }
+
+    public File getOutputFolder() {
+        switch (outputLocation) {
+            case INPUT_FOLDER -> {
+                return parent.firstInput.getParentFile();
+            }
+            case CUSTOM_FOLDER -> {
+                return outputFolder;
+            }
+            default -> {
+                LOGGER.error("Unknown output folder type: " + outputLocation);
+                return null;
+            }
+        }
     }
 
     public void updateStatus() {
@@ -242,9 +258,10 @@ public class Output extends BaseTask {
         this.status = JobState.status.RUNNING;
         LOGGER.info("Saving final output file");
         try {
-            if (!Objects.equals(this.input.getAbsolutePath(), this.output.getAbsolutePath())) {
-                // Todo: Check this works with NGFF
-                Files.copy(this.input.toPath(), this.output.toPath(), ATOMIC_MOVE);
+            if (!Objects.equals(input.getAbsolutePath(), output.getAbsolutePath())) {
+                if (this.input.isDirectory()) FileUtils.moveDirectory(input, output);
+                else if (overwrite) FileUtils.moveFile(input, output, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                else FileUtils.moveFile(input, output);
             }
             this.status = JobState.status.COMPLETED;
         } catch (IOException e) {

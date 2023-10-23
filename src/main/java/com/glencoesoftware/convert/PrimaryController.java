@@ -35,7 +35,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.*;
 import javafx.scene.input.*;
@@ -66,7 +65,7 @@ public class PrimaryController {
 
     @FXML
     public Label jobsText;
-    public Label tasksText;
+    public Label taskNameText;
     public TableView<BaseWorkflow> jobList;
     public TableColumn<BaseWorkflow, Boolean> workflowSelectionColumn;
     public TableColumn<BaseWorkflow, String> workflowNameColumn;
@@ -80,9 +79,8 @@ public class PrimaryController {
     public Label fileListHelpText;
     public SplitPane jobsPane;
     public Button addJobButton;
-    public Button chooseDirButton;
-    public Button clearDirButton;
     public Button runJobsButton;
+    public FontIcon runJobsButtonIcon;
     public Button configureSelectedButton;
     public Button removeSelectedButton;
     public VBox jobsBox;
@@ -105,9 +103,7 @@ public class PrimaryController {
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
 
-    public final String defaultOutputText = "<Same as input>";
-
-    public enum prefName {OUTPUT_FOLDER, DEFAULT_FORMAT, SHOW_FORMAT_DLG}
+    public enum prefName {DEFAULT_FORMAT, SHOW_FORMAT_DLG}
 
     public static final Preferences userPreferences = Preferences.userRoot();
 
@@ -116,8 +112,6 @@ public class PrimaryController {
 
     private Stage addFilesStage;
     private AddFilesDialog addFilesController;
-
-    public ProgressBar progressBar;
 
     public ChangeListener<Number> taskWatcher = new ChangeListener<>() {
         @Override
@@ -141,6 +135,7 @@ public class PrimaryController {
 
         // Configure jobs table
         CheckBox selectAllBox = new CheckBox();
+        selectAllBox.getStyleClass().add("select-all-box");
         selectAllBox.setOnAction(e -> {
             for (BaseWorkflow job: jobList.getItems()) {
                 job.setSelected(selectAllBox.isSelected());
@@ -158,6 +153,11 @@ public class PrimaryController {
         workflowFormatColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         workflowStatusColumn.setCellFactory(col -> new WorkflowStatusTableCell());
         workflowActionColumn.setCellFactory(col -> new MultiButtonTableCell());
+        workflowSelectionColumn.setReorderable(false);
+        workflowNameColumn.setReorderable(false);
+        workflowFormatColumn.setReorderable(false);
+        workflowStatusColumn.setReorderable(false);
+        workflowActionColumn.setReorderable(false);
 
         // Configure tasks table
         taskNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -165,13 +165,19 @@ public class PrimaryController {
         taskActionColumn.setCellFactory(col -> new ButtonTableCell());
         taskStatusColumn.setCellFactory(col -> new TaskStatusTableCell());
 
+        taskNameColumn.setReorderable(false);
+        taskStatusColumn.setReorderable(false);
+        taskActionColumn.setReorderable(false);
+
         jobList.getItems().addListener((ListChangeListener<BaseWorkflow>)(c -> {
             if (jobList.getItems().isEmpty()) {
+                runJobsButton.setDisable(true);
                 fileListHelpText.setVisible(true);
                 jobsPane.setVisible(false);
             } else {
                 // Compute column sizing
                 dividerResized();
+                runJobsButton.setDisable(false);
                 fileListHelpText.setVisible(false);
                 jobsPane.setVisible(true);
             }
@@ -185,33 +191,17 @@ public class PrimaryController {
             if (newSelection != null) {
                 newSelection.currentStage.addListener(taskWatcher);
                 taskList.setItems(newSelection.tasks);
-                if (newSelection.status.get() == JobState.status.RUNNING) {
-                    tasksText.setText(
-                            String.format("Tasks: %d of %d",
-                                    newSelection.currentStage.get(), newSelection.tasks.size()));
-                }
-                tasksText.setText("Tasks: " + newSelection.getInput());
+                taskNameText.setText(newSelection.firstInput.getName());
                 taskList.refresh();
             } else {
                 taskList.setItems(null);
-                tasksText.setText("Tasks");
+                taskNameText.setText(null);
             }
         });
 
         taskList.setPlaceholder(new Label("Select a job for details"));
         // Disable entry selection on the task list
         taskList.setSelectionModel(null);
-
-        FontIcon addIcon = new FontIcon("bi-plus");
-        FontIcon removeIcon = new FontIcon("bi-dash");
-        FontIcon clearIcon = new FontIcon("bi-x");
-        FontIcon finishedIcon = new FontIcon("bi-check");
-
-        addIcon.setIconSize(20);
-        removeIcon.setIconSize(20);
-        clearIcon.setIconSize(20);
-        finishedIcon.setIconSize(20);
-        addJobButton.setGraphic(addIcon);
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
 
@@ -224,7 +214,7 @@ public class PrimaryController {
 
     private void dividerResized() {
         // Adjust Name column sizes as the divider is moved
-        workflowNameColumn.setMinWidth(Math.max(jobList.getWidth() - 370, 120));
+        workflowNameColumn.setMinWidth(Math.max(jobList.getWidth() - 375, 120));
         taskNameColumn.setMinWidth(Math.max(taskList.getWidth() - 150, 100));
     }
 
@@ -284,7 +274,6 @@ public class PrimaryController {
 
     @FXML
     private void configureDefaultFormat() {
-        // Todo: make space for table scrollbars
         addFilesController.prepareForDisplay();
         showStage(addFilesStage);
         addFilesStage.hide();
@@ -453,12 +442,12 @@ public class PrimaryController {
             }
             BaseWorkflow job;
             if (desiredFormat.equals(ConvertToNGFF.getDisplayName())) {
-                job = new ConvertToNGFF(this);
+                job = new ConvertToNGFF(this, file);
             } else {
-                job = new ConvertToTiff(this);
+                job = new ConvertToTiff(this, file);
             }
 
-            job.calculateIO(filePath);
+            job.calculateIO();
             jobs.add(job);
         }
     }
@@ -521,8 +510,9 @@ public class PrimaryController {
     }
 
     public void runCompleted() {
-        runJobsButton.setText("Run Conversions");
-        menuRun.setText("Run Conversions");
+        runJobsButton.setText("Run job(s)");
+        runJobsButtonIcon.setIconLiteral("bi-play-fill");
+        menuRun.setText("Run job(s)");
         isRunning = false;
         menuControlButtons.forEach((control -> control.setDisable(false)));
     }
@@ -581,8 +571,9 @@ public class PrimaryController {
             }
 
         menuControlButtons.forEach((control -> control.setDisable(true)));
-        runJobsButton.setText("Stop Conversions");
-        menuRun.setText("Stop Conversions");
+        runJobsButton.setText("Stop job(s)");
+        runJobsButtonIcon.setIconLiteral("bi-stop-fill");
+        menuRun.setText("Stop job(s)");
         isRunning = true;
         LOGGER.info("Beginning file conversion...\n");
 
@@ -600,7 +591,8 @@ public class PrimaryController {
                         
                         Required: ~%,dMB | Free: %,dMB\s
                         
-                        Do you want to continue?""",
+                        Do you want to continue?
+                        """,
                         drive,
                         neededSpace / 1048576,
                         freeSpace / 1048576),

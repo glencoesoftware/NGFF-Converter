@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.awt.*;
+import java.util.Arrays;
 
 
 public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
@@ -32,6 +33,16 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
     private final FontIcon openDirIcon = new FontIcon("bi-folder-symlink-fill");
 
     {
+        for (FontIcon icon: Arrays.asList(removeIcon, logIcon, stopRunningIcon, configureIcon, restartIcon, openDirIcon)) {
+            icon.setIconSize(16);
+            icon.getStyleClass().add("icon-graphic");
+        }
+        for (Button button: Arrays.asList(showLog, removeJob, stopRunning, configureTasks, resetJob, showFile)) {
+            button.getStyleClass().add("icon-button");
+            button.setPrefWidth(32);
+            button.setPrefHeight(32);
+        }
+
         showLog.setGraphic(logIcon);
         showLog.setTooltip(new Tooltip("Show execution logs"));
         showLog.setOnAction(evt -> getTableRow().getItem().showLogBox());
