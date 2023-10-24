@@ -20,13 +20,13 @@ public class ConvertToTiff extends BaseWorkflow{
         this.setTasks(tasks);
     }
 
-    public static String getDisplayName() {
-        return "OME-TIFF";
-    }
+    public static String shortName = "OME-TIFF";
+    public static String fullName = "Convert to OME-TIFF";
 
-    public String getName() {
-        return getDisplayName();
-    }
+    public String getShortName() { return shortName; }
+
+    public String getFullName() { return fullName; }
+
 
     public FileChooser.ExtensionFilter[] getExtensionFilters() {
         return new FileChooser.ExtensionFilter[]{

@@ -49,6 +49,8 @@ import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -56,6 +58,8 @@ import java.util.Queue;
 import java.util.*;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+
+import static java.util.Map.entry;
 
 
 public class PrimaryController {
@@ -120,6 +124,11 @@ public class PrimaryController {
         }
     };
 
+    public static Map<String, Class<? extends BaseWorkflow>> installedWorkflows  =  Map.ofEntries(
+            entry(ConvertToNGFF.shortName, ConvertToNGFF.class),
+            entry(ConvertToTiff.shortName, ConvertToTiff.class)
+    );
+
 
     @FXML
     public void initialize() throws IOException {
@@ -150,7 +159,7 @@ public class PrimaryController {
         workflowNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         workflowNameColumn.setCellValueFactory(new PropertyValueFactory<>("input"));
         workflowFormatColumn.setCellFactory(col -> new ChoiceTableCell());
-        workflowFormatColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        workflowFormatColumn.setCellValueFactory(new PropertyValueFactory<>("shortName"));
         workflowStatusColumn.setCellFactory(col -> new WorkflowStatusTableCell());
         workflowActionColumn.setCellFactory(col -> new MultiButtonTableCell());
         workflowSelectionColumn.setReorderable(false);
@@ -170,14 +179,13 @@ public class PrimaryController {
         taskActionColumn.setReorderable(false);
 
         jobList.getItems().addListener((ListChangeListener<BaseWorkflow>)(c -> {
+            updateRunButton();
             if (jobList.getItems().isEmpty()) {
-                runJobsButton.setDisable(true);
                 fileListHelpText.setVisible(true);
                 jobsPane.setVisible(false);
             } else {
                 // Compute column sizing
                 dividerResized();
-                runJobsButton.setDisable(false);
                 fileListHelpText.setVisible(false);
                 jobsPane.setVisible(true);
             }
@@ -369,7 +377,7 @@ public class PrimaryController {
         boolean allowConfig = true;
         for (BaseWorkflow job: jobList.getItems()) {
             if (job.getSelected().getValue()) {
-                selectedTypes.add(job.getName());
+                selectedTypes.add(job.getShortName());
                 if (job.status.getValue() != JobState.status.READY &&
                         job.status.getValue() != JobState.status.WARNING) {
                     // A selected job is already running, completed or failed = should not change config.
@@ -441,10 +449,15 @@ public class PrimaryController {
                 continue;
             }
             BaseWorkflow job;
-            if (desiredFormat.equals(ConvertToNGFF.getDisplayName())) {
-                job = new ConvertToNGFF(this, file);
-            } else {
-                job = new ConvertToTiff(this, file);
+            try {
+                // Lookup the job name in the workflow list
+                Constructor<? extends BaseWorkflow> jobClass = installedWorkflows.get(
+                        desiredFormat).getConstructor(PrimaryController.class, File.class);
+                job = jobClass.newInstance(this, file);
+            } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                     IllegalAccessException e) {
+                // We catch these but they ---should--- never happen
+                throw new RuntimeException(e);
             }
 
             job.calculateIO();
@@ -471,15 +484,27 @@ public class PrimaryController {
 
 
     @FXML
-    private void resetPrefs() throws BackingStoreException {
-        userPreferences.clear();
-        CreateNGFF.taskPreferences.clear();
-        CreateTiff.taskPreferences.clear();
-        Output.taskPreferences.clear();
-        userPreferences.flush();
-        CreateNGFF.taskPreferences.flush();
-        CreateTiff.taskPreferences.flush();
-        Output.taskPreferences.flush();
+    private void resetPrefs() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "This will reset all Workflow defaults.", ButtonType.YES, ButtonType.NO
+                );
+        confirm.setTitle("Reset all settings");
+        confirm.setHeaderText("Clear all saved settings?");
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                try {
+                    userPreferences.clear();
+                    CreateNGFF.taskPreferences.clear();
+                    CreateTiff.taskPreferences.clear();
+                    Output.taskPreferences.clear();
+                    userPreferences.flush();
+                    CreateNGFF.taskPreferences.flush();
+                    CreateTiff.taskPreferences.flush();
+                    Output.taskPreferences.flush();
+                } catch (BackingStoreException e) {
+                    LOGGER.error("Unable to save preferences" + e);
+                }
+            }});
     }
 
 
@@ -509,11 +534,33 @@ public class PrimaryController {
         showStage(jobSettingsStage);
     }
 
+    public void updateRunButton() {
+        if (isRunning) {
+            menuRun.setText("Stop job(s)");
+            runJobsButton.setText("Stop job(s)");
+            runJobsButtonIcon.setIconLiteral("bi-stop-fill");
+            runJobsButton.setDisable(false);
+        } else {
+            menuRun.setText("Run job(s)");
+            runJobsButton.setText("Run job(s)");
+            runJobsButtonIcon.setIconLiteral("bi-play-fill");
+            runJobsButton.setDisable(true);
+            menuRun.setDisable(true);
+
+            for (BaseWorkflow job : jobList.getItems()) {
+                // Only enable the runJobsButton if a job is runnable
+                if (job.status.get() == JobState.status.READY || job.status.get() == JobState.status.WARNING) {
+                    runJobsButton.setDisable(false);
+                    menuRun.setDisable(false);
+                    break;
+                }
+            }
+        }
+    }
+
     public void runCompleted() {
-        runJobsButton.setText("Run job(s)");
-        runJobsButtonIcon.setIconLiteral("bi-play-fill");
-        menuRun.setText("Run job(s)");
         isRunning = false;
+        updateRunButton();
         menuControlButtons.forEach((control -> control.setDisable(false)));
     }
 
@@ -579,10 +626,8 @@ public class PrimaryController {
             }
 
         menuControlButtons.forEach((control -> control.setDisable(true)));
-        runJobsButton.setText("Stop job(s)");
-        runJobsButtonIcon.setIconLiteral("bi-stop-fill");
-        menuRun.setText("Stop job(s)");
         isRunning = true;
+        updateRunButton();
         LOGGER.info("Beginning file conversion...\n");
 
         worker = new WorkflowRunner(this);

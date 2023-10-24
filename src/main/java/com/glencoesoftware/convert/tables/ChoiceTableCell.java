@@ -1,13 +1,16 @@
 package com.glencoesoftware.convert.tables;
 
 import com.glencoesoftware.convert.JobState;
+import com.glencoesoftware.convert.PrimaryController;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
-import com.glencoesoftware.convert.workflows.ConvertToNGFF;
-import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 
 import javafx.scene.control.TableCell;
+
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 
 public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
@@ -16,26 +19,30 @@ public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
 
     {
         options.getStyleClass().add("workflow-choice");
-        options.getItems().addAll(ConvertToTiff.getDisplayName(), ConvertToNGFF.getDisplayName());
+        options.getItems().addAll(PrimaryController.installedWorkflows.keySet());
         options.setOnAction(ext -> {
             int index = getIndex();
             ObservableList<BaseWorkflow> items = getTableView().getItems();
             if (index == -1 | index >= items.size()) {return;}
             BaseWorkflow thisWorkflow = items.get(index);
-            if (thisWorkflow.getName().equals(options.getValue())) {
+            if (thisWorkflow.getShortName().equals(options.getValue())) {
                 return;
             }
             BaseWorkflow newWorkflow;
-            if (options.getValue().equals("OME-TIFF")) {
-                System.out.println("Switching to tiff");
-                newWorkflow = new ConvertToTiff(thisWorkflow.controller, thisWorkflow.firstInput);
-            } else {
-                System.out.println("Switching to NGFF");
-                newWorkflow = new ConvertToNGFF(thisWorkflow.controller, thisWorkflow.firstInput);
+            System.out.println("Switching to " + options.getValue());
+
+            try {
+                // Lookup the job name in the workflow list
+                Constructor<? extends BaseWorkflow> jobClass = PrimaryController.installedWorkflows.get(
+                        options.getValue()).getConstructor(PrimaryController.class, File.class);
+                newWorkflow = jobClass.newInstance(thisWorkflow.controller, thisWorkflow.firstInput);
+            } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
+                     IllegalAccessException e) {
+                // We catch these but they ---should--- never happen
+                throw new RuntimeException(e);
             }
 
             newWorkflow.calculateIO();
-            System.out.println("Changed workflow");
             items.set(index, newWorkflow);
         });
 

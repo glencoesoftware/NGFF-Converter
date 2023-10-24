@@ -30,7 +30,8 @@ public class Output extends BaseTask {
 
     public static String name = "Output";
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
-    public enum prefKeys {OVERWRITE, LOG_CHOICE, LOG_LOCATION, WORKING_CHOICE, WORKING_DIR, OUTPUT_CHOICE, OUTPUT_DIR}
+    public enum prefKeys {OVERWRITE, DIRECT_WRITE, LOG_CHOICE, LOG_LOCATION,
+        WORKING_CHOICE, WORKING_DIR, OUTPUT_CHOICE, OUTPUT_DIR}
 
     public enum outputLocationType {
         INPUT_FOLDER("Same folder as input"),
@@ -60,6 +61,7 @@ public class Output extends BaseTask {
 
     // Variables storing true settings for this instance. n.b. this.input and this.output arise from BaseTask.
     private boolean overwrite = false;
+    private boolean directWrite = true;
 
     private outputLocationType outputLocation = outputLocationType.INPUT_FOLDER;
     private File outputFolder = null;
@@ -73,6 +75,7 @@ public class Output extends BaseTask {
     private static final ArrayList<Node> standardSettings = new ArrayList<>();
     private static final ArrayList<Node> addFilesSettings = new ArrayList<>();
     private static final ToggleSwitch overwriteBox = new ToggleSwitch();
+    private static final ToggleSwitch directWriteBox = new ToggleSwitch();
     private static final ChoiceBox<outputLocationType> outputChoice = new ChoiceBox<>();
     private static final TextField outputDirectory = new TextField();
     private static final TextField outputFileName = new TextField();
@@ -85,6 +88,7 @@ public class Output extends BaseTask {
     private static final VBox outputDirectoryContainer;
     private static final VBox outputChoiceContainer;
     private static final VBox overwriteContainer;
+    private static final VBox directWriteContainer;
     private static final Label outputTitle;
     private static final FontIcon fileBrowseButton;
     private static final FontIcon fileResetButton;
@@ -126,6 +130,7 @@ public class Output extends BaseTask {
         bindWidgets();
         applyOutputToWidgets();
         overwriteBox.setSelected(overwrite);
+        directWriteBox.setSelected(directWrite);
         logChoice.setValue(logToFile);
         if (logFileLocation != null) logDirectory.setText(logFileLocation.getAbsolutePath());
         workingDirectoryChoice.setValue(workingDirectoryLocation);
@@ -168,6 +173,7 @@ public class Output extends BaseTask {
             overwrite = overwriteBox.selectedProperty().get();
         }
 
+        directWrite = directWriteBox.selectedProperty().get();
         logToFile = logChoice.getValue();
         switch (logToFile) {
             case DISABLED -> logFileLocation = null;
@@ -271,10 +277,26 @@ public class Output extends BaseTask {
         }
     }
 
+    @Override
+    public void prepareToRun() {
+        calculateOutput("");
+        BaseTask secondLastTask = parent.tasks.get(parent.tasks.size() - 2);
+        secondLastTask.output = output;
+    }
+
     public void run() {
         // Apply GUI configurations first
-        calculateOutput("");
         this.status = JobState.status.RUNNING;
+        if (directWrite){
+            if (this.output.exists()) {
+                this.status = JobState.status.COMPLETED;
+            } else {
+                this.status = JobState.status.FAILED;
+                LOGGER.error("Output file not detected");
+            }
+            return;
+        }
+
         LOGGER.info("Saving final output file");
         try {
             if (!Objects.equals(input.getAbsolutePath(), output.getAbsolutePath())) {
@@ -330,7 +352,6 @@ public class Output extends BaseTask {
 
                 });
 
-        // Todo: Improve directory browser widgets
 
         overwriteContainer = getSettingContainer(
                 overwriteBox,
@@ -339,6 +360,18 @@ public class Output extends BaseTask {
         );
         standardSettings.add(overwriteContainer);
         addFilesSettings.add(overwriteContainer);
+
+        directWriteContainer = getSettingContainer(
+                directWriteBox,
+                "Write output directly to destination folder",
+                """
+                        If enabled, the final output file will be written directly to the destination folder.
+                        If disabled, data is first written to the working directory, and is only moved to the 
+                        destination folder if all tasks complete successfully.
+                        """
+        );
+        standardSettings.add(directWriteContainer);
+        addFilesSettings.add(directWriteContainer);
 
         standardSettings.add(logSettingsBox);
 
@@ -432,6 +465,7 @@ public class Output extends BaseTask {
             return;
         }
         overwrite = source.overwrite;
+        directWrite = source.directWrite;
         logToFile = source.logToFile;
         logFileLocation = source.logFileLocation;
         workingDirectoryLocation = source.workingDirectoryLocation;
@@ -450,6 +484,7 @@ public class Output extends BaseTask {
         outputDirectory.setText(Objects.requireNonNullElse(outputFolderDefault, ""));
 
         overwriteBox.setSelected(taskPreferences.getBoolean(prefKeys.OVERWRITE.name(), false));
+        directWriteBox.setSelected(taskPreferences.getBoolean(prefKeys.DIRECT_WRITE.name(), true));
 
         // Log settings
         logChoice.setValue(logFileType.valueOf(
@@ -468,24 +503,23 @@ public class Output extends BaseTask {
     public static void setDefaultsFromWidgets() throws BackingStoreException {
         taskPreferences.clear();
 
-        taskPreferences.put(prefKeys.OUTPUT_CHOICE.name(), outputChoice.getValue().label);
+        taskPreferences.put(prefKeys.OUTPUT_CHOICE.name(), outputChoice.getValue().name());
         if (outputChoice.getValue() == outputLocationType.CUSTOM_FOLDER)
             taskPreferences.put(prefKeys.OUTPUT_DIR.name(), outputDirectory.getText());
 
         taskPreferences.putBoolean(prefKeys.OVERWRITE.name(), overwriteBox.isSelected());
+        taskPreferences.putBoolean(prefKeys.DIRECT_WRITE.name(), directWriteBox.isSelected());
 
         // Log settings
-        taskPreferences.put(prefKeys.LOG_CHOICE.name(), logChoice.getValue().label);
+        taskPreferences.put(prefKeys.LOG_CHOICE.name(), logChoice.getValue().name());
         if (logChoice.getValue() == logFileType.CUSTOM_FOLDER)
             taskPreferences.put(prefKeys.LOG_LOCATION.name(), logDirectory.getText());
 
         // Working dir
-        taskPreferences.put(prefKeys.WORKING_CHOICE.name(), workingDirectoryChoice.getValue().label);
+        taskPreferences.put(prefKeys.WORKING_CHOICE.name(), workingDirectoryChoice.getValue().name());
         if (workingDirectoryChoice.getValue() == workingDirectoryType.CUSTOM_FOLDER)
             taskPreferences.put(prefKeys.WORKING_DIR.name(), workingDirectoryField.getText());
 
         taskPreferences.flush();
     }
 }
-
-

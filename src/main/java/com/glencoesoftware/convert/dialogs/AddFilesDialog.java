@@ -1,8 +1,8 @@
 package com.glencoesoftware.convert.dialogs;
 
+import com.glencoesoftware.convert.PrimaryController;
 import com.glencoesoftware.convert.tasks.Output;
 import com.glencoesoftware.convert.workflows.ConvertToNGFF;
-import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -43,13 +43,13 @@ public class AddFilesDialog {
 
 
     public void initialize() {
-        workflowChoiceBox.getItems().setAll(ConvertToNGFF.getDisplayName(), ConvertToTiff.getDisplayName());
-        workflowChoiceBox.setValue(userPreferences.get(DEFAULT_FORMAT.name(), ConvertToNGFF.getDisplayName()));
+        workflowChoiceBox.getItems().setAll(PrimaryController.installedWorkflows.keySet());
+        workflowChoiceBox.setValue(userPreferences.get(DEFAULT_FORMAT.name(), ConvertToNGFF.shortName));
     }
 
     public void prepareForDisplay() {
         // Get standard settings and apply defaults
-        workflowChoiceBox.setValue(userPreferences.get(DEFAULT_FORMAT.name(), ConvertToNGFF.getDisplayName()));
+        workflowChoiceBox.setValue(userPreferences.get(DEFAULT_FORMAT.name(), ConvertToNGFF.shortName));
         ArrayList<Node> settings = Output.getAddFilesSettings();
         Output.resetWidgets();
         settingsPanel.getChildren().clear();

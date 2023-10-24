@@ -3,7 +3,6 @@ package com.glencoesoftware.convert.tasks;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
-import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.tasks.progress.NGFFProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -19,7 +18,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.layout.*;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import ome.xml.model.enums.DimensionOrder;
 
@@ -341,6 +339,7 @@ public class CreateNGFF extends BaseTask{
     public void run() {
         // Apply GUI configurations first
         setupIO();
+        // TODO: Handle existing NGFF
 
         System.out.println("Setting progress up");
         NGFFProgressListener listener = new NGFFProgressListener(progressBar, progressLabel, converter);

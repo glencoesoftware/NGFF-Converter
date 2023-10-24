@@ -79,6 +79,10 @@ public abstract class BaseTask {
     // Execute the task
     abstract public void run();
 
+    // Optional method to be run just before all jobs in the workflow start. Use to validate settings,
+    // make last minute changes, etc.
+    public void prepareToRun() {}
+
     // Recalculate the task's status. Check for issues in settings, etc.
     abstract public void updateStatus();
 

@@ -2,7 +2,6 @@ package com.glencoesoftware.convert.dialogs;
 
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
-import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
@@ -173,40 +172,85 @@ public class ConfigureJobDialog {
     }
     @FXML
     private void restoreDefaults() {
-        for (BaseWorkflow job: jobs) {
-            for (BaseTask task : job.tasks) {
-                task.resetToDefaults();
-                task.updateStatus();
+        ButtonType thisTask = new ButtonType("This Task");
+        ButtonType allTasks = new ButtonType("All Tasks");
+        Alert choice = new Alert(Alert.AlertType.INFORMATION,
+                "Reset settings for this task (%s) or all tasks?".formatted(currentTask.getName()),
+                ButtonType.CANCEL, thisTask, allTasks
+        );
+        choice.setTitle("Restore defaults");
+        choice.setHeaderText("Choose which settings to reset");
+        choice.showAndWait().ifPresent(response -> {
+            if (response == thisTask) {
+                for (BaseWorkflow job: jobs) {
+                    BaseTask task = job.tasks.get(taskIndex);
+                    task.resetToDefaults();
+                    task.updateStatus();
+                }
+            } if (response == allTasks) {
+                for (BaseWorkflow job: jobs) {
+                    for (BaseTask task : job.tasks) {
+                        task.resetToDefaults();
+                        task.updateStatus();
+                    }
+                }
             }
-        }
+        });
         this.jobs.get(0).prepareGUI();
     }
     @FXML
     private void setDefaults() {
-        for (BaseTask task : tasks) {
-            try {
-                task.setDefaults();
-            } catch (BackingStoreException e) {
-                LOGGER.error("Failed to set defaults: " + e);
+        ButtonType thisTask = new ButtonType("This Task");
+        ButtonType allTasks = new ButtonType("All Tasks");
+        Alert choice = new Alert(Alert.AlertType.INFORMATION,
+                "Set defaults for this task (%s) or all tasks?".formatted(currentTask.getName()),
+                ButtonType.CANCEL, thisTask, allTasks
+        );
+        choice.setTitle("Set defaults");
+        choice.setHeaderText("Choose which settings to reset");
+        choice.showAndWait().ifPresent(response -> {
+            if (response == thisTask) {
+                try {
+                    currentTask.setDefaults();
+                } catch (BackingStoreException e) {
+                    LOGGER.error("Failed to set defaults: " + e);
+                }
+            } if (response == allTasks) {
+                for (BaseTask task : tasks) {
+                    try {
+                        task.setDefaults();
+                    } catch (BackingStoreException e) {
+                        LOGGER.error("Failed to set defaults: " + e);
+                    }
+                }
             }
-        }
+        });
     }
     @FXML
     private void applyToAll() {
         BaseWorkflow thisJob = currentTask.parent;
-        List<BaseWorkflow> allJobs = currentTask.parent.controller.jobList.getItems();
-        int count = 0;
-        for (BaseWorkflow job: allJobs) {
-            if (job == thisJob) {
-                continue;
+        Alert choice = new Alert(Alert.AlertType.CONFIRMATION);
+        choice.setTitle("Apply to all");
+        choice.setHeaderText("Are you sure?");
+        choice.setContentText(
+                "Apply these settings to all '%s' jobs in the job list?".formatted(thisJob.getFullName())
+        );
+        choice.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                List<BaseWorkflow> allJobs = currentTask.parent.controller.jobList.getItems();
+                int count = 0;
+                for (BaseWorkflow job: allJobs) {
+                    if (job == thisJob) {
+                        continue;
+                    }
+                    if (job.getClass().equals( thisJob.getClass())) {
+                        LOGGER.info("Cloning values from " + thisJob.getFullName());
+                        job.cloneSettings(thisJob);
+                        count++;
+                    }
+                };
+                LOGGER.info("Copied values to " + count + " instances");
             }
-            if (job.getClass().equals( thisJob.getClass())) {
-                LOGGER.info("Cloning values from " + thisJob.getName());
-                job.cloneSettings(thisJob);
-                count++;
-                }
-            };
-        System.out.println("Copied values to " + count + " instances");
+        });
     }
-
 }

@@ -122,9 +122,13 @@
 
 .file-browser-button {
     -fx-fill: primary;
-    -fx-border-width 2;
+    -fx-border-width: 2;
     -fx-border-radius: 4px;
     -fx-border-color: highlight;
+}
+
+.file-browser-button:hover {
+    -fx-fill: black;
 }
 
 

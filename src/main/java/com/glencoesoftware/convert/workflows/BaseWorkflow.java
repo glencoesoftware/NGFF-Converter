@@ -51,11 +51,10 @@ public abstract class BaseWorkflow {
         return this.selected;
     }
 
-    static String getDisplayName() { return null; }
+    abstract public String getShortName();
 
-    public String getName() {
-        return getDisplayName();
-    }
+    abstract public String getFullName();
+
 
     public String getStatusString() {
         return StringUtils.capitalize(this.status.get().toString().toLowerCase());
@@ -188,13 +187,14 @@ public abstract class BaseWorkflow {
         }
         LOGGER.info("Path calculation complete. Final output will be:");
         LOGGER.info(workingInput.getAbsolutePath());
-        logControl.setTitle("Execution Logs: %s (-> %s)".formatted(firstInput.getName(), getName()));
+        logControl.setTitle("Execution Logs: %s (-> %s)".formatted(firstInput.getName(), getShortName()));
         this.respondToUpdate();
     }
 
     public void reset() {
         this.currentStage.set(-1);
         this.status.set(READY);
+        this.calculateIO();
         for (BaseTask task : this.tasks) {
             task.status = READY;
             task.updateStatus();
@@ -216,7 +216,11 @@ public abstract class BaseWorkflow {
         if (fileAppender != null) rootLogger.addAppender(fileAppender);
         LOGGER.info("Beginning conversion of " + this.firstInput.getName());
 
-//        this.calculateIO();
+        LOGGER.info("Preparing to run tasks");
+        for (BaseTask task : this.tasks) {
+            task.prepareToRun();
+        }
+        LOGGER.info("Executing tasks");
         for (BaseTask task : this.tasks) {
             LOGGER.info("Running task " + task.getClass().getSimpleName());
             task.run();

@@ -19,13 +19,14 @@ public class ConvertToNGFF extends BaseWorkflow {
         this.setTasks(tasks);
     }
 
-    public static String getDisplayName() {
-        return "OME-NGFF";
-    }
+    public static String shortName = "OME-NGFF";
+    public static String fullName = "Convert to OME-NGFF";
 
-    public String getName() {
-        return getDisplayName();
-    }
+
+    public String getShortName() { return shortName; }
+
+    public String getFullName() { return fullName; }
+
 
     public FileChooser.ExtensionFilter[] getExtensionFilters() {
         return new FileChooser.ExtensionFilter[]{
