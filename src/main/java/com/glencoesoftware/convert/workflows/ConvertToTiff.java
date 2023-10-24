@@ -7,6 +7,7 @@ import com.glencoesoftware.convert.tasks.CreateTiff;
 import com.glencoesoftware.convert.tasks.Output;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.stage.FileChooser;
 
 import java.io.File;
 
@@ -25,6 +26,12 @@ public class ConvertToTiff extends BaseWorkflow{
 
     public String getName() {
         return getDisplayName();
+    }
+
+    public FileChooser.ExtensionFilter[] getExtensionFilters() {
+        return new FileChooser.ExtensionFilter[]{
+                new FileChooser.ExtensionFilter("OME-TIFF Files", "*.ome.tiff", "*.ome.tif"),
+                new FileChooser.ExtensionFilter("TIFF Files", "*.tif", "*.tiff")};
     }
 
 

@@ -534,7 +534,15 @@ public class PrimaryController {
                         case RUNNING, QUEUED -> task.status = JobState.status.FAILED;
                     }
                 }
-            }});
+            }
+            else if (job.status.get() == JobState.status.QUEUED) {
+                job.status.set(JobState.status.READY);
+                for (BaseTask task: job.tasks) task.status = JobState.status.READY;
+                // Recalculate current status now that we're not queued
+                job.respondToUpdate();
+            }
+        });
+
         jobList.refresh();
         runCompleted();
     }

@@ -3,16 +3,18 @@ package com.glencoesoftware.convert.tasks;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
-import com.glencoesoftware.convert.workflows.ConvertToTiff;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
 import org.controlsfx.control.ToggleSwitch;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,8 +24,6 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 
 // Virtual task to allow configuration of the output file destination and other misc options
 public class Output extends BaseTask {
@@ -86,8 +86,13 @@ public class Output extends BaseTask {
     private static final VBox outputChoiceContainer;
     private static final VBox overwriteContainer;
     private static final Label outputTitle;
+    private static final FontIcon fileBrowseButton;
+    private static final FontIcon fileResetButton;
+    private static HBox logDirWidget;
+    private static HBox workingDirWidget;
     private static final VBox logSettingsBox = getSettingGroupContainer();
     private static final VBox workingSettingsBox = getSettingGroupContainer();
+    private static File sysTemp = null;
 
     public String getName() { return name; }
 
@@ -109,9 +114,12 @@ public class Output extends BaseTask {
     public void setOutputFromWidgets() {
         // Can only do this if input was already set
         if (input == null) return;
+        String fileName = outputFileName.getText();
+        // User cleared a custom name
+        if (fileName.isEmpty()) fileName = input.getName();
         if (outputChoice.getValue() == outputLocationType.INPUT_FOLDER)
-            this.output = new File(parent.firstInput.getParent(), outputFileName.getText());
-        else this.output = new File(outputDirectory.getText(), outputFileName.getText());
+            this.output = new File(parent.firstInput.getParent(), fileName);
+        else this.output = new File(outputDirectory.getText(), fileName);
     }
 
     public void prepareForDisplay() {
@@ -126,21 +134,18 @@ public class Output extends BaseTask {
 
     // Attach this instance to the static widgets
     private void bindWidgets() {
-        // This File choosers in particular is instance-specific
-        outputFileName.onMouseClickedProperty().set(e -> {
-                    FileChooser fileChooser = new FileChooser();
-                    fileChooser.setInitialDirectory(this.output);
-                    fileChooser.setTitle("Set output file");
-                    if (parent instanceof ConvertToTiff) {
-                        fileChooser.getExtensionFilters().addAll(
-                                new FileChooser.ExtensionFilter("OME-TIFF Files", "*.ome.tiff", "*.ome.tif"),
-                                new FileChooser.ExtensionFilter("TIFF Files", "*.tif", "*.tiff"));
-                    } else fileChooser.getExtensionFilters().add(
-                            new FileChooser.ExtensionFilter("NGFF Files", "*.zarr", "*.ngff"));
+        // This File chooser in particular is instance-specific
+        fileResetButton.onMouseClickedProperty().set(e -> outputFileName.setText(input.getName()));
 
-                    File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
+        fileBrowseButton.onMouseClickedProperty().set(e -> {
+                    FileChooser fileChooser = new FileChooser();
+                    fileChooser.setInitialDirectory(this.output.getParentFile());
+                    fileChooser.setInitialFileName(this.output.getName());
+                    fileChooser.setTitle("Set output file");
+                    fileChooser.getExtensionFilters().addAll(parent.getExtensionFilters());
+                    File selectedFile = fileChooser.showSaveDialog(App.getScene().getWindow());
                     if (selectedFile != null) {
-                        if (selectedFile.getParent().equals(input.getParent()))
+                        if (selectedFile.getParent().equals(parent.firstInput.getParent()))
                             outputChoice.getSelectionModel().select(0);
                         else outputChoice.getSelectionModel().select(1);
                         outputDirectory.setText(selectedFile.getParent());
@@ -155,7 +160,13 @@ public class Output extends BaseTask {
         if (outputText == null || outputLocation == outputLocationType.INPUT_FOLDER) outputFolder = null;
         else outputFolder = new File(outputText);
         setOutputFromWidgets();
-        overwrite = overwriteBox.selectedProperty().get();
+        if (parent.tasks != null) {
+            // Overwrite applies to all tasks, not just this one
+            parent.setOverwrite(overwriteBox.selectedProperty().get());
+        } else {
+            // Todo: solve this during initial init
+            overwrite = overwriteBox.selectedProperty().get();
+        }
 
         logToFile = logChoice.getValue();
         switch (logToFile) {
@@ -182,22 +193,30 @@ public class Output extends BaseTask {
         return new File(logFileLocation, "%s.log".formatted(output.getName()));
         }
 
-    public void setOverwrite(boolean overwrite) {
-        this.overwrite = overwrite;
+    public void setOverwrite(boolean shouldOverwrite) {
+        overwrite = shouldOverwrite;
     }
 
     public boolean getOverwrite() {
         return this.overwrite;
     }
 
-    public File getWorkingDirectory() {
-        switch (workingDirectoryLocation) {
-            case SYSTEM_TEMP -> { try {
-                return Files.createTempDirectory("ngff-converter").toFile();
+    private static File getSysTemp() {
+        if (sysTemp == null) {
+            try {
+                sysTemp = Files.createTempDirectory("ngff-converter").toFile();
             } catch (IOException e) {
                 System.out.println("Failed to get temp dir");
                 throw new RuntimeException(e);
-            }}
+        }}
+        return sysTemp;
+    }
+
+    public File getWorkingDirectory() {
+        switch (workingDirectoryLocation) {
+            case SYSTEM_TEMP -> {
+                return getSysTemp();
+            }
             case OUTPUT_FOLDER -> {
                 return getOutputFolder();
             }
@@ -278,11 +297,26 @@ public class Output extends BaseTask {
         standardSettings.add(outputLocationBox);
         addFilesSettings.add(outputLocationBox);
 
-
         outputChoice.getItems().setAll(outputLocationType.values());
-        outputFileNameContainer = getSettingContainer(outputFileName, "File name", "");
+
+        // We do the file name widget manually as it needs special handling
+        fileBrowseButton = new FontIcon("bi-folder-fill");
+        fileBrowseButton.setIconSize(16);
+        fileBrowseButton.getStyleClass().add("file-browser-button");
+
+        fileResetButton = new FontIcon("bi-x-circle-fill");
+        fileResetButton.setIconSize(16);
+        fileResetButton.getStyleClass().add("file-browser-button");
+        HBox fileNameWidget = new HBox(5, outputFileName, fileBrowseButton, fileResetButton);
+        HBox.setHgrow(outputFileName, Priority.ALWAYS);
+        fileNameWidget.setAlignment(Pos.CENTER_LEFT);
+
+        outputFileNameContainer = getSettingContainer(fileNameWidget, "File name", "");
         outputChoiceContainer = getSettingContainer(outputChoice, "Location", "");
-        outputDirectoryContainer = getSettingContainer(outputDirectory, "Directory", "");
+
+        HBox outputDirWidget = getDirectorySelectWidget(outputDirectory, "Choose output directory", null);
+
+        outputDirectoryContainer = getSettingContainer(outputDirWidget, "Directory", "");
 
         outputChoice.getSelectionModel().selectedItemProperty().addListener(
                 (observableValue, oldVal, newVal) -> {
@@ -298,17 +332,6 @@ public class Output extends BaseTask {
 
         // Todo: Improve directory browser widgets
 
-        outputDirectory.onMouseClickedProperty().set(e -> {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choose output directory");
-            TextField source = (TextField) e.getSource();
-            if (!source.getText().isEmpty()) directoryChooser.setInitialDirectory(new File(source.getText()));
-            File newDir = directoryChooser.showDialog(App.getScene().getWindow());
-            if (newDir != null) {
-                outputDirectory.setText(newDir.getAbsolutePath());
-            }
-        });
-
         overwriteContainer = getSettingContainer(
                 overwriteBox,
                 "Overwrite Existing Files",
@@ -321,8 +344,8 @@ public class Output extends BaseTask {
 
         logChoice.getItems().setAll(logFileType.values());
         logChoice.getSelectionModel().selectedIndexProperty().addListener((e, oldVal, newVal) -> {
-                logDirectory.getParent().setVisible(newVal.intValue() == 2);
-                logDirectory.getParent().setManaged(newVal.intValue() == 2);
+                logDirWidget.getParent().setVisible(newVal.intValue() == 2);
+                logDirWidget.getParent().setManaged(newVal.intValue() == 2);
                 }
         );
         logSettingsBox.getChildren().add(getSettingContainer(
@@ -336,16 +359,9 @@ public class Output extends BaseTask {
                         """
         ));
 
-        logDirectory.onMouseClickedProperty().set(e -> {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choose log directory");
-            File newDir = directoryChooser.showDialog(App.getScene().getWindow());
-            if (newDir != null) {
-                logDirectory.setText(newDir.getAbsolutePath());
-            }
-        });
+        logDirWidget = getDirectorySelectWidget(logDirectory, "Choose log directory", null);
         logSettingsBox.getChildren().add(
-                getSettingContainer(logDirectory, "Log file location",
+                getSettingContainer(logDirWidget, "Log file location",
                         """
                 Folder in which to save log files.
                 """
@@ -356,8 +372,8 @@ public class Output extends BaseTask {
 
         workingDirectoryChoice.getItems().setAll(workingDirectoryType.values());
         workingDirectoryChoice.getSelectionModel().selectedIndexProperty().addListener((i, o, v) -> {
-                workingDirectoryField.getParent().setVisible(v.intValue() == 2);
-                workingDirectoryField.getParent().setManaged(v.intValue() == 2);
+                workingDirWidget.getParent().setVisible(v.intValue() == 2);
+                workingDirWidget.getParent().setManaged(v.intValue() == 2);
                 });
         workingSettingsBox.getChildren().add(
                 getSettingContainer(workingDirectoryChoice, "Working directory location",
@@ -370,19 +386,11 @@ public class Output extends BaseTask {
                 """
                 ));
 
-        workingDirectoryField.onMouseClickedProperty().set(e -> {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choose working directory");
-            TextField source = (TextField) e.getSource();
-            String text = source.getText();
-            if (!text.isEmpty()) directoryChooser.setInitialDirectory(new File(text));
-            File newDir = directoryChooser.showDialog(App.getScene().getWindow());
-            if (newDir != null) {
-                workingDirectoryField.setText(newDir.getAbsolutePath());
-            }
-        });
+        workingDirWidget = getDirectorySelectWidget(workingDirectoryField, "Choose working directory",
+                getSysTemp());
+
         workingSettingsBox.getChildren().add(
-                getSettingContainer(workingDirectoryField, "Working directory",
+                getSettingContainer(workingDirWidget, "Working directory",
                         """
                 Folder in which to write temporary files.
                 """

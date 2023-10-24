@@ -92,11 +92,11 @@ public class ConfigureJobDialog {
             System.out.println("No jobs given?");
             return;
         }
-        this.multiMode = jobs.size() > 1;
+        multiMode = jobs.size() > 1;
 
 
         BaseWorkflow jobSample = this.jobs.get(0);
-        if (this.multiMode) mainLabel.setText("Configuring %d jobs".formatted(this.jobs.size()));
+        if (multiMode) mainLabel.setText("Configuring %d jobs".formatted(this.jobs.size()));
         else mainLabel.setText("Configuring %s".formatted(jobSample.getInput()));
 
         this.tasks = jobSample.tasks;
@@ -127,7 +127,7 @@ public class ConfigureJobDialog {
     private void applySettings() {
         System.out.println("Applying settings");
         // Different handling if configuring multiple jobs
-        if (this.multiMode) {
+        if (multiMode) {
             // Iterate through tasks
             for (int i = 0; i < this.tasks.size(); i++) {
                 // Fetch settings from the template task used in the dialog

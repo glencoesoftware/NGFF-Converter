@@ -1,11 +1,15 @@
 package com.glencoesoftware.convert.tasks;
 
 import ch.qos.logback.classic.Level;
+import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -104,8 +108,11 @@ public abstract class BaseTask {
     abstract public void cloneValues(BaseTask source);
 
     // Should receive global overwrite setting and apply that to the engine if necessary.
-    public void setOverwrite(boolean shouldOverwrite) {
-    }
+    abstract public void setOverwrite(boolean shouldOverwrite);
+
+    // Clear any loaded settings and apply the defaults. Primarily needed to call reset() methods on executors.
+    abstract public void resetToDefaults();
+
 
     public static VBox getSettingContainer(Node node, String headerText, String tooltipText) {
         return new VBox(5, getSettingHeader(headerText, tooltipText), node);
@@ -153,7 +160,69 @@ public abstract class BaseTask {
         return label;
     }
 
-    // Clear any loaded settings and apply the defaults. Primarily needed to call reset() methods on executors.
-    abstract public void resetToDefaults();
+    public static HBox getFileSelectWidget(TextField pathField, String title, boolean newFile,
+                                           File defaultDir, FileChooser.ExtensionFilter[] extensionFilters) {
+
+        FontIcon browseButton = new FontIcon("bi-folder-fill");
+        browseButton.setIconSize(16);
+        browseButton.getStyleClass().add("file-browser-button");
+        browseButton.onMouseClickedProperty().set(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle(title);
+            File startDir = null;
+            if (pathField.getText() != null && !pathField.getText().isEmpty()) {
+                File currentDir = new File(pathField.getText());
+                fileChooser.setInitialFileName(currentDir.getName());
+                if (currentDir.exists()) startDir = currentDir.getParentFile();
+            } else if (defaultDir != null) startDir = defaultDir;
+            fileChooser.setInitialDirectory(startDir);
+            if (extensionFilters != null) fileChooser.getExtensionFilters().addAll(extensionFilters);
+            File selectedFile;
+            if (newFile) selectedFile = fileChooser.showSaveDialog(App.getScene().getWindow());
+            else selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
+            if (selectedFile != null) {
+                pathField.setText(selectedFile.getAbsolutePath());
+            }
+        });
+
+        FontIcon resetButton = new FontIcon("bi-x-circle-fill");
+        resetButton.setIconSize(16);
+        resetButton.getStyleClass().add("file-browser-button");
+        resetButton.onMouseClickedProperty().set(e -> pathField.clear());
+        HBox container = new HBox(5, pathField, browseButton, resetButton);
+        HBox.setHgrow(pathField, Priority.ALWAYS);
+        container.setAlignment(Pos.CENTER_LEFT);
+        return container;
+    }
+
+    public static HBox getDirectorySelectWidget(TextField pathField, String title, File defaultDir) {
+        FontIcon browseButton = new FontIcon("bi-folder-fill");
+        browseButton.setIconSize(16);
+        browseButton.getStyleClass().add("file-browser-button");
+        browseButton.onMouseClickedProperty().set(e -> {
+            DirectoryChooser dirChooser = new DirectoryChooser();
+            dirChooser.setTitle(title);
+            File startDir = null;
+            if (pathField.getText() != null && !pathField.getText().isEmpty()) {
+                File currentDir = new File(pathField.getText());
+                if (currentDir.exists()) startDir = currentDir.getParentFile();
+            } else if (defaultDir != null) startDir = defaultDir;
+            dirChooser.setInitialDirectory(startDir);
+            File selectedDir = dirChooser.showDialog(App.getScene().getWindow());
+            if (selectedDir != null) {
+                pathField.setText(selectedDir.getAbsolutePath());
+            }
+        });
+
+        FontIcon resetButton = new FontIcon("bi-x-circle-fill");
+        resetButton.setIconSize(16);
+        resetButton.getStyleClass().add("file-browser-button");
+        resetButton.onMouseClickedProperty().set(e -> pathField.clear());
+        HBox container = new HBox(5, pathField, browseButton, resetButton);
+        HBox.setHgrow(pathField, Priority.ALWAYS);
+        container.setAlignment(Pos.CENTER_LEFT);
+        return container;
+    }
+
 
 }

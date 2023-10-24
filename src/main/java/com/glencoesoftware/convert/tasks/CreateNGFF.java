@@ -536,19 +536,14 @@ public class CreateNGFF extends BaseTask{
         ));
 
         scaleFormatCSV = new TextField();
-        scaleFormatCSV.setEditable(false);
-        scaleFormatCSV.onMouseClickedProperty().set(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Choose Scale Format CSV File");
-            fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
-            File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
-            if (selectedFile != null) {
-                scaleFormatCSV.setText(selectedFile.getAbsolutePath());
-            }
-        });
+        FileChooser.ExtensionFilter[] filter = {
+                new FileChooser.ExtensionFilter("CSV Files", "*.csv")};
+
+        HBox scaleFormatCSVWidget = getFileSelectWidget(scaleFormatCSV, "Choose Scale Format CSV File", false,
+                null, filter);
+
         advancedSettings.add(getSettingContainer(
-                scaleFormatCSV,
+                scaleFormatCSVWidget,
                 "Scale Format CSV",
                 """
                         Additional format string argument CSV file
@@ -650,17 +645,9 @@ public class CreateNGFF extends BaseTask{
         ));
 
         memoDirectory = new TextField();
-        memoDirectory.setEditable(false);
-        memoDirectory.onMouseClickedProperty().set(e -> {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choose memo file directory");
-            File newDir = directoryChooser.showDialog(App.getScene().getWindow());
-            if (newDir != null) {
-                memoDirectory.setText(newDir.getAbsolutePath());
-            }
-        });
+        HBox memoWidget = getDirectorySelectWidget(memoDirectory, "Choose memo file directory", null);
         advancedSettings.add(getSettingContainer(
-                memoDirectory,
+                memoWidget,
                 "Memo file directory",
                 "Directory used to store .bfmemo cache files"
         ));

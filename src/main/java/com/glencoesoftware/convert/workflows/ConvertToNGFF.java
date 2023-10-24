@@ -6,6 +6,7 @@ import com.glencoesoftware.convert.tasks.CreateNGFF;
 import com.glencoesoftware.convert.tasks.Output;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.stage.FileChooser;
 
 import java.io.File;
 
@@ -26,4 +27,9 @@ public class ConvertToNGFF extends BaseWorkflow {
         return getDisplayName();
     }
 
+    public FileChooser.ExtensionFilter[] getExtensionFilters() {
+        return new FileChooser.ExtensionFilter[]{
+                new FileChooser.ExtensionFilter("NGFF Files", "*.zarr", "*.ngff")
+        };
+    }
 }

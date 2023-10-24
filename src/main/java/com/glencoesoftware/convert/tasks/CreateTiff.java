@@ -1,7 +1,6 @@
 package com.glencoesoftware.convert.tasks;
 
 import com.glencoesoftware.convert.JobState;
-import com.glencoesoftware.convert.tasks.progress.NGFFProgressListener;
 import com.glencoesoftware.convert.tasks.progress.TiffProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.pyramid.CompressionType;
@@ -13,6 +12,7 @@ import loci.formats.codec.CodecOptions;
 import loci.formats.codec.JPEG2000CodecOptions;
 import org.controlsfx.control.ToggleSwitch;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.function.UnaryOperator;
@@ -43,6 +43,8 @@ public class CreateTiff extends BaseTask {
     private static final ToggleSwitch rgb;
 
     private static final ToggleSwitch split;
+
+    private boolean overwrite = false;
 
     public String getName() { return name; }
 
@@ -100,6 +102,10 @@ public class CreateTiff extends BaseTask {
         converter.setOutputPath(this.output.getAbsolutePath());
     }
 
+    public void setOverwrite(boolean shouldOverwrite) {
+        overwrite = shouldOverwrite;
+    }
+
     public void run() {
         // Apply GUI configurations first
         setupIO();
@@ -108,6 +114,7 @@ public class CreateTiff extends BaseTask {
         LOGGER.info("Running raw2ometiff");
         this.status = JobState.status.RUNNING;
         try {
+            if (!overwrite && output.exists()) throw new IOException("Output path already exists");
             converter.call();
             this.status = JobState.status.COMPLETED;
             LOGGER.info("TIFF creation successful");
@@ -124,6 +131,9 @@ public class CreateTiff extends BaseTask {
         if (this.output == null | this.input == null) {
             this.status = JobState.status.WARNING;
             this.warningMessage = "I/O not configured";
+        } else if (!overwrite && output.exists()) {
+            this.status = JobState.status.WARNING;
+            this.warningMessage = "Output file already exists";
         } else {
             this.status = JobState.status.READY;
         }

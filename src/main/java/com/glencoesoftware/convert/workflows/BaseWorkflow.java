@@ -13,6 +13,7 @@ import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -130,7 +131,7 @@ public abstract class BaseWorkflow {
 
     public void setOverwrite(boolean shouldOverwrite) {
         // Todo: apply output overwrite bool properly
-        for (BaseTask task : this.tasks) {
+        for (BaseTask task : tasks) {
             task.setOverwrite(shouldOverwrite);
         }
     }
@@ -300,4 +301,7 @@ public abstract class BaseWorkflow {
 
     }
 
-    }
+    // Return a list of extension filters for use with dialogs setting this workflow's final output
+    abstract public FileChooser.ExtensionFilter[] getExtensionFilters();
+
+}
