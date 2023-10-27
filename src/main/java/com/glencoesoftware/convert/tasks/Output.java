@@ -84,7 +84,7 @@ public class Output extends BaseTask {
     private static final ChoiceBox<logFileType> logChoice = new ChoiceBox<>();
     private static final TextField logDirectory = new TextField();
     private static final VBox outputLocationBox = getSettingGroupContainer();
-    private static final VBox outputFileNameContainer;
+    public static final VBox outputFileNameContainer;
     private static final VBox outputDirectoryContainer;
     private static final VBox outputChoiceContainer;
     private static final VBox overwriteContainer;
@@ -432,8 +432,8 @@ public class Output extends BaseTask {
 
 
     public ArrayList<Node> getStandardSettings() {
-        outputFileName.getParent().setVisible(true);
-        outputFileName.getParent().setManaged(true);
+        outputFileNameContainer.setVisible(true);
+        outputFileNameContainer.setManaged(true);
         return standardSettings;
     }
 
@@ -443,8 +443,8 @@ public class Output extends BaseTask {
 
     public static ArrayList<Node> getAddFilesSettings() {
         // We hide the file name from this reduced settings display
-        outputFileName.getParent().setVisible(false);
-        outputFileName.getParent().setManaged(false);
+        outputFileNameContainer.setVisible(false);
+        outputFileNameContainer.setManaged(false);
         return addFilesSettings;
     }
 
@@ -523,5 +523,3 @@ public class Output extends BaseTask {
         taskPreferences.flush();
     }
 }
-
-// TODO: Multimode settings display

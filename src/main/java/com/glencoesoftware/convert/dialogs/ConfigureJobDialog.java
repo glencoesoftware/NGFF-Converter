@@ -2,6 +2,7 @@ package com.glencoesoftware.convert.dialogs;
 
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.tasks.BaseTask;
+import com.glencoesoftware.convert.tasks.Output;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -166,6 +167,9 @@ public class ConfigureJobDialog {
     private void nextTask() {
         this.taskIndex += 1;
         displayTaskSettings();
+        // Don't allow user to configure File Name when editing multiple entries
+        Output.outputFileNameContainer.setVisible(!multiMode);
+        Output.outputFileNameContainer.setManaged(!multiMode);
     }
     @FXML
     private void prevTask() {

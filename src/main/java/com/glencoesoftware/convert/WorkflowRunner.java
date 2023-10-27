@@ -53,8 +53,6 @@ class WorkflowRunner extends Task<Integer> {
             LOGGER.info("Running new model pipeline");
             job.execute();
 
-            //Todo: Cleanup intermediates?
-
             switch (job.status.get()) {
                 case COMPLETED -> LOGGER.info("Successfully created: " + job.finalOutput.getName() + "\n");
                 case FAILED -> {

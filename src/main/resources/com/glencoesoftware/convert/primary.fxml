@@ -54,7 +54,7 @@
 
                </Button>
            </HBox>
-           <StackPane onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" style="-fx-background-color: white; -fx-border-color: grey;" VBox.vgrow="ALWAYS">
+           <StackPane onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" styleClass="stack-pane" VBox.vgrow="ALWAYS">
                <SplitPane fx:id="jobsPane" dividerPositions="0.7" style="-fx-background-color: white;">
                    <VBox fx:id="jobsBox">
                        <HBox prefHeight="36.0" spacing="5.0">
@@ -125,10 +125,18 @@
                        </TableView>
                    </VBox>
                </SplitPane>
-               <Label fx:id="fileListHelpText" mouseTransparent="true" pickOnBounds="false" text="Drop files or folders here to add jobs" textFill="#8a8a8a">
+               <Label fx:id="fileListHelpText" contentDisplay="TOP" graphicTextGap="0.0" mouseTransparent="true" pickOnBounds="false" text="Drop files or folders here to add jobs" textFill="#8a8a8a">
                    <font>
                        <Font name="System Bold" size="20.0" />
                    </font>
+                   <graphic>
+                       <ImageView fitHeight="128.0" fitWidth="128.0" opacity="0.5">
+                           <Image url="@logomark.png" />
+                       </ImageView>
+                   </graphic>
+               <padding>
+                  <Insets top="-20.0" />
+               </padding>
                </Label>
              <VBox.margin>
                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

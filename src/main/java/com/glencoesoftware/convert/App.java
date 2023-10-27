@@ -34,7 +34,9 @@ public class App extends Application {
         scene = new Scene(primary, 1024, 600);
         controller = fxmlLoader.getController();
         stage.setScene(scene);
-        stage.setTitle("NGFF-Converter");
+        String version = getClass().getPackage().getImplementationVersion();
+        if (version == null) { version = "DEV"; }
+        stage.setTitle("NGFF-Converter - %s".formatted(version));
         Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
         stage.getIcons().add(icon);
         stage.setOnCloseRequest(event -> Platform.exit());

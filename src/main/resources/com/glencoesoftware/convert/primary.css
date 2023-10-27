@@ -99,7 +99,7 @@ minor-button > .text-button-icon {
     -fx-control-inner-background: white;
     -fx-control-inner-background-alt: neutral;
     -fx-table-cell-border-color: transparent;
-    -fx-selection-bar: #DDD;
+    -fx-selection-bar: #9fcdea;
 }
 
 .table-view .column-header {
@@ -140,4 +140,9 @@ minor-button > .text-button-icon {
 
 .split-pane:horizontal > .split-pane-divider {
    -fx-background-color: tertiary;
+}
+
+.stack-pane {
+    -fx-border-color: primary;
+    -fx-background-color: neutral;
 }
