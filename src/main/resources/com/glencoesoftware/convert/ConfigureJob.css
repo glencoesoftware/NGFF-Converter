@@ -94,11 +94,6 @@
     -fx-text-fill: white;
 }
 
-.minor-button:focused, .major-button:focused, .task-arrow:focused {
-    -fx-border-color: primary;
-    -fx-border-style: dashed;
-}
-
 .minor-button:hover, .major-button:hover, .task-arrow:hover {
     -fx-border-color: black;
     -fx-border-style: solid;

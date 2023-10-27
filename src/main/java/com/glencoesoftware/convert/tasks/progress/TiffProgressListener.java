@@ -47,11 +47,9 @@ public class TiffProgressListener implements IProgressListener {
     }
 
     public void updateBar() {
-        System.out.println("Requesting bar update");
         Platform.runLater( () -> {
             progressBar.setProgress(progress);
             labelText.setText("Series %d of ?\n %s".formatted(currentSeries + 1, elapsedTimeString));
-            System.out.println("Processed bar update");
         });
     }
 
@@ -104,7 +102,6 @@ public class TiffProgressListener implements IProgressListener {
 
     @Override
     public void notifyChunkStart(int plane, int xx, int yy, int zz) {
-        System.out.println("Got chunk start");
         progress += 0.001;
         updateBar();
 //        progressBar.setProgress(progressBar.getProgress() + 0.01);

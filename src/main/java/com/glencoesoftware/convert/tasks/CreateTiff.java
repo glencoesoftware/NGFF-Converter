@@ -44,7 +44,7 @@ public class CreateTiff extends BaseTask {
 
     private static final ToggleSwitch split;
 
-    private boolean overwrite = false;
+    private boolean overwrite = Output.overwriteBox.selectedProperty().get();
 
     public String getName() { return name; }
 

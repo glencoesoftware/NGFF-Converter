@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import org.kordamp.ikonli.javafx.*?>
 
-<BorderPane fx:id="configureJob" prefHeight="600.0" prefWidth="440.0" stylesheets="@ConfigureJob.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.ConfigureJobDialog">
+<BorderPane fx:id="configureJob" prefHeight="600.0" prefWidth="440.0" stylesheets="@ConfigureJob.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.ConfigureJobDialog">
    <top>
       <VBox BorderPane.alignment="CENTER">
           <HBox alignment="CENTER">

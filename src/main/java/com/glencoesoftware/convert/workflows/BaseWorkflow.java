@@ -13,8 +13,10 @@ import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -76,19 +78,17 @@ public abstract class BaseWorkflow {
 
     public String statusText = "";
 
-    public File firstInput = null;
+    public File firstInput;
 
     public File finalOutput = null;
 
+    // Used by the joblist table to fetch file name. NOT unused!
     public String getInput() {
-        if (firstInput == null) {
-            return null;
-        }
         return firstInput.getName();
     }
 
+    // Index of the current running task
     public IntegerProperty currentStage = new SimpleIntegerProperty(-1);
-
 
     public ObservableList<BaseTask> tasks;
     protected void setTasks(ObservableList<BaseTask> tasks) {
@@ -102,17 +102,24 @@ public abstract class BaseWorkflow {
 
     private Stage consoleWindow;
     private TextAreaStream textAreaStream;
+
+    private FileAppender<ILoggingEvent> fileAppender;
+    private TextAreaAppender<ILoggingEvent> logBoxAppender;
     private LogDisplayDialog logControl;
 
     private void createLogControl() throws IOException {
         FXMLLoader logLoader = new FXMLLoader();
         logLoader.setLocation(App.class.getResource("LogDisplay.fxml"));
         Scene scene = new Scene(logLoader.load());
+        scene.setFill(Color.TRANSPARENT);
         logControl = logLoader.getController();
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
+        consoleWindow.initStyle(StageStyle.UNDECORATED);
+        consoleWindow.initStyle(StageStyle.TRANSPARENT);
         textAreaStream = logControl.stream;
         logControl.setParent(this.controller);
+        logControl.registerStage(consoleWindow);
     }
 
     {
@@ -129,7 +136,6 @@ public abstract class BaseWorkflow {
     }
 
     public void setOverwrite(boolean shouldOverwrite) {
-        // Todo: apply output overwrite bool properly
         for (BaseTask task : tasks) {
             task.setOverwrite(shouldOverwrite);
         }
@@ -149,7 +155,6 @@ public abstract class BaseWorkflow {
         statusText = "";
         loop: for (BaseTask task : this.tasks) {
             task.updateStatus();
-            System.out.println("New status for "+ task.name  + " is " + task.getStatusString());
             switch (task.status) {
                 case READY -> System.out.println("Job queued");
                 case RUNNING, FAILED -> {
@@ -187,14 +192,14 @@ public abstract class BaseWorkflow {
         }
         LOGGER.info("Path calculation complete. Final output will be:");
         LOGGER.info(workingInput.getAbsolutePath());
-        logControl.setTitle("Execution Logs: %s (-> %s)".formatted(firstInput.getName(), getShortName()));
+        logControl.setTitle("%s (→ %s)".formatted(firstInput.getName(), getShortName()));
         this.respondToUpdate();
     }
 
     public void reset() {
-        this.currentStage.set(-1);
-        this.status.set(READY);
-        this.calculateIO();
+        currentStage.set(-1);
+        status.set(READY);
+        calculateIO();
         for (BaseTask task : this.tasks) {
             task.status = READY;
             task.updateStatus();
@@ -207,66 +212,28 @@ public abstract class BaseWorkflow {
 
     public void execute(){
         // Presumes input/outputs are pre-calculated
-        this.status.set(JobState.status.RUNNING);
-        this.currentStage.set(0);
+        status.set(JobState.status.RUNNING);
+        currentStage.set(0);
         // Setup logging
-        FileAppender<ILoggingEvent> fileAppender = getFileAppender(getLogFile());
-        TextAreaAppender<ILoggingEvent> logBoxAppender = logControl.getAppender();
+        fileAppender = getFileAppender(getLogFile());
+        logBoxAppender = logControl.getAppender();
         rootLogger.addAppender(logBoxAppender);
         if (fileAppender != null) rootLogger.addAppender(fileAppender);
         LOGGER.info("Beginning conversion of " + this.firstInput.getName());
 
         LOGGER.info("Preparing to run tasks");
-        for (BaseTask task : this.tasks) {
+        for (BaseTask task : tasks) {
             task.prepareToRun();
         }
         LOGGER.info("Executing tasks");
-        for (BaseTask task : this.tasks) {
+        for (BaseTask task : tasks) {
             LOGGER.info("Running task " + task.getClass().getSimpleName());
             task.run();
-            this.currentStage.set(this.currentStage.get() + 1);
-            if (task.status != JobState.status.COMPLETED) {
-                this.status.set(JobState.status.FAILED);
-                this.currentStage.set(-1);
-                break;
-            }
+            if (task.status != JobState.status.COMPLETED) break;
+            currentStage.set(currentStage.get() + 1);
         }
-        LOGGER.info("Tasks finished, cleaning up intermediates");
-
-        // Cleanup intermediates
-        for (int i = 0; i < this.tasks.size() - 1; ++i) {
-            BaseTask task = this.tasks.get(i);
-            File output = task.getOutput();
-            if (!Objects.equals(output, this.finalOutput)) {
-                if (!output.exists()){
-                    continue;
-                }
-                try {
-                    if (output.isDirectory()) {
-                        FileUtils.deleteDirectory(output);
-                    } else {
-                        FileUtils.delete(output);
-                    }
-                } catch (IOException ioe) {
-                    LOGGER.error("Failed to clean up intermediates - %s - Error was: %s".formatted(
-                            output.getAbsolutePath(), ioe));
-
-                }
-            }
-        }
-        LOGGER.info("Conversion finished");
-
-        // Print anything left in the console buffer.
-        textAreaStream.forceFlush();
-        rootLogger.detachAppender(logBoxAppender);
-        if (fileAppender != null) rootLogger.detachAppender(fileAppender);
-        if (this.currentStage.get() != -1) {
-            // Workflow wasn't aborted
-            status.set(JobState.status.COMPLETED);
-            logBoxAppender.stop();
-            if (fileAppender != null) fileAppender.stop();
-        }
-        this.currentStage.set(-1);
+        LOGGER.info("Tasks finished");
+        shutdown();
     }
 
     public void prepareToActivate() {
@@ -274,6 +241,55 @@ public abstract class BaseWorkflow {
             status.set(JobState.status.QUEUED);
             for (BaseTask task : tasks) task.status = JobState.status.QUEUED;
         }
+    }
+
+    private void cleanupIntermediates() {
+        for (int i = 0; i < tasks.size() - 1; ++i) {
+            BaseTask task = tasks.get(i);
+            File output = task.getOutput();
+            if (!Objects.equals(output, finalOutput)) {
+                if (!output.exists()){
+                    continue;
+                }
+                try {
+                    if (output.isDirectory()) FileUtils.deleteDirectory(output);
+                    else FileUtils.delete(output);
+                } catch (IOException ioe) {
+                    LOGGER.error("Failed to clean up intermediates - %s - Error was: %s".formatted(
+                            output.getAbsolutePath(), ioe));
+                }
+            }
+        }
+    }
+
+    public void shutdown() {
+        // Cleanup intermediates
+        LOGGER.info("Cleaning up intermediates");
+        cleanupIntermediates();
+        LOGGER.info("Conversion finished");
+
+        // Print anything left in the console buffer.
+        textAreaStream.forceFlush();
+        if (logBoxAppender != null) rootLogger.detachAppender(logBoxAppender);
+        if (fileAppender != null) rootLogger.detachAppender(fileAppender);
+
+        // Evaluate whether we completed successfully
+        if (this.currentStage.get() == this.tasks.size()) {
+            // We completed all tasks
+            status.set(JobState.status.COMPLETED);
+            // After a success we won't be running again, shut down the loggers.
+            if (logBoxAppender != null) logBoxAppender.stop();
+            if (fileAppender != null) fileAppender.stop();
+        } else {
+            // Tasks were interrupted or errored out
+            status.set(JobState.status.FAILED);
+            // Mark any unfinished tasks as failed
+            for (BaseTask task: tasks)
+                switch (task.status) {
+                    case RUNNING, QUEUED -> task.status = JobState.status.FAILED;
+                }
+        }
+        this.currentStage.set(-1);
     }
 
     private static FileAppender<ILoggingEvent> getFileAppender(File logFile) {

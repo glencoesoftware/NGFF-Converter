@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert.dialogs;
 
+import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.ObservableList;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.prefs.BackingStoreException;
 
 public class ConfigureJobDialog {
@@ -96,7 +98,7 @@ public class ConfigureJobDialog {
 
         BaseWorkflow jobSample = this.jobs.get(0);
         if (multiMode) mainLabel.setText("Configuring %d jobs".formatted(this.jobs.size()));
-        else mainLabel.setText("Configuring %s".formatted(jobSample.getInput()));
+        else mainLabel.setText("Configuring %s".formatted(jobSample.firstInput.getName()));
 
         this.tasks = jobSample.tasks;
         jobSample.prepareGUI();
@@ -180,6 +182,10 @@ public class ConfigureJobDialog {
         );
         choice.setTitle("Restore defaults");
         choice.setHeaderText("Choose which settings to reset");
+        choice.getDialogPane().getStylesheets().add(
+                Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+        Button thisTaskButton = (Button) choice.getDialogPane().lookupButton(thisTask);
+        thisTaskButton.setDefaultButton(true);
         choice.showAndWait().ifPresent(response -> {
             if (response == thisTask) {
                 for (BaseWorkflow job: jobs) {
@@ -208,6 +214,10 @@ public class ConfigureJobDialog {
         );
         choice.setTitle("Set defaults");
         choice.setHeaderText("Choose which settings to reset");
+        choice.getDialogPane().getStylesheets().add(
+                Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+        Button thisTaskButton = (Button) choice.getDialogPane().lookupButton(thisTask);
+        thisTaskButton.setDefaultButton(true);
         choice.showAndWait().ifPresent(response -> {
             if (response == thisTask) {
                 try {
@@ -235,6 +245,8 @@ public class ConfigureJobDialog {
         choice.setContentText(
                 "Apply these settings to all '%s' jobs in the job list?".formatted(thisJob.getFullName())
         );
+        choice.getDialogPane().getStylesheets().add(
+                Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
         choice.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 List<BaseWorkflow> allJobs = currentTask.parent.controller.jobList.getItems();

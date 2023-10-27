@@ -99,6 +99,7 @@ public class CreateNGFF extends BaseTask{
         super(parent);
         // Load the preferences stored as defaults
         applyDefaults();
+        converter.setOverwrite(Output.overwriteBox.selectedProperty().get());
     }
 
     // Load settings from this instance's converter into the static widgets
@@ -339,7 +340,6 @@ public class CreateNGFF extends BaseTask{
     public void run() {
         // Apply GUI configurations first
         setupIO();
-        // TODO: Handle existing NGFF
 
         System.out.println("Setting progress up");
         NGFFProgressListener listener = new NGFFProgressListener(progressBar, progressLabel, converter);
@@ -348,6 +348,14 @@ public class CreateNGFF extends BaseTask{
 
         LOGGER.info("Running bioformats2raw");
         this.status = JobState.status.RUNNING;
+
+        // Check if we actually need to convert to NGFF
+        if (input.getName().endsWith(".zarr")) {
+            LOGGER.info("Input file appears to already be NGFF, skipping conversion step");
+            status = JobState.status.COMPLETED;
+            listener.stop();
+            return;
+        }
         try {
             int result = converter.call();
             if (result == 0) {

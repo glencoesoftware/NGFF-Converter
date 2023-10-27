@@ -8,6 +8,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FilenameUtils;
@@ -45,6 +46,7 @@ public abstract class BaseTask {
         // We want some basic log messages to always show
         LOGGER.setLevel(Level.INFO);
         progressLabel.setContentDisplay(ContentDisplay.TOP);
+        progressLabel.setTextAlignment(TextAlignment.CENTER);
         progressBar.setMaxWidth(95);
     }
 

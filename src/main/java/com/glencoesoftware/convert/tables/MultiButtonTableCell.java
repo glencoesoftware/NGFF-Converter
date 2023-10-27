@@ -1,6 +1,7 @@
 package com.glencoesoftware.convert.tables;
 
 import com.glencoesoftware.convert.App;
+import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -58,13 +59,17 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         stopRunning.setTooltip(new Tooltip("Stop execution"));
         stopRunning.setOnAction(evt -> {
             // Stop an ongoing run
-            try {
-                App.controller.runCancel();
-            } catch (InterruptedException e) {
-                System.out.println("Failed to stop " + e);
-                throw new RuntimeException(e);
+            BaseWorkflow subject = getTableRow().getItem();
+            if (subject.status.get() == JobState.status.RUNNING) {
+                try {
+                    App.controller.runCancel();
+                } catch (InterruptedException e) {
+                    System.out.println("Failed to stop " + e);
+                    throw new RuntimeException(e);
+                }
+            } else {
+                subject.shutdown();
             }
-            // Todo: stop single task?
         });
 
         configureTasks.setGraphic(configureIcon);
@@ -79,12 +84,14 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         resetJob.setOnAction(evt -> {
             BaseWorkflow subject = getTableRow().getItem();
             subject.reset();
+            App.controller.updateRunButton();
             getTableView().refresh();
         });
 
         showFile.setGraphic(openDirIcon);
         showFile.setTooltip(new Tooltip("Open containing folder"));
         showFile.setOnAction(evt -> {
+            // Todo: Alternate system for Win10
             Desktop desktop = Desktop.getDesktop();
             desktop.browseFileDirectory(getTableRow().getItem().finalOutput);
         });

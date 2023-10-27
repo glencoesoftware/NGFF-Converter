@@ -89,7 +89,6 @@ public class AddFilesDialog {
 
     @FXML
     private void onApply() {
-        // Todo: Keyboard shortcuts
         shouldProceed = true;
         onClose();
     }

@@ -102,7 +102,6 @@ public class NGFFProgressListener implements IProgressListener {
 
     @Override
     public void notifyChunkStart(int plane, int xx, int yy, int zz) {
-        System.out.println("Got chunk start");
         progress += 0.001;
         updateBar();
 //        progressBar.setProgress(progressBar.getProgress() + 0.01);

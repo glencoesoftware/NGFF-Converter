@@ -74,7 +74,7 @@ public class Output extends BaseTask {
     // Static widget settings for display
     private static final ArrayList<Node> standardSettings = new ArrayList<>();
     private static final ArrayList<Node> addFilesSettings = new ArrayList<>();
-    private static final ToggleSwitch overwriteBox = new ToggleSwitch();
+    static final ToggleSwitch overwriteBox = new ToggleSwitch();
     private static final ToggleSwitch directWriteBox = new ToggleSwitch();
     private static final ChoiceBox<outputLocationType> outputChoice = new ChoiceBox<>();
     private static final TextField outputDirectory = new TextField();
@@ -167,10 +167,8 @@ public class Output extends BaseTask {
         setOutputFromWidgets();
         if (parent.tasks != null) {
             // Overwrite applies to all tasks, not just this one
+            // Won't work on init, but this is handled by the task defaults
             parent.setOverwrite(overwriteBox.selectedProperty().get());
-        } else {
-            // Todo: solve this during initial init
-            overwrite = overwriteBox.selectedProperty().get();
         }
 
         directWrite = directWriteBox.selectedProperty().get();
@@ -289,6 +287,7 @@ public class Output extends BaseTask {
         this.status = JobState.status.RUNNING;
         if (directWrite){
             if (this.output.exists()) {
+                LOGGER.error("Output file was written sucessfully");
                 this.status = JobState.status.COMPLETED;
             } else {
                 this.status = JobState.status.FAILED;
@@ -304,6 +303,7 @@ public class Output extends BaseTask {
                 else if (overwrite) FileUtils.moveFile(input, output, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
                 else FileUtils.moveFile(input, output);
             }
+            LOGGER.error("Output file was written sucessfully");
             this.status = JobState.status.COMPLETED;
         } catch (IOException e) {
             this.status = JobState.status.FAILED;
@@ -523,3 +523,5 @@ public class Output extends BaseTask {
         taskPreferences.flush();
     }
 }
+
+// TODO: Multimode settings display

@@ -27,6 +27,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventTarget;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -102,7 +103,7 @@ public class PrimaryController {
     public boolean isRunning = false;
     private Thread runnerThread;
     private WorkflowRunner worker;
-    private ArrayList<MenuItem> menuControlButtons;
+    private List<MenuItem> menuControlButtons;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
     public String version;
@@ -146,9 +147,7 @@ public class PrimaryController {
         CheckBox selectAllBox = new CheckBox();
         selectAllBox.getStyleClass().add("select-all-box");
         selectAllBox.setOnAction(e -> {
-            for (BaseWorkflow job: jobList.getItems()) {
-                job.setSelected(selectAllBox.isSelected());
-            }
+            for (BaseWorkflow job: jobList.getItems()) job.setSelected(selectAllBox.isSelected());
         });
         workflowSelectionColumn.setGraphic(selectAllBox);
         workflowSelectionColumn.setCellFactory(CheckBoxTableCell.forTableColumn(idx -> {
@@ -213,10 +212,9 @@ public class PrimaryController {
         version = getClass().getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
 
-        // Arrays of controls we want to lock during a run. Menu items have different class inheritance to controls.
-        // Todo: update
-        menuControlButtons = new ArrayList<>(Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
-                menuClearFinished, menuClearAll, menuResetPrefs));
+        // Array of menu controls we want to lock during a run.
+        menuControlButtons = Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
+                menuClearFinished, menuClearAll, menuResetPrefs);
         initSecondaryDialogs();
     }
 
@@ -409,12 +407,10 @@ public class PrimaryController {
     private void handleFileDrop(DragEvent event) {
         if (isRunning) {return;}
         Dragboard db = event.getDragboard();
-        boolean success = false;
         if (db.hasFiles()) {
-            success = true;
+            event.setDropCompleted(true);
             addFilesToList(db.getFiles());
-        }
-        event.setDropCompleted(success);
+        } else event.setDropCompleted(false);
         event.consume();
     }
 
@@ -428,9 +424,9 @@ public class PrimaryController {
         Queue<File> fileQueue = new LinkedList<>(files);
         List<BaseWorkflow> jobs = jobList.getItems();
         HashSet<String> existing = new HashSet<>();
-        for (BaseWorkflow job : jobs) {
-            existing.add(job.firstInput.getAbsolutePath());
-        }
+        for (BaseWorkflow job : jobs)
+            if (job.status.get() != JobState.status.COMPLETED) existing.add(job.firstInput.getAbsolutePath());
+        int count = 0;
         while (!fileQueue.isEmpty()) {
             File file = fileQueue.remove();
             String extension = FilenameUtils.getExtension(file.getName());
@@ -462,6 +458,18 @@ public class PrimaryController {
 
             job.calculateIO();
             jobs.add(job);
+            count++;
+        }
+        LOGGER.info("Added %d jobs".formatted(count));
+        if (count == 0) {
+            Alert alert = new Alert(Alert.AlertType.WARNING,
+                    "Selected file(s) were either not supported or already in the job list",
+                    ButtonType.OK);
+            alert.setTitle("Add Jobs");
+            alert.setHeaderText("No jobs added");
+            alert.getDialogPane().getStylesheets().add(
+                    Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+            alert.showAndWait();
         }
     }
 
@@ -490,6 +498,8 @@ public class PrimaryController {
                 );
         confirm.setTitle("Reset all settings");
         confirm.setHeaderText("Clear all saved settings?");
+        confirm.getDialogPane().getStylesheets().add(
+                Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.YES) {
                 try {
@@ -562,6 +572,7 @@ public class PrimaryController {
         isRunning = false;
         updateRunButton();
         menuControlButtons.forEach((control -> control.setDisable(false)));
+        addJobButton.setDisable(false);
     }
 
     @FXML
@@ -574,13 +585,9 @@ public class PrimaryController {
         runnerThread.interrupt();
         runnerThread.join();
         jobList.getItems().forEach((job) -> {
+            // If we're stopping a running job we need to shut it down
             if (job.status.get() == JobState.status.RUNNING) {
-                job.status.set(JobState.status.FAILED);
-                for (BaseTask task: job.tasks) {
-                    switch (task.status) {
-                        case RUNNING, QUEUED -> task.status = JobState.status.FAILED;
-                    }
-                }
+                job.shutdown();
             }
             else if (job.status.get() == JobState.status.QUEUED) {
                 job.status.set(JobState.status.READY);
@@ -626,6 +633,7 @@ public class PrimaryController {
             }
 
         menuControlButtons.forEach((control -> control.setDisable(true)));
+        addJobButton.setDisable(true);
         isRunning = true;
         updateRunButton();
         LOGGER.info("Beginning file conversion...\n");
@@ -656,6 +664,6 @@ public class PrimaryController {
 
         return alert.showAndWait();
     }
-
+// Todo: Skin remaining dialogs
 
 }
