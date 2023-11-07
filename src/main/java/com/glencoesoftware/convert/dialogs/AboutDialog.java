@@ -1,0 +1,27 @@
+package com.glencoesoftware.convert.dialogs;
+
+import com.glencoesoftware.bioformats2raw.Converter;
+import com.glencoesoftware.convert.App;
+import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import loci.formats.ImageReader;
+
+public class AboutDialog {
+    @FXML
+    private Label guiVersion;
+    @FXML
+    private Label b2rVersion;
+    @FXML
+    private Label r2oVersion;
+    @FXML
+    private Label bfVersion;
+    @FXML
+    public void initialize() {
+        guiVersion.setText(guiVersion.getText() + App.controller.version);
+        bfVersion.setText(bfVersion.getText() + ImageReader.class.getPackage().getImplementationVersion());
+        b2rVersion.setText(b2rVersion.getText() + Converter.class.getPackage().getImplementationVersion());
+        r2oVersion.setText(r2oVersion.getText() +
+                PyramidFromDirectoryWriter.class.getPackage().getImplementationVersion());
+    }
+}

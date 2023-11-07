@@ -530,19 +530,14 @@ public class PrimaryController {
     @FXML
     private void displayAbout() throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader();
-        String bfVer = ImageReader.class.getPackage().getImplementationVersion();
-        String b2rVer = Converter.class.getPackage().getImplementationVersion();
-        String r2oVer = PyramidFromDirectoryWriter.class.getPackage().getImplementationVersion();
-        fxmlLoader.getNamespace().put("guiVer", version);
-        fxmlLoader.getNamespace().put("b2rVer", b2rVer);
-        fxmlLoader.getNamespace().put("bfVer", bfVer);
-        fxmlLoader.getNamespace().put("r2oVer", r2oVer);
         fxmlLoader.setLocation(App.class.getResource("AboutDialog.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         Stage stage = new Stage();
+        scene.setFill(Color.TRANSPARENT);
         stage.setScene(scene);
         stage.setAlwaysOnTop(true);
         stage.initModality(Modality.WINDOW_MODAL);
+        stage.initStyle(StageStyle.UNIFIED);
         stage.initOwner(App.getScene().getWindow());
         stage.setResizable(false);
         stage.show();
