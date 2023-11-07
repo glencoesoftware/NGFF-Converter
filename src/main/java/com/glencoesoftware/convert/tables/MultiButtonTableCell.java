@@ -14,6 +14,7 @@ import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.Arrays;
 
 
@@ -91,9 +92,17 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         showFile.setGraphic(openDirIcon);
         showFile.setTooltip(new Tooltip("Open containing folder"));
         showFile.setOnAction(evt -> {
-            // Todo: Alternate system for Win10
             Desktop desktop = Desktop.getDesktop();
-            desktop.browseFileDirectory(getTableRow().getItem().finalOutput);
+            try {
+                desktop.browseFileDirectory(getTableRow().getItem().finalOutput);
+            } catch (UnsupportedOperationException e) {
+                // Some Windows versions don't support browse for some reason
+                try {
+                    desktop.open(getTableRow().getItem().finalOutput.getParentFile());
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
         });
 
 
