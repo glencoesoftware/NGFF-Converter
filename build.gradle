@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.10'
@@ -56,7 +58,7 @@ dependencies {
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
 }
 
-configurations.all {
+configurations.configureEach {
     exclude group: 'edu.ucar', 'module': 'cdm'
 }
 
@@ -66,7 +68,7 @@ jar {
             "Created-By": "Gradle ${gradle.gradleVersion}",
             "Build-Jdk": "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
             "Built-By": System.properties['user.name'],
-            "Built-On": new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+            "Built-On": new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
             "Implementation-Build": "git rev-parse --verify HEAD".execute().getText().trim(),
             "Implementation-Title": 'NGFF-Converter',
             "Implementation-Version": archiveVersion,
@@ -79,7 +81,7 @@ jar {
 }
 
 runtime {
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    addOptions('--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages')
 
     def currentOs = org.gradle.internal.os.OperatingSystem.current()
 

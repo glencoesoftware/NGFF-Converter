@@ -338,7 +338,7 @@ public class ConfigureJobDialog {
         File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
         if (selectedFile == null) return;
         try {
-            currentTask.parent.loadSettings(selectedFile, currentTask.parent);
+            currentTask.parent.loadSettings(selectedFile);
             currentTask.parent.controller.updateStatus("Imported settings successfully");
         } catch (IOException e) {
             currentTask.parent.controller.updateStatus("Failed to import settings");

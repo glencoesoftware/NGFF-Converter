@@ -9,7 +9,6 @@ package com.glencoesoftware.convert.dialogs;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.glencoesoftware.convert.PrimaryController;
 import com.glencoesoftware.convert.TextAreaAppender;
 import com.glencoesoftware.convert.TextAreaStream;
 import javafx.fxml.FXML;

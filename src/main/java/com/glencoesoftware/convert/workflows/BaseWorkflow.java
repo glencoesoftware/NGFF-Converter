@@ -333,7 +333,7 @@ public abstract class BaseWorkflow {
         generator.close();
     }
 
-    public void loadSettings(File targetFile, BaseWorkflow targetWorkflow) throws IOException {
+    public void loadSettings(File targetFile) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode node = mapper.readTree(targetFile);
         for (BaseTask task: tasks) task.importSettings(node);

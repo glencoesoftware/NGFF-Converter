@@ -3,16 +3,15 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import org.kordamp.ikonli.javafx.*?>
 
-<BorderPane fx:id="addFiles" prefHeight="550.0" prefWidth="440.0" stylesheets="@AddFiles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AddFilesDialog">
+<BorderPane styleClass="addFiles" prefHeight="550.0" prefWidth="440.0" stylesheets="@AddFiles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AddFilesDialog">
    <top>
       <VBox BorderPane.alignment="CENTER">
          <HBox alignment="CENTER">
             <HBox.margin>
                <Insets />
             </HBox.margin>
-            <Label fx:id="mainLabel" maxWidth="1.7976931348623157E308" text="Choose Output Options" HBox.hgrow="ALWAYS" />
+            <Label styleClass="mainLabel" maxWidth="1.7976931348623157E308" text="Choose Output Options" HBox.hgrow="ALWAYS" />
          </HBox>
          <BorderPane.margin>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

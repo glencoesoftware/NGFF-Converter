@@ -69,13 +69,9 @@
 
 }
 
-#mainLabel {
+.mainLabel {
     -fx-font-size: 20px;
     -fx-font-weight: 700;
-}
-
-#taskLabel {
-    -fx-font-size: 18px;
 }
 
 .close-button {
@@ -118,6 +114,6 @@
     -fx-fill: primary;
 }
 
-#addFiles {
+.addFiles {
     -fx-padding: 10px;
 }

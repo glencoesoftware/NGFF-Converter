@@ -819,7 +819,7 @@ public class CreateNGFF extends BaseTask{
         taskPreferences.putBoolean(prefKeys.REUSE_RES.name(), converter.getReuseExistingResolutions());
         taskPreferences.putInt(prefKeys.CHUNK_DEPTH.name(), converter.getChunkDepth());
         taskPreferences.put(prefKeys.SCALE_FORMAT_STRING.name(), converter.getScaleFormat());
-        // For now we won't save task-specific paths as defaults?
+        // We don't save task-specific paths as defaults
         // taskPreferences.put(prefKeys.SCALE_FORMAT_CSV.name(), converter.getAdditionalScaleFormatCSV().toString());
         if (converter.getFillValue() != null) {
             taskPreferences.putInt(prefKeys.FILL_VALUE.name(), converter.getFillValue());
@@ -997,14 +997,14 @@ public class CreateNGFF extends BaseTask{
             generator.writeFieldName(prefKeys.BLOSC_CNAME.name());
             generator.writeString((String) compressionProps.get("cname"));
             generator.writeFieldName(prefKeys.BLOSC_CLEVEL.name());
-            generator.writeString(String.valueOf((Integer) compressionProps.get("clevel")));
+            generator.writeString(String.valueOf(compressionProps.get("clevel")));
             generator.writeFieldName(prefKeys.BLOSC_BLOCKSIZE.name());
-            generator.writeString(String.valueOf((Integer) compressionProps.get("blocksize")));
+            generator.writeString(String.valueOf(compressionProps.get("blocksize")));
             generator.writeFieldName(prefKeys.BLOSC_SHUFFLE.name());
-            generator.writeString(String.valueOf((Integer) compressionProps.get("shuffle")));
+            generator.writeString(String.valueOf(compressionProps.get("shuffle")));
         } else if (converter.getCompression() == ZarrCompression.zlib) {
             generator.writeFieldName(prefKeys.ZLIB_LEVEL.name());
-            generator.writeString(String.valueOf((Integer) compressionProps.get("level")));
+            generator.writeString(String.valueOf(compressionProps.get("level")));
         }
 
         generator.writeFieldName(prefKeys.MAX_CACHED_TILES.name());

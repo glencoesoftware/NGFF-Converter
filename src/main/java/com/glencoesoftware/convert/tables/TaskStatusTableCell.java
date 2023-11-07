@@ -4,12 +4,9 @@ import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Paint;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
     private final Label mainLabel = new Label();
@@ -32,30 +29,25 @@ public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
         container.getChildren().clear();
         BaseTask current = getTableView().getItems().get(getIndex());
         labelTooltip.setText("Task OK");
+        mainLabel.setText(current.getStatusString());
         switch (current.status) {
             case COMPLETED -> {
-                mainLabel.setText("Completed");
                 mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 labelTooltip.setText("Task successful");
                 container.getChildren().add(mainLabel);
             }
-            case RUNNING -> {
-                container.getChildren().addAll(current.getProgressWidget());
-            }
+            case RUNNING -> container.getChildren().addAll(current.getProgressWidget());
             case WARNING -> {
-                mainLabel.setText("Warning");
                 mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 labelTooltip.setText(current.warningMessage);
                 container.getChildren().add(mainLabel);
             }
             case FAILED -> {
-                mainLabel.setText("Failed");
                 labelTooltip.setText("Task Failed");
                 mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 container.getChildren().add(mainLabel);
             }
             default -> {
-                mainLabel.setText("Ready");
                 mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 container.getChildren().add(mainLabel);
             }

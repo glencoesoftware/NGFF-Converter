@@ -4,7 +4,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-<?import org.kordamp.ikonli.javafx.*?>
 
 <VBox alignment="CENTER" prefHeight="500.0" prefWidth="600.0" styleClass="root-container" stylesheets="@LogDisplay.css"
       xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1"

@@ -5,7 +5,6 @@ import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 
 import javafx.scene.control.TableCell;
-import javafx.scene.paint.Paint;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 
