@@ -1,6 +1,8 @@
 package com.glencoesoftware.convert.tasks;
 
 import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -17,6 +19,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.prefs.BackingStoreException;
 
@@ -119,6 +122,11 @@ public abstract class BaseTask {
     // Clear any loaded settings and apply the defaults. Primarily needed to call reset() methods on executors.
     abstract public void resetToDefaults();
 
+    // Clear any loaded settings and apply the defaults. Primarily needed to call reset() methods on executors.
+    abstract public void exportSettings(JsonGenerator generator) throws IOException;
+
+    // Clear any loaded settings and apply the defaults. Primarily needed to call reset() methods on executors.
+    abstract public void importSettings(JsonNode mainNode);
 
     public static VBox getSettingContainer(Node node, String headerText, String tooltipText) {
         return new VBox(5, getSettingHeader(headerText, tooltipText), node);

@@ -26,7 +26,6 @@ public class ButtonTableCell extends TableCell<BaseTask, Void> {
 
         configureButton.setOnAction(ext -> {
             BaseTask task = getTableView().getItems().get(getIndex());
-            System.out.println("Configuring task " + task.toString());
             task.parent.controller.displaySettingsDialog(FXCollections.observableArrayList(task.parent), getIndex());
         });
 

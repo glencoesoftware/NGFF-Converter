@@ -29,7 +29,8 @@ public class ChoiceTableCell extends TableCell<BaseWorkflow, String> {
                 return;
             }
             BaseWorkflow newWorkflow;
-            System.out.println("Switching to " + options.getValue());
+            thisWorkflow.controller.updateStatus("Switching %s workflow to %s".formatted(
+                    thisWorkflow.firstInput.getName(), options.getValue()));
 
             try {
                 // Lookup the job name in the workflow list

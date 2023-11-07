@@ -1,5 +1,7 @@
 package com.glencoesoftware.convert.tasks;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -210,7 +212,6 @@ public class Output extends BaseTask {
             try {
                 sysTemp = Files.createTempDirectory("ngff-converter").toFile();
             } catch (IOException e) {
-                System.out.println("Failed to get temp dir");
                 throw new RuntimeException(e);
         }}
         return sysTemp;
@@ -228,7 +229,7 @@ public class Output extends BaseTask {
                 return trueWorkingDirectory;
             }
             default -> {
-                System.out.println("Oops" + workingDirectoryLocation);
+                LOGGER.error("Invalid working dir: " + workingDirectoryLocation);
                 return null;
             }
         }
@@ -260,7 +261,6 @@ public class Output extends BaseTask {
     }
 
     public void updateStatus() {
-        System.out.println("Doing status update");
         if (this.status == JobState.status.COMPLETED) {
             return;
         }
@@ -366,7 +366,7 @@ public class Output extends BaseTask {
                 "Write output directly to destination folder",
                 """
                         If enabled, the final output file will be written directly to the destination folder.
-                        If disabled, data is first written to the working directory, and is only moved to the 
+                        If disabled, data is first written to the working directory, and is only moved to the
                         destination folder if all tasks complete successfully.
                         """
         );
@@ -461,7 +461,7 @@ public class Output extends BaseTask {
 
     public void cloneValues(BaseTask sourceInstance) {
         if (!(sourceInstance instanceof Output source)) {
-            System.out.println("Incorrect input type");
+            LOGGER.error("Incorrect input type for value cloning");
             return;
         }
         overwrite = source.overwrite;
@@ -521,5 +521,69 @@ public class Output extends BaseTask {
             taskPreferences.put(prefKeys.WORKING_DIR.name(), workingDirectoryField.getText());
 
         taskPreferences.flush();
+    }
+
+    public void exportSettings(JsonGenerator generator) throws IOException {
+        generator.writeFieldName(getName());
+        generator.writeStartObject();
+        generator.writeFieldName(prefKeys.OUTPUT_CHOICE.name());
+        generator.writeString(outputLocation.name());
+        if (outputLocation == outputLocationType.CUSTOM_FOLDER) {
+            generator.writeFieldName(prefKeys.OUTPUT_DIR.name());
+            generator.writeString(outputFolder.getAbsolutePath());
+        }
+        generator.writeFieldName(prefKeys.OVERWRITE.name());
+        generator.writeBoolean(overwrite);
+        generator.writeFieldName(prefKeys.DIRECT_WRITE.name());
+        generator.writeBoolean(directWrite);
+        generator.writeFieldName(prefKeys.LOG_CHOICE.name());
+        generator.writeString(logToFile.name());
+        if (logToFile == logFileType.CUSTOM_FOLDER) {
+            generator.writeFieldName(prefKeys.LOG_LOCATION.name());
+            generator.writeString(logFileLocation.getAbsolutePath());
+        }
+
+        generator.writeFieldName(prefKeys.WORKING_CHOICE.name());
+        generator.writeString(workingDirectoryLocation.name());
+        if (workingDirectoryLocation == workingDirectoryType.CUSTOM_FOLDER) {
+            generator.writeFieldName(prefKeys.WORKING_DIR.name());
+            generator.writeString(trueWorkingDirectory.getAbsolutePath());
+        }
+        generator.writeEndObject();
+
+    }
+
+    public void importSettings(JsonNode mainNode) {
+        JsonNode settings = mainNode.get(getName());
+        if (settings == null) {
+            LOGGER.warn("No settings node for Task %s".formatted(getName()));
+            return;
+        }
+        JsonNode subject;
+        subject = settings.get(prefKeys.OUTPUT_CHOICE.name());
+        if (subject != null) outputChoice.setValue(outputLocationType.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.OUTPUT_DIR.name());
+        if (subject != null) outputDirectory.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.OVERWRITE.name());
+        if (subject != null) overwriteBox.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.DIRECT_WRITE.name());
+        if (subject != null) directWriteBox.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.LOG_CHOICE.name());
+        if (subject != null) logChoice.setValue(logFileType.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.LOG_LOCATION.name());
+        if (subject != null) logDirectory.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.WORKING_CHOICE.name());
+        if (subject != null) workingDirectoryChoice.setValue(workingDirectoryType.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.WORKING_DIR.name());
+        if (subject != null) workingDirectoryField.setText(subject.textValue());
+
+        LOGGER.info("Loaded settings for Task %s".formatted(getName()));
     }
 }

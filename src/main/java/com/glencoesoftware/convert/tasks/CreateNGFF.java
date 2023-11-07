@@ -1,5 +1,7 @@
 package com.glencoesoftware.convert.tasks;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
@@ -44,7 +46,7 @@ public class CreateNGFF extends BaseTask{
 
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
-        DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, SCALE_FORMAT_STRING,
+        DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, SCALE_FORMAT_STRING, SCALE_FORMAT_CSV,
         FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE, ZLIB_LEVEL,
         MAX_CACHED_TILES, MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
         READER_OPTS, OUTPUT_OPTS, EXTRA_READERS
@@ -211,7 +213,6 @@ public class CreateNGFF extends BaseTask{
 
     // Save settings from widgets into the converter's values
     public void applySettings() {
-        System.out.println("Applying settings for " + name);
         converter.setLogLevel(logLevel.getValue());
         converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
         converter.setCompression(compression.getValue());
@@ -268,7 +269,7 @@ public class CreateNGFF extends BaseTask{
     // Duplicate settings from another supplied instance (except input/output)
     public void cloneValues(BaseTask sourceInstance) {
         if (!(sourceInstance instanceof CreateNGFF source)) {
-            System.out.println("Incorrect input type");
+            LOGGER.error("Incorrect input type for value cloning");
             return;
         }
         converter.setLogLevel(source.converter.getLogLevel());
@@ -341,10 +342,8 @@ public class CreateNGFF extends BaseTask{
         // Apply GUI configurations first
         setupIO();
 
-        System.out.println("Setting progress up");
         NGFFProgressListener listener = new NGFFProgressListener(progressBar, progressLabel, converter);
         converter.setProgressListener(listener);
-        System.out.println("set progressbar listener");
 
         LOGGER.info("Running bioformats2raw");
         this.status = JobState.status.RUNNING;
@@ -951,6 +950,211 @@ public class CreateNGFF extends BaseTask{
     public void resetToDefaults() {
         resetConverter();
         applyDefaults();
+    }
+
+    public void exportSettings(JsonGenerator generator) throws IOException {
+        generator.writeFieldName(getName());
+        generator.writeStartObject();
+        generator.writeFieldName(prefKeys.LOG_LEVEL.name());
+        generator.writeString(converter.getLogLevel());
+        generator.writeFieldName(prefKeys.MAX_WORKERS.name());
+        generator.writeString(String.valueOf(converter.getMaxWorkers()));
+        generator.writeFieldName(prefKeys.COMPRESSION.name());
+        generator.writeString(converter.getCompression().name());
+        generator.writeFieldName(prefKeys.TILE_HEIGHT.name());
+        generator.writeString(String.valueOf(converter.getTileHeight()));
+        generator.writeFieldName(prefKeys.TILE_WIDTH.name());
+        generator.writeString(String.valueOf(converter.getTileWidth()));
+        if (converter.getResolutions() != null) {
+            generator.writeFieldName(prefKeys.RESOLUTIONS.name());
+            generator.writeString(String.valueOf(converter.getResolutions()));
+        }
+        generator.writeFieldName(prefKeys.SERIES.name());
+        generator.writeString(converter.getSeriesList()
+                .stream().map(String::valueOf).collect(joining(",")));
+        generator.writeFieldName(prefKeys.DIMENSION_ORDER.name());
+        generator.writeString(converter.getDimensionOrder().name());
+        generator.writeFieldName(prefKeys.DOWNSAMPLING.name());
+        generator.writeString(converter.getDownsampling().name());
+        generator.writeFieldName(prefKeys.MIN_IMAGE_SIZE.name());
+        generator.writeString(String.valueOf(converter.getMinImageSize()));
+        generator.writeFieldName(prefKeys.REUSE_RES.name());
+        generator.writeBoolean(converter.getReuseExistingResolutions());
+        generator.writeFieldName(prefKeys.CHUNK_DEPTH.name());
+        generator.writeString(String.valueOf(converter.getChunkDepth()));
+        generator.writeFieldName(prefKeys.SCALE_FORMAT_STRING.name());
+        generator.writeString(converter.getScaleFormat());
+        if (converter.getAdditionalScaleFormatCSV() != null) {
+            generator.writeFieldName(prefKeys.SCALE_FORMAT_CSV.name());
+            generator.writeString(converter.getAdditionalScaleFormatCSV().toString());
+        }
+        if (converter.getFillValue() != null) {
+            generator.writeFieldName(prefKeys.FILL_VALUE.name());
+            generator.writeString(String.valueOf(converter.getFillValue()));
+        }
+        Map<String, Object> compressionProps = converter.getCompressionProperties();
+        if (converter.getCompression() == ZarrCompression.blosc) {
+            generator.writeFieldName(prefKeys.BLOSC_CNAME.name());
+            generator.writeString((String) compressionProps.get("cname"));
+            generator.writeFieldName(prefKeys.BLOSC_CLEVEL.name());
+            generator.writeString(String.valueOf((Integer) compressionProps.get("clevel")));
+            generator.writeFieldName(prefKeys.BLOSC_BLOCKSIZE.name());
+            generator.writeString(String.valueOf((Integer) compressionProps.get("blocksize")));
+            generator.writeFieldName(prefKeys.BLOSC_SHUFFLE.name());
+            generator.writeString(String.valueOf((Integer) compressionProps.get("shuffle")));
+        } else if (converter.getCompression() == ZarrCompression.zlib) {
+            generator.writeFieldName(prefKeys.ZLIB_LEVEL.name());
+            generator.writeString(String.valueOf((Integer) compressionProps.get("level")));
+        }
+
+        generator.writeFieldName(prefKeys.MAX_CACHED_TILES.name());
+        generator.writeString(String.valueOf(converter.getMaxCachedTiles()));
+
+        generator.writeFieldName(prefKeys.MIN_MAX.name());
+        generator.writeBoolean(converter.getCalculateOMEROMetadata());
+        generator.writeFieldName(prefKeys.HCS.name());
+        generator.writeBoolean(converter.getNoHCS());
+        generator.writeFieldName(prefKeys.NESTED.name());
+        generator.writeBoolean(converter.getNested());
+        generator.writeFieldName(prefKeys.OME_META.name());
+        generator.writeBoolean(converter.getNoOMEMeta());
+        generator.writeFieldName(prefKeys.NO_ROOT.name());
+        generator.writeBoolean(converter.getNoRootGroup());
+        if (converter.getPyramidName() != null) {
+            generator.writeFieldName(prefKeys.PYRAMID_NAME.name());
+            generator.writeString(converter.getPyramidName());
+        }
+        generator.writeFieldName(prefKeys.KEEP_MEMOS.name());
+        generator.writeBoolean(converter.getKeepMemoFiles());
+        if (converter.getMemoDirectory() != null) {
+            generator.writeFieldName(prefKeys.MEMO_DIR.name());
+            generator.writeString(converter.getMemoDirectory().getAbsolutePath());
+        }
+        generator.writeFieldName(prefKeys.READER_OPTS.name());
+        generator.writeString(String.join(",", converter.getReaderOptions()));
+        Map<String, String> outputOpts = converter.getOutputOptions();
+        if (outputOpts != null) {
+            generator.writeFieldName(prefKeys.OUTPUT_OPTS.name());
+            generator.writeString(outputOpts.entrySet()
+                    .stream()
+                    .map(Object::toString)
+                    .collect(joining(",")));
+        }
+        generator.writeFieldName(prefKeys.EXTRA_READERS.name());
+        generator.writeString(desiredReaders.stream().map(Class::getName).collect(joining(",")));
+        generator.writeEndObject();
+    }
+
+    public void importSettings(JsonNode mainNode) {
+        JsonNode settings = mainNode.get(getName());
+        if (settings == null) {
+            LOGGER.warn("No settings node for Task %s".formatted(getName()));
+            return;
+        }
+        JsonNode subject;
+        subject = settings.get(prefKeys.LOG_LEVEL.name());
+        if (subject != null) logLevel.setValue(subject.textValue());
+
+        subject = settings.get(prefKeys.MAX_WORKERS.name());
+        if (subject != null) maxWorkers.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.COMPRESSION.name());
+        if (subject != null) compression.setValue(ZarrCompression.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.TILE_WIDTH.name());
+        if (subject != null) tileWidth.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.TILE_HEIGHT.name());
+        if (subject != null) tileHeight.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.RESOLUTIONS.name());
+        if (subject != null) resolutions.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.SERIES.name());
+        if (subject != null) series.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.DIMENSION_ORDER.name());
+        if (subject != null) dimensionOrder.setValue(DimensionOrder.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.DOWNSAMPLING.name());
+        if (subject != null) downsampling.setValue(Downsampling.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.MIN_IMAGE_SIZE.name());
+        if (subject != null) minImageSize.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.REUSE_RES.name());
+        if (subject != null) useExistingResolutions.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.CHUNK_DEPTH.name());
+        if (subject != null) chunkDepth.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.SCALE_FORMAT_STRING.name());
+        if (subject != null) scaleFormatString.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.SCALE_FORMAT_CSV.name());
+        if (subject != null) scaleFormatCSV.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.FILL_VALUE.name());
+        if (subject != null) fillValue.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.BLOSC_CNAME.name());
+        if (subject != null) compressorBloscCname.setValue(subject.textValue());
+
+        subject = settings.get(prefKeys.BLOSC_CLEVEL.name());
+        if (subject != null) compressorBloscClevel.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.BLOSC_BLOCKSIZE.name());
+        if (subject != null) compressorBloscBlockSize.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.BLOSC_SHUFFLE.name());
+        if (subject != null) compressorBloscShuffle.setValue(subject.textValue());
+
+        subject = settings.get(prefKeys.ZLIB_LEVEL.name());
+        if (subject != null) compressorZlibLevel.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.MAX_CACHED_TILES.name());
+        if (subject != null) maxCachedTiles.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.MIN_MAX.name());
+        if (subject != null) disableMinMax.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.NESTED.name());
+        if (subject != null) nested.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.OME_META.name());
+        if (subject != null) noOMEMeta.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.NO_ROOT.name());
+        if (subject != null) noRoot.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.PYRAMID_NAME.name());
+        if (subject != null) pyramidName.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.KEEP_MEMOS.name());
+        if (subject != null) keepMemos.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.MEMO_DIR.name());
+        if (subject != null) memoDirectory.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.READER_OPTS.name());
+        if (subject != null) readerOptions.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.OUTPUT_OPTS.name());
+        if (subject != null) outputOptions.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.EXTRA_READERS.name());
+        if (subject != null) {
+            desiredReaders.clear();
+            desiredReaders.addAll(Arrays.stream(subject.textValue().split(",")).map((String s) -> {
+                try {
+                    return Class.forName(s);
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error("Did not find class for extra reader " + s);
+                    return null;
+                }
+            }).toList());
+        }
+        LOGGER.info("Loaded settings for Task %s".formatted(getName()));
     }
 
     public void resetConverter() {

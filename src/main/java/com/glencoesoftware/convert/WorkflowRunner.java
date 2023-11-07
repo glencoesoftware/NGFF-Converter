@@ -30,13 +30,16 @@ class WorkflowRunner extends Task<Integer> {
     @Override
     protected Integer call() {
         int count = 0;
+        int totalJobs = 0;
         // Set everything to queued status
         for (BaseWorkflow job : jobList.getItems()) {
             job.prepareToActivate();
-            if (job.status.get() == JobState.status.READY | job.status.get() == JobState.status.WARNING) {
-                job.status.set(JobState.status.QUEUED);
+            if (job.status.get() == JobState.status.QUEUED) {
+                totalJobs++;
             }
         }
+        // Give the progress bar a very small value to trigger display.
+        parent.updateProgress(0.01);
         // Start executing jobs
         for (BaseWorkflow job : jobList.getItems()) {
             if (interrupted || (job.status.get() == JobState.status.COMPLETED) ||
@@ -50,12 +53,17 @@ class WorkflowRunner extends Task<Integer> {
                 jobList.refresh();
             });
 
-            LOGGER.info("Running new model pipeline");
+            LOGGER.info("Running " + job.firstInput.getName());
+            parent.updateStatus("Working on %s job %d of %d".formatted(job.firstInput.getName(), count + 1, totalJobs));
             job.execute();
 
             switch (job.status.get()) {
-                case COMPLETED -> LOGGER.info("Successfully created: " + job.finalOutput.getName() + "\n");
+                case COMPLETED -> {
+                    LOGGER.info("Successfully created: " + job.finalOutput.getName() + "\n");
+                    parent.updateStatus(job.firstInput.getName() + " completed");
+                }
                 case FAILED -> {
+                    parent.updateStatus(job.firstInput.getName() + " failed");
                     if (interrupted) {
                         LOGGER.info("User aborted job: " + job.finalOutput.getName() + "\n");
                     } else {
@@ -65,6 +73,7 @@ class WorkflowRunner extends Task<Integer> {
                 default -> LOGGER.info("Job status is invalid????: " + job.status);
             }
             count++;
+            parent.updateProgress((double) count / totalJobs);
 
             Platform.runLater(jobList::refresh);
         }

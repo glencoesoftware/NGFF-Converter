@@ -27,7 +27,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.event.EventTarget;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -44,6 +43,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.*;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
+import org.controlsfx.control.StatusBar;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -117,6 +117,9 @@ public class PrimaryController {
 
     private Stage addFilesStage;
     private AddFilesDialog addFilesController;
+
+    @FXML
+    private StatusBar statusBar;
 
     public ChangeListener<Number> taskWatcher = new ChangeListener<>() {
         @Override
@@ -216,6 +219,8 @@ public class PrimaryController {
         menuControlButtons = Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuResetPrefs);
         initSecondaryDialogs();
+        updateStatus("Startup complete");
+
     }
 
     private void dividerResized() {
@@ -249,7 +254,7 @@ public class PrimaryController {
         addFilesStage = new Stage();
         addFilesStage.setScene(fileScene);
         addFilesStage.initModality(Modality.APPLICATION_MODAL);
-        addFilesStage.initStyle(StageStyle.TRANSPARENT);
+        addFilesStage.initStyle(StageStyle.UNIFIED);
         addFilesStage.setResizable(false);
         addFilesController = fileLoader.getController();
 
@@ -261,8 +266,7 @@ public class PrimaryController {
         jobSettingsStage = new Stage();
         jobSettingsStage.setScene(jobScene);
         jobSettingsStage.initModality(Modality.APPLICATION_MODAL);
-        jobSettingsStage.initStyle(StageStyle.TRANSPARENT);
-        jobSettingsStage.setResizable(false);
+        jobSettingsStage.initStyle(StageStyle.UNIFIED);
         jobSettingsController = settingsLoader.getController();
 
     }
@@ -461,6 +465,7 @@ public class PrimaryController {
             count++;
         }
         LOGGER.info("Added %d jobs".formatted(count));
+        updateStatus("Added %d jobs".formatted(count));
         if (count == 0) {
             Alert alert = new Alert(Alert.AlertType.WARNING,
                     "Selected file(s) were either not supported or already in the job list",
@@ -488,6 +493,7 @@ public class PrimaryController {
                 .toList();
         jobList.getItems().clear();
         jobList.getItems().addAll(new_list);
+        updateStatus("Cleared completed job(s)");
     }
 
 
@@ -511,8 +517,11 @@ public class PrimaryController {
                     CreateNGFF.taskPreferences.flush();
                     CreateTiff.taskPreferences.flush();
                     Output.taskPreferences.flush();
+                    updateStatus("Preferences were reset");
+
                 } catch (BackingStoreException e) {
                     LOGGER.error("Unable to save preferences" + e);
+                    updateStatus("Failed to reset preferences");
                 }
             }});
     }
@@ -573,6 +582,8 @@ public class PrimaryController {
         updateRunButton();
         menuControlButtons.forEach((control -> control.setDisable(false)));
         addJobButton.setDisable(false);
+        updateStatus("Run finished");
+        updateProgress(0.0);
     }
 
     @FXML
@@ -582,6 +593,7 @@ public class PrimaryController {
 
     public void runCancel() throws InterruptedException {
         worker.interrupted = true;
+        updateStatus("Stopping run");
         runnerThread.interrupt();
         runnerThread.join();
         jobList.getItems().forEach((job) -> {
@@ -610,6 +622,7 @@ public class PrimaryController {
         }
 
         // Validate there is enough space to perform conversions.
+        updateStatus("Validating drive space");
         HashMap<Path, Double> spaceMap = new HashMap<>();
         jobList.getItems().stream().filter(job ->
                 job.status.get() != JobState.status.COMPLETED).forEach(job -> {
@@ -628,6 +641,7 @@ public class PrimaryController {
                     LOGGER.info("User opted to continue despite disk space warning");
                 } else {
                     LOGGER.error("User aborted conversions in response to disk space warning");
+                    updateStatus("Run cancelled");
                     return;
                 }}
             }
@@ -637,6 +651,7 @@ public class PrimaryController {
         isRunning = true;
         updateRunButton();
         LOGGER.info("Beginning file conversion...\n");
+        updateStatus("Beginning file conversion");
 
         worker = new WorkflowRunner(this);
         worker.interrupted = false;
@@ -664,6 +679,13 @@ public class PrimaryController {
 
         return alert.showAndWait();
     }
-// Todo: Skin remaining dialogs
+
+    public void updateStatus(String newStatus) {
+        Platform.runLater(() -> statusBar.setText(newStatus));
+    }
+
+    public void updateProgress(double newProgress) {
+        Platform.runLater(() -> statusBar.setProgress(newProgress));
+    }
 
 }

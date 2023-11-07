@@ -29,7 +29,6 @@ public class JobState {
         iconColors.put(status.COMPLETED, "#057204");
         iconColors.put(status.FAILED, "#E02D3C");
         iconColors.put(status.WARNING, "ORANGE");
-
     }
 
     public static FontIcon getStatusIcon(status statusCode, int size) {

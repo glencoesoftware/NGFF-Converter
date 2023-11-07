@@ -119,8 +119,5 @@
 }
 
 #addFiles {
-    -fx-background-radius: 10px;
-    -fx-padding: 20px;
-    -fx-background-insets: 12px;
-    -fx-effect: dropshadow(three-pass-box, derive(cadetblue, -20%), 10, 0, 4, 4);
+    -fx-padding: 10px;
 }

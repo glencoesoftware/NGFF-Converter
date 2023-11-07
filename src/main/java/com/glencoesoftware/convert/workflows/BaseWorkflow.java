@@ -5,6 +5,9 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.glencoesoftware.convert.*;
 import com.glencoesoftware.convert.dialogs.LogDisplayDialog;
 import com.glencoesoftware.convert.tasks.BaseTask;
@@ -46,11 +49,11 @@ public abstract class BaseWorkflow {
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
 
     public void setSelected(boolean val) {
-        this.selected.set(val);
+        selected.set(val);
     }
 
     public BooleanProperty getSelected() {
-        return this.selected;
+        return selected;
     }
 
     abstract public String getShortName();
@@ -59,14 +62,14 @@ public abstract class BaseWorkflow {
 
 
     public String getStatusString() {
-        return StringUtils.capitalize(this.status.get().toString().toLowerCase());
+        return StringUtils.capitalize(status.get().toString().toLowerCase());
     }
 
     private final ch.qos.logback.classic.Logger rootLogger =
             (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
     private final ch.qos.logback.classic.Logger LOGGER =
-            (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(this.getClass());
+            (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(getClass());
 
     {
         // We want some basic log messages to always show
@@ -91,12 +94,12 @@ public abstract class BaseWorkflow {
     public IntegerProperty currentStage = new SimpleIntegerProperty(-1);
 
     public ObservableList<BaseTask> tasks;
-    protected void setTasks(ObservableList<BaseTask> tasks) {
-        this.tasks = tasks;
+    protected void setTasks(ObservableList<BaseTask> newTasks) {
+        tasks = newTasks;
     }
 
     public File getLogFile() {
-        Output outputTask = (Output) this.tasks.get(this.tasks.size() - 1);
+        Output outputTask = (Output) tasks.get(tasks.size() - 1);
         return outputTask.getLogFile();
     }
 
@@ -115,11 +118,8 @@ public abstract class BaseWorkflow {
         logControl = logLoader.getController();
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
-        consoleWindow.initStyle(StageStyle.UNDECORATED);
-        consoleWindow.initStyle(StageStyle.TRANSPARENT);
+        consoleWindow.initStyle(StageStyle.UNIFIED);
         textAreaStream = logControl.stream;
-        logControl.setParent(this.controller);
-        logControl.registerStage(consoleWindow);
     }
 
     {
@@ -142,21 +142,20 @@ public abstract class BaseWorkflow {
     }
 
     public boolean canOverwrite() {
-        Output outputTask = (Output) this.tasks.get(this.tasks.size() - 1);
+        Output outputTask = (Output) tasks.get(tasks.size() - 1);
         return outputTask.getOverwrite();
     }
 
     public File getWorkingDirectory() {
-        Output outputTask = (Output) this.tasks.get(this.tasks.size() - 1);
+        Output outputTask = (Output) tasks.get(tasks.size() - 1);
         return outputTask.getWorkingDirectory();
     }
     public void respondToUpdate() {
         JobState.status finalStatus = READY;
         statusText = "";
-        loop: for (BaseTask task : this.tasks) {
+        loop: for (BaseTask task : tasks) {
             task.updateStatus();
             switch (task.status) {
-                case READY -> System.out.println("Job queued");
                 case RUNNING, FAILED -> {
                     finalStatus = task.status;
                     break loop;
@@ -174,7 +173,7 @@ public abstract class BaseWorkflow {
 
     public void calculateIO() {
         // Run through each task and determine the input/output file paths to feed into each-other.
-        File workingInput = this.firstInput;
+        File workingInput = firstInput;
         File workingDir = getWorkingDirectory();
         for (BaseTask task: tasks) {
             task.setInput(workingInput);
@@ -182,32 +181,32 @@ public abstract class BaseWorkflow {
             workingInput = task.getOutput();
         }
 
-        this.finalOutput = workingInput;
-        if (this.finalOutput.exists() && !canOverwrite()) {
-            this.status.set(JobState.status.WARNING);
-            this.statusText = "Output path already exists: " + this.finalOutput.getAbsolutePath();
+        finalOutput = workingInput;
+        if (finalOutput.exists() && !canOverwrite()) {
+            status.set(JobState.status.WARNING);
+            statusText = "Output path already exists: " + finalOutput.getAbsolutePath();
         } else {
-            this.status.set(READY);
-            this.statusText = "";
+            status.set(READY);
+            statusText = "";
         }
         LOGGER.info("Path calculation complete. Final output will be:");
         LOGGER.info(workingInput.getAbsolutePath());
         logControl.setTitle("%s (→ %s)".formatted(firstInput.getName(), getShortName()));
-        this.respondToUpdate();
+        respondToUpdate();
     }
 
     public void reset() {
         currentStage.set(-1);
         status.set(READY);
         calculateIO();
-        for (BaseTask task : this.tasks) {
+        for (BaseTask task : tasks) {
             task.status = READY;
             task.updateStatus();
         }
     }
 
     public void prepareGUI() {
-        for (BaseTask task : this.tasks) task.prepareForDisplay();
+        for (BaseTask task : tasks) task.prepareForDisplay();
     }
 
     public void execute(){
@@ -219,7 +218,7 @@ public abstract class BaseWorkflow {
         logBoxAppender = logControl.getAppender();
         rootLogger.addAppender(logBoxAppender);
         if (fileAppender != null) rootLogger.addAppender(fileAppender);
-        LOGGER.info("Beginning conversion of " + this.firstInput.getName());
+        LOGGER.info("Beginning conversion of " + firstInput.getName());
 
         LOGGER.info("Preparing to run tasks");
         for (BaseTask task : tasks) {
@@ -274,7 +273,7 @@ public abstract class BaseWorkflow {
         if (fileAppender != null) rootLogger.detachAppender(fileAppender);
 
         // Evaluate whether we completed successfully
-        if (this.currentStage.get() == this.tasks.size()) {
+        if (currentStage.get() == tasks.size()) {
             // We completed all tasks
             status.set(JobState.status.COMPLETED);
             // After a success we won't be running again, shut down the loggers.
@@ -289,7 +288,7 @@ public abstract class BaseWorkflow {
                     case RUNNING, QUEUED -> task.status = JobState.status.FAILED;
                 }
         }
-        this.currentStage.set(-1);
+        currentStage.set(-1);
     }
 
     private static FileAppender<ILoggingEvent> getFileAppender(File logFile) {
@@ -309,7 +308,7 @@ public abstract class BaseWorkflow {
 
     // Copy setting values from supplied instance to this one
     public void cloneSettings(BaseWorkflow sourceInstance) {
-        if (!(sourceInstance.getClass() == this.getClass())) {
+        if (!(sourceInstance.getClass() == getClass())) {
             LOGGER.error("Cannot clone a different workflow");
             return;
         }
@@ -323,5 +322,21 @@ public abstract class BaseWorkflow {
 
     // Return a list of extension filters for use with dialogs setting this workflow's final output
     abstract public FileChooser.ExtensionFilter[] getExtensionFilters();
+
+    public void writeSettings(File targetFile) throws IOException {
+        JsonFactory factory = new JsonFactory();
+        JsonGenerator generator = factory.createGenerator(targetFile, JsonEncoding.UTF8);
+        generator.useDefaultPrettyPrinter();
+        generator.writeStartObject();
+        for (BaseTask task: tasks) task.exportSettings(generator);
+        generator.writeEndObject();
+        generator.close();
+    }
+
+    public void loadSettings(File targetFile, BaseWorkflow targetWorkflow) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode node = mapper.readTree(targetFile);
+        for (BaseTask task: tasks) task.importSettings(node);
+    }
 
 }

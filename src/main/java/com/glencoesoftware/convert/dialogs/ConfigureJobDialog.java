@@ -1,5 +1,6 @@
 package com.glencoesoftware.convert.dialogs;
 
+import com.fasterxml.jackson.core.*;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.Output;
@@ -10,10 +11,13 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -91,7 +95,7 @@ public class ConfigureJobDialog {
         resetDialog();
         this.jobs = jobs;
         if (jobs.isEmpty()) {
-            System.out.println("No jobs given?");
+            LOGGER.error("No jobs given to config dialog? This shouldn't happen");
             return;
         }
         multiMode = jobs.size() > 1;
@@ -127,9 +131,9 @@ public class ConfigureJobDialog {
     }
     @FXML
     private void applySettings() {
-        System.out.println("Applying settings");
         // Different handling if configuring multiple jobs
         if (multiMode) {
+            int count = 0;
             // Iterate through tasks
             for (int i = 0; i < this.tasks.size(); i++) {
                 // Fetch settings from the template task used in the dialog
@@ -145,8 +149,9 @@ public class ConfigureJobDialog {
                     otherTask.applySettings();
                     otherTask.updateStatus();
                 }
+                count++;
             }
-            System.out.println("Done");
+            currentTask.parent.controller.updateStatus("Applied settings to %d jobs".formatted(count));
             return;
         }
         // If there's just one task we do it this easy way.
@@ -154,7 +159,7 @@ public class ConfigureJobDialog {
             task.applySettings();
             task.updateStatus();
         }
-        System.out.println("Done");
+        currentTask.parent.controller.updateStatus("Applied job settings");
     }
 
     @FXML
@@ -197,6 +202,7 @@ public class ConfigureJobDialog {
                     task.resetToDefaults();
                     task.updateStatus();
                 }
+                currentTask.parent.controller.updateStatus("Reset task to defaults");
             } if (response == allTasks) {
                 for (BaseWorkflow job: jobs) {
                     for (BaseTask task : job.tasks) {
@@ -204,6 +210,7 @@ public class ConfigureJobDialog {
                         task.updateStatus();
                     }
                 }
+                currentTask.parent.controller.updateStatus("Reset all tasks to defaults");
             }
         });
         this.jobs.get(0).prepareGUI();
@@ -226,15 +233,19 @@ public class ConfigureJobDialog {
             if (response == thisTask) {
                 try {
                     currentTask.setDefaults();
+                    currentTask.parent.controller.updateStatus("Saved defaults for " + currentTask.getName());
                 } catch (BackingStoreException e) {
                     LOGGER.error("Failed to set defaults: " + e);
+                    currentTask.parent.controller.updateStatus("Failed to save defaults");
                 }
             } if (response == allTasks) {
                 for (BaseTask task : tasks) {
                     try {
                         task.setDefaults();
+                        currentTask.parent.controller.updateStatus("Saved defaults for all tasks");
                     } catch (BackingStoreException e) {
                         LOGGER.error("Failed to set defaults: " + e);
+                        currentTask.parent.controller.updateStatus("Failed to save defaults");
                     }
                 }
             }
@@ -264,9 +275,76 @@ public class ConfigureJobDialog {
                         job.cloneSettings(thisJob);
                         count++;
                     }
-                };
+                }
                 LOGGER.info("Copied values to " + count + " instances");
+                currentTask.parent.controller.updateStatus("Applied settings to %d jobs".formatted(count));
+
             }
         });
+    }
+
+    @FXML
+    private void exportSettings() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setInitialFileName("exported-settings.json");
+        fileChooser.setTitle("Choose file to save settings to");
+        File selectedFile = fileChooser.showSaveDialog(App.getScene().getWindow());
+        if (selectedFile == null) return;
+        ButtonType thisTask = new ButtonType("This Task");
+        ButtonType allTasks = new ButtonType("All Tasks");
+        Alert choice = new Alert(Alert.AlertType.INFORMATION,
+                "Export settings for this task (%s) or all tasks?".formatted(currentTask.getName()),
+                ButtonType.CANCEL, thisTask, allTasks
+        );
+        choice.setTitle("Export settings");
+        choice.setHeaderText("Choose settings to export");
+        choice.getDialogPane().getStylesheets().add(
+                Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+        Button thisTaskButton = (Button) choice.getDialogPane().lookupButton(thisTask);
+        thisTaskButton.setDefaultButton(true);
+        choice.showAndWait().ifPresent(response -> {
+            if (response == thisTask) {
+                try {
+                    JsonFactory factory = new JsonFactory();
+                    JsonGenerator generator = factory.createGenerator(selectedFile, JsonEncoding.UTF8);
+                    generator.useDefaultPrettyPrinter();
+                    generator.writeStartObject();
+                    currentTask.exportSettings(generator);
+                    generator.writeEndObject();
+                    generator.close();
+                    currentTask.parent.controller.updateStatus("Exported settings for " + currentTask.getName());
+                } catch (IOException e) {
+                    currentTask.parent.controller.updateStatus("Failed to export settings");
+                    throw new RuntimeException(e);
+                }
+            }
+            if (response == allTasks) {
+                try {
+                    currentTask.parent.writeSettings(selectedFile);
+                    currentTask.parent.controller.updateStatus("Exported settings for all tasks");
+                } catch (IOException e) {
+                    currentTask.parent.controller.updateStatus("Failed to export settings");
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void importSettings() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setInitialFileName("exported-settings.json");
+        fileChooser.setTitle("Choose file to load settings from");
+        File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
+        if (selectedFile == null) return;
+        try {
+            currentTask.parent.loadSettings(selectedFile, currentTask.parent);
+            currentTask.parent.controller.updateStatus("Imported settings successfully");
+        } catch (IOException e) {
+            currentTask.parent.controller.updateStatus("Failed to import settings");
+            throw new RuntimeException(e);
+        }
+
+
     }
 }

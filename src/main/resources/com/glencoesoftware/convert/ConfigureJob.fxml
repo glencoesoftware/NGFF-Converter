@@ -13,11 +13,6 @@
                   <Insets />
               </HBox.margin>
               <Label fx:id="mainLabel" alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" text="Configuring {{Workflow}}" textAlignment="CENTER" HBox.hgrow="ALWAYS" />
-              <Button contentDisplay="GRAPHIC_ONLY" maxHeight="32.0" maxWidth="32.0" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" prefWidth="32.0" styleClass="close-button">
-                  <graphic>
-                      <FontIcon iconColor="black" iconLiteral="bi-x" iconSize="30" styleClass="close-icon" />
-                  </graphic>
-              </Button>
           </HBox>
             <HBox alignment="CENTER_LEFT" spacing="5.0" VBox.vgrow="NEVER">
                 <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevTask" prefHeight="32.0" prefWidth="32.0" styleClass="task-arrow">
@@ -64,6 +59,8 @@
       <HBox spacing="10.0" BorderPane.alignment="CENTER">
         <MenuButton popupSide="TOP" prefHeight="32.0" styleClass="minor-button" text="Options">
             <items>
+                <MenuItem mnemonicParsing="false" onAction="#importSettings" text="Import settings" />
+                <MenuItem mnemonicParsing="false" onAction="#exportSettings" text="Export settings" />
                 <MenuItem mnemonicParsing="false" onAction="#restoreDefaults" text="Restore Defaults" />
                 <MenuItem mnemonicParsing="false" onAction="#setDefaults" text="Set Defaults" />
                 <MenuItem mnemonicParsing="false" onAction="#applyToAll" text="Apply to all" />

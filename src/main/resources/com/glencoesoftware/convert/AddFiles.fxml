@@ -13,11 +13,6 @@
                <Insets />
             </HBox.margin>
             <Label fx:id="mainLabel" maxWidth="1.7976931348623157E308" text="Choose Output Options" HBox.hgrow="ALWAYS" />
-            <Button contentDisplay="GRAPHIC_ONLY" maxHeight="32.0" maxWidth="32.0" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" prefWidth="32.0" styleClass="close-button">
-               <graphic>
-                  <FontIcon iconColor="black" iconLiteral="bi-x" iconSize="30" styleClass="close-icon" />
-               </graphic>
-            </Button>
          </HBox>
          <BorderPane.margin>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

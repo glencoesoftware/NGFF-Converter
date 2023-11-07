@@ -1,5 +1,7 @@
 package com.glencoesoftware.convert.tasks;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.tasks.progress.TiffProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -75,7 +77,6 @@ public class CreateTiff extends BaseTask {
 
     // Save settings from widgets into the converter's values
     public void applySettings() {
-        System.out.println("Applying settings for " + name);
         converter.setLogLevel(logLevel.getValue());
         converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
         converter.setCompression(compression.getValue());
@@ -270,7 +271,7 @@ public class CreateTiff extends BaseTask {
 
     public void cloneValues(BaseTask sourceInstance) {
         if (!(sourceInstance instanceof CreateTiff source)) {
-            System.out.println("Incorrect input type");
+            LOGGER.error("Incorrect input type for value cloning");
             return;
         }
         converter.setLogLevel(source.converter.getLogLevel());
@@ -292,4 +293,54 @@ public class CreateTiff extends BaseTask {
         converter = new PyramidFromDirectoryWriter();
     }
 
+    public void exportSettings(JsonGenerator generator) throws IOException {
+        generator.writeFieldName(getName());
+        generator.writeStartObject();
+        generator.writeFieldName(prefKeys.LOG_LEVEL.name());
+        generator.writeString(converter.getLogLevel());
+        generator.writeFieldName(prefKeys.MAX_WORKERS.name());
+        generator.writeString(String.valueOf(converter.getMaxWorkers()));
+        generator.writeFieldName(prefKeys.COMPRESSION.name());
+        generator.writeString(converter.getCompression().name());
+        generator.writeFieldName(prefKeys.LEGACY.name());
+        generator.writeBoolean(converter.getLegacyTIFF());
+        generator.writeFieldName(prefKeys.RGB.name());
+        generator.writeBoolean(converter.getRGB());
+        generator.writeFieldName(prefKeys.SPLIT.name());
+        generator.writeBoolean(converter.getSplitTIFFs());
+        generator.writeFieldName(prefKeys.COMPRESSION_OPTS.name());
+        generator.writeString(String.valueOf(converter.getCompressionOptions().quality));
+        generator.writeEndObject();
+    }
+
+    public void importSettings(JsonNode mainNode) {
+        JsonNode settings = mainNode.get(getName());
+        if (settings == null) {
+            LOGGER.warn("No settings node for Task %s".formatted(getName()));
+            return;
+        }
+        JsonNode subject;
+        subject = settings.get(prefKeys.LOG_LEVEL.name());
+        if (subject != null) logLevel.setValue(subject.textValue());
+
+        subject = settings.get(prefKeys.MAX_WORKERS.name());
+        if (subject != null) maxWorkers.setText(String.valueOf(subject.intValue()));
+
+        subject = settings.get(prefKeys.COMPRESSION.name());
+        if (subject != null) compression.setValue(CompressionType.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.LEGACY.name());
+        if (subject != null) legacy.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.RGB.name());
+        if (subject != null) rgb.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.SPLIT.name());
+        if (subject != null) split.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.COMPRESSION_OPTS.name());
+        if (subject != null) compressionQuality.setText(subject.textValue());
+
+        LOGGER.info("Loaded settings for Task %s".formatted(getName()));
+    }
 }

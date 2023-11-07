@@ -16,8 +16,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
-import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
@@ -25,11 +23,9 @@ import java.awt.datatransfer.StringSelection;
 
 public class LogDisplayDialog {
 
-    private Stage stage;
     @FXML
     public TextArea logBox;
     public TextAreaStream stream;
-    public PrimaryController parentController;
     public Label title;
     public HBox topPane;
 
@@ -38,13 +34,6 @@ public class LogDisplayDialog {
     public void setTitle(String newTitle) {
         title.setText(newTitle);
     }
-
-    private double xOffset;
-    private double yOffset;
-
-    @FXML
-    private FontIcon resizeIcon;
-
 
     @FXML
     public void initialize() {
@@ -67,33 +56,6 @@ public class LogDisplayDialog {
         return logBoxAppender;
     }
 
-    public void setParent(PrimaryController parent) {
-        parentController = parent;
-    }
-
-    public void registerStage(Stage mainStage) {
-        stage = mainStage;
-        topPane.setOnMousePressed(event -> {
-            xOffset = stage.getX() - event.getScreenX();
-            yOffset = stage.getY() - event.getScreenY();
-        });
-
-        topPane.setOnMouseDragged(event -> {
-            stage.setX(event.getScreenX() + xOffset);
-            stage.setY(event.getScreenY() + yOffset);
-        });
-
-        resizeIcon.setOnMousePressed(event -> {
-            xOffset = stage.getWidth() - event.getSceneX();
-            yOffset = stage.getHeight() - event.getSceneY();
-        });
-
-        resizeIcon.setOnMouseDragged(event -> {
-            stage.setWidth(Math.max(400.0, event.getScreenX() - stage.getX() + xOffset));
-            stage.setHeight(Math.max(400.0, event.getScreenY() - stage.getY() + yOffset));
-        });
-    }
-
     @FXML
     public void copyLogs() {
         Toolkit.getDefaultToolkit()
@@ -109,8 +71,4 @@ public class LogDisplayDialog {
         logBox.clear();
     }
 
-    @FXML
-    public void closeLogs() {
-        stage.close();
-    }
 }

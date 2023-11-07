@@ -5,9 +5,10 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import org.controlsfx.control.*?>
 <?import org.kordamp.ikonli.javafx.*?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" stylesheets="@primary.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="400.0" minWidth="600.0" prefHeight="600.0" prefWidth="1024.0" stylesheets="@primary.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <top>
        <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
            <BorderPane.margin>
@@ -144,4 +145,7 @@
            </StackPane>
        </VBox>
    </center>
+   <bottom>
+      <StatusBar fx:id="statusBar" text="Add jobs to begin" BorderPane.alignment="CENTER" />
+   </bottom>
 </BorderPane>

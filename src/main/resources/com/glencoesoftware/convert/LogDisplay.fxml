@@ -10,7 +10,6 @@
       xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.glencoesoftware.convert.dialogs.LogDisplayDialog">
     <HBox fx:id="topPane" alignment="CENTER">
-        <Region layoutX="11.0" layoutY="10.0" prefWidth="32.0" HBox.hgrow="NEVER"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label pickOnBounds="false" styleClass="header" text="Execution Logs">
             <VBox.margin>
@@ -18,12 +17,6 @@
             </VBox.margin>
         </Label>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button contentDisplay="GRAPHIC_ONLY" maxHeight="32.0" maxWidth="32.0" mnemonicParsing="false"
-                onAction="#closeLogs" prefHeight="32.0" prefWidth="32.0" styleClass="close-button">
-            <graphic>
-                <FontIcon iconColor="black" iconLiteral="bi-x" iconSize="30" styleClass="close-icon"/>
-            </graphic>
-        </Button>
     </HBox>
     <Label fx:id="title" pickOnBounds="false" text="Logs">
         <font>
@@ -45,20 +38,10 @@
         <VBox.margin>
             <Insets bottom="5.0"/>
         </VBox.margin>
-        <Region prefWidth="20.0" HBox.hgrow="NEVER">
-            <HBox.margin>
-                <Insets left="5.0"/>
-            </HBox.margin>
-        </Region>
         <Region HBox.hgrow="ALWAYS"/>
         <Button mnemonicParsing="false" onAction="#copyLogs" styleClass="minor-button" text="Copy To Clipboard"/>
         <Button mnemonicParsing="false" onAction="#clearLogs" styleClass="minor-button" text="Clear"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <FontIcon fx:id="resizeIcon" iconLiteral="bi-arrows-angle-expand" iconSize="16" rotate="90">
-            <HBox.margin>
-                <Insets right="5.0"/>
-            </HBox.margin>
-        </FontIcon>
     </HBox>
 
 </VBox>
