@@ -70,7 +70,7 @@ public class TiffProgressListener implements IProgressListener {
     }
 
     public void stop() {
-        timer.stop();
+        if (timer != null) timer.stop();
     };
 
     @Override

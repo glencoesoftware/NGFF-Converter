@@ -1,0 +1,57 @@
+.root {
+    primary: #455A64;
+    highlight: #2980B8;
+}
+
+.root * {
+    -fx-font-family: "Helvetica";
+}
+
+.label {
+    -fx-text-fill: primary;
+}
+
+.root, .pane, .region, .scroll-pane {
+    -fx-background-color: white;
+}
+
+.mainLabel {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+}
+
+.minor-button {
+    -fx-border-color: #E1E7EF;
+    -fx-border-radius: 4px;
+    -fx-background-color: white;
+}
+
+.major-button {
+    -fx-background-color: highlight;
+    -fx-border-radius: 4px;
+    -fx-border-color: highlight;
+    -fx-text-fill: white;
+}
+
+.minor-button:hover, .major-button:hover, .task-arrow:hover {
+    -fx-border-color: black;
+    -fx-border-style: solid;
+}
+
+.minor-button:pressed, .major-button:pressed, .task-arrow:pressed {
+    -fx-background-color: primary;
+}
+
+.updateDialog {
+    -fx-padding: 10px;
+}
+
+.link-label * {
+    -fx-text-alignment: center;
+}
+
+.main-text {
+    -fx-text-alignment: center;
+    -fx-font-size: 14px;
+    -fx-wrap-text: true;
+}

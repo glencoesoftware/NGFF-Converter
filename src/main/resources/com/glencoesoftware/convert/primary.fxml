@@ -29,6 +29,7 @@
            <Menu mnemonicParsing="false" text="Help">
                <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="bioformats2raw help" />
                <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="raw2ometiff help" />
+               <MenuItem mnemonicParsing="false" onAction="#manualCheckForUpdate" text="Check for Updates" />
                <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />
            </Menu>
        </MenuBar>

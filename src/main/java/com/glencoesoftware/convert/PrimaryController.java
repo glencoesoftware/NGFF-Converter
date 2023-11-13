@@ -48,6 +48,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -681,6 +682,8 @@ public class PrimaryController {
 
     public void updateProgress(double newProgress) {
         Platform.runLater(() -> statusBar.setProgress(newProgress));
+        if (newProgress == 0) Taskbar.getTaskbar().setProgressValue(-1);
+        else Taskbar.getTaskbar().setProgressValue((int) (newProgress * 100));
     }
 
 }

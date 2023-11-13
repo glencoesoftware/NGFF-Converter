@@ -70,7 +70,8 @@ public class NGFFProgressListener implements IProgressListener {
     }
 
     public void stop() {
-        timer.stop();
+        // Stop the animation timer if it was started
+        if (timer != null) timer.stop();
     };
 
     @Override
