@@ -725,8 +725,12 @@ public class PrimaryController {
 
     public void updateProgress(double newProgress) {
         Platform.runLater(() -> statusBar.setProgress(newProgress));
-        if (newProgress == 0) Taskbar.getTaskbar().setProgressValue(-1);
-        else Taskbar.getTaskbar().setProgressValue((int) (newProgress * 100));
+        // Javafx doesn't support native taskbar interaction, but on some platforms we can do this with basic awt.
+        Taskbar taskbar = Taskbar.getTaskbar();
+        if (taskbar.isSupported(Taskbar.Feature.PROGRESS_VALUE)) {
+            if (newProgress == 0) Taskbar.getTaskbar().setProgressValue(-1);
+            else Taskbar.getTaskbar().setProgressValue((int) (newProgress * 100));
+        }
     }
 
 }
