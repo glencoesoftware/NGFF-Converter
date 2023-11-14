@@ -209,7 +209,7 @@ public abstract class BaseWorkflow {
         for (BaseTask task : tasks) task.prepareForDisplay();
     }
 
-    public void execute(){
+    public void execute() throws InterruptedException {
         // Presumes input/outputs are pre-calculated
         status.set(JobState.status.RUNNING);
         currentStage.set(0);

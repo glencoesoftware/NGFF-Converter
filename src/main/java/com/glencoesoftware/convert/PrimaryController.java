@@ -102,7 +102,7 @@ public class PrimaryController {
     private Stage b2rHelpWindow;
     private Stage r2oHelpWindow;
     public boolean isRunning = false;
-    private Thread runnerThread;
+    public Thread runnerThread;
     private WorkflowRunner worker;
     private List<MenuItem> menuControlButtons;
 

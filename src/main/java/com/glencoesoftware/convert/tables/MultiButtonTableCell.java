@@ -62,12 +62,7 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
             // Stop an ongoing run
             BaseWorkflow subject = getTableRow().getItem();
             if (subject.status.get() == JobState.status.RUNNING) {
-                try {
-                    App.controller.runCancel();
-                } catch (InterruptedException e) {
-                    System.out.println("Failed to stop " + e);
-                    throw new RuntimeException(e);
-                }
+                subject.controller.runnerThread.interrupt();
             } else {
                 subject.shutdown();
             }

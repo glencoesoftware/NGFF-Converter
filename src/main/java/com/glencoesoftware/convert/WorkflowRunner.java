@@ -55,7 +55,16 @@ class WorkflowRunner extends Task<Integer> {
 
             LOGGER.info("Running " + job.firstInput.getName());
             parent.updateStatus("Working on %s job %d of %d".formatted(job.firstInput.getName(), count + 1, totalJobs));
-            job.execute();
+            try {
+                job.execute();
+            } catch (InterruptedException e) {
+                // Clean up job if it was interrupted during initial startup
+                job.shutdown();
+            }
+            if (Thread.interrupted()) {
+                // N.b. Calling interrupted() clears interrupt status! Else all subsequent jobs will be interrupted.
+                LOGGER.warn("Execution of %s was interrupted".formatted(job.firstInput.getName()));
+            }
 
             switch (job.status.get()) {
                 case COMPLETED -> {
