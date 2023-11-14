@@ -41,7 +41,7 @@
                    <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
                </VBox.margin>
                <ImageView fitHeight="40.0" pickOnBounds="true" preserveRatio="true">
-                   <Image url="@logo.png" />
+                   <Image url="@logo-small.png" />
                </ImageView>
                <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
                <Button fx:id="addJobButton" mnemonicParsing="false" onAction="#addFiles" styleClass="minor-button" text="Add job(s)">
