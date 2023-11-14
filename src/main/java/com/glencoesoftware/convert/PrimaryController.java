@@ -44,6 +44,7 @@ import javafx.stage.*;
 import javafx.stage.Window;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
+import org.controlsfx.control.Notifications;
 import org.controlsfx.control.StatusBar;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
@@ -623,6 +624,10 @@ public class PrimaryController {
         addJobButton.setDisable(false);
         updateStatus("Run finished");
         updateProgress(0.0);
+        Notifications.create()
+                .title("NGFF-Converter")
+                .text("Conversions have finished")
+                .showInformation();
     }
 
     @FXML
