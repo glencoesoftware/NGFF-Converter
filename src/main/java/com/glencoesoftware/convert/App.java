@@ -26,6 +26,13 @@ public class App extends Application {
 
     public static PrimaryController controller;
 
+    public static String version;
+
+    static {
+        version = App.class.getPackage().getImplementationVersion();
+        if (version == null) { version = "DEV"; }
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("primary.fxml"));
@@ -33,8 +40,6 @@ public class App extends Application {
         scene = new Scene(primary, 1024, 600);
         controller = fxmlLoader.getController();
         stage.setScene(scene);
-        String version = getClass().getPackage().getImplementationVersion();
-        if (version == null) { version = "DEV"; }
         stage.setTitle("NGFF-Converter - %s".formatted(version));
         Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
         stage.getIcons().add(icon);

@@ -24,7 +24,7 @@ public class AboutDialog {
     private Label bfVersion;
     @FXML
     public void initialize() {
-        guiVersion.setText(guiVersion.getText() + App.controller.version);
+        guiVersion.setText(guiVersion.getText() + App.version);
         bfVersion.setText(bfVersion.getText() + ImageReader.class.getPackage().getImplementationVersion());
         b2rVersion.setText(b2rVersion.getText() + Converter.class.getPackage().getImplementationVersion());
         r2oVersion.setText(r2oVersion.getText() +

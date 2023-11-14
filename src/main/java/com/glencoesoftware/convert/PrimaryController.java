@@ -10,6 +10,7 @@ import ch.qos.logback.classic.Level;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.convert.dialogs.AddFilesDialog;
 import com.glencoesoftware.convert.dialogs.ConfigureJobDialog;
+import com.glencoesoftware.convert.dialogs.UpdateDialog;
 import com.glencoesoftware.convert.tables.*;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.CreateNGFF;
@@ -40,6 +41,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
+import javafx.stage.Window;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
 import org.controlsfx.control.StatusBar;
@@ -106,9 +108,8 @@ public class PrimaryController {
     private List<MenuItem> menuControlButtons;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
-    public String version;
 
-    public enum prefName {DEFAULT_FORMAT, SHOW_FORMAT_DLG}
+    public enum prefName {DEFAULT_FORMAT, SHOW_FORMAT_DLG, LAST_UPDATE}
 
     public static final Preferences userPreferences = Preferences.userRoot();
 
@@ -118,6 +119,8 @@ public class PrimaryController {
     private Stage addFilesStage;
     private AddFilesDialog addFilesController;
 
+    private Stage updaterStage;
+    private UpdateDialog updaterController;
     @FXML
     private StatusBar statusBar;
 
@@ -212,15 +215,13 @@ public class PrimaryController {
         taskList.setPlaceholder(new Label("Select a job for details"));
         // Disable entry selection on the task list
         taskList.setSelectionModel(null);
-        version = getClass().getPackage().getImplementationVersion();
-        if (version == null) { version = "DEV"; }
 
         // Array of menu controls we want to lock during a run.
         menuControlButtons = Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuResetPrefs);
         initSecondaryDialogs();
+        autoCheckForUpdate();
         updateStatus("Startup complete");
-
     }
 
     private void dividerResized() {
@@ -269,6 +270,16 @@ public class PrimaryController {
         jobSettingsStage.initStyle(StageStyle.UNIFIED);
         jobSettingsController = settingsLoader.getController();
 
+        // Updater Window
+        FXMLLoader updaterLoader = new FXMLLoader();
+        updaterLoader.setLocation(App.class.getResource("UpdateDialog.fxml"));
+        Scene updaterScene = new Scene(updaterLoader.load());
+        updaterScene.setFill(Color.TRANSPARENT);
+        updaterStage = new Stage();
+        updaterStage.setScene(updaterScene);
+        updaterStage.initModality(Modality.APPLICATION_MODAL);
+        updaterStage.initStyle(StageStyle.UNIFIED);
+        updaterController = updaterLoader.getController();
     }
 
     // Moves a stage to the middle of the main program window and displays it.
@@ -572,6 +583,39 @@ public class PrimaryController {
         }
     }
 
+    @FXML
+    private void manualCheckForUpdate() {
+        try {
+            updaterController.doUpdateCheck();
+        } catch (BackingStoreException | IOException e) {
+            LOGGER.error("Failed to check for updates");
+            updateStatus("Failed to check for updates");
+            return;
+        }
+        updaterController.show();
+        updateStatus("Update check complete");
+    }
+
+    private void autoCheckForUpdate(){
+        if (updaterController.shouldCheckForUpdates.isSelected()) {
+            try {
+                updaterController.doUpdateCheck();
+            } catch (BackingStoreException | IOException e) {
+                LOGGER.error("Failed to check for updates");
+                return;
+            }
+            if (updaterController.updateAvailable) {
+                Platform.runLater(() -> updaterController.show());
+
+                updateStatus("A new version of NGFF-Converter is available");
+            } else {
+                updateStatus("No newer versions of NGFF-Converter are available");
+            }
+        }
+        System.out.println("Check completed");
+
+    }
+
     public void runCompleted() {
         isRunning = false;
         updateRunButton();
@@ -686,3 +730,5 @@ public class PrimaryController {
     }
 
 }
+
+// Todo: Expand about dialog
