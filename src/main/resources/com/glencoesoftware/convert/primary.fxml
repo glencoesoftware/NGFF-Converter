@@ -59,7 +59,7 @@
            <StackPane onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" styleClass="stack-pane" VBox.vgrow="ALWAYS">
                <SplitPane fx:id="jobsPane" dividerPositions="0.7" style="-fx-background-color: white;">
                    <VBox fx:id="jobsBox">
-                       <HBox prefHeight="36.0" spacing="5.0">
+                       <HBox maxHeight="36.0" minHeight="36.0" prefHeight="36.0" spacing="5.0">
                            <padding>
                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
@@ -69,7 +69,7 @@
                                </font>
                            </Label>
                        </HBox>
-                       <HBox alignment="CENTER_RIGHT" prefHeight="36.0" spacing="5.0">
+                       <HBox alignment="CENTER_RIGHT" maxHeight="36.0" minHeight="36.0" prefHeight="36.0" spacing="5.0">
                            <VBox.margin>
                                <Insets />
                            </VBox.margin>
@@ -78,7 +78,7 @@
                            </padding>
                            <Button fx:id="removeSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#removeSelected" styleClass="minor-button" text="Remove Selected" textAlignment="CENTER" />
                            <Button fx:id="configureSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#configureSelected" styleClass="minor-button" text="Configure Selected" textAlignment="CENTER" />
-                           <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                           <Region HBox.hgrow="ALWAYS" />
                            <Button layoutX="479.0" layoutY="15.0" mnemonicParsing="false" onAction="#clearFinished" styleClass="minor-button" text="Clear Completed" textAlignment="CENTER" />
 
                        </HBox>
@@ -96,7 +96,7 @@
                        </TableView>
                    </VBox>
                    <VBox>
-                       <HBox prefHeight="36.0" spacing="5.0">
+                       <HBox maxHeight="36.0" prefHeight="36.0" minHeight="36.0" spacing="5.0">
                            <padding>
                                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
@@ -106,7 +106,7 @@
                                </font>
                            </Label>
                        </HBox>
-                       <HBox alignment="CENTER" minHeight="36.0" prefHeight="36.0" spacing="5.0">
+                       <HBox alignment="CENTER" maxHeight="36.0" minHeight="36.0" prefHeight="36.0" spacing="5.0">
                            <VBox.margin>
                                <Insets />
                            </VBox.margin>
