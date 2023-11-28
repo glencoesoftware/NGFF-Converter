@@ -54,16 +54,16 @@ public class UpdateDialog {
     public void doUpdateCheck() throws BackingStoreException, IOException {
         String currentVersion = App.version;
         long lastUpdate = userPreferences.getLong(LAST_UPDATE.name(), 0);
-        URL uri = new URL("https://api.github.com/repos/GlencoeSoftware/NGFF-Converter/releases/latest");
+        URL uri = new URL("https://downloads.glencoesoftware.com/public/NGFF-Converter/metadata/version.json");
         ObjectMapper mapper = new ObjectMapper();
         JsonNode response = mapper.readTree(uri);
-        String latestVersion = response.get("tag_name").textValue();
+        String latestVersion = response.get("currentversion").textValue();
 
         container.getChildren().clear();
         // Prepare UI
         if (compareVersion(latestVersion, currentVersion)) {
             updateAvailable = true;
-            Label header = new Label("A new version of NGFF-Converter is available (%s)".formatted(latestVersion));
+            Label header = new Label("A new version of NGFF-Converter is available (v%s)".formatted(latestVersion));
             header.getStyleClass().add("main-text");
             HyperlinkLabel link = new HyperlinkLabel("[Click here] to visit the download page");
             link.setOnAction(event -> {
@@ -98,9 +98,7 @@ public class UpdateDialog {
     }
 
     private boolean compareVersion(String latestVersion, String currentVersion) {
-        // Strip the preceding 'v' from GitHub tags
-        System.out.printf("Going to compare versions %s & %s%n", currentVersion, latestVersion);
-        latestVersion = latestVersion.substring(1);
+        LOGGER.debug("Comparing versions %s & %s".formatted(currentVersion, latestVersion));
         // Don't bother with deep comparison if we're on current
         if (latestVersion.equals(currentVersion)) return false;
         // Don't check with dev versions
