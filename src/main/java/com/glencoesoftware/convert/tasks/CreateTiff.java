@@ -116,7 +116,7 @@ public class CreateTiff extends BaseTask {
     public void run() {
         // Apply GUI configurations first
         setupIO();
-        TiffProgressListener listener = new TiffProgressListener(progressBar, progressLabel, converter);
+        TiffProgressListener listener = new TiffProgressListener(progressBar, progressLabel);
         converter.setProgressListener(listener);
         LOGGER.info("Running raw2ometiff");
         this.status = JobState.status.RUNNING;

@@ -7,7 +7,6 @@
 package com.glencoesoftware.convert.tasks.progress;
 
 import com.glencoesoftware.bioformats2raw.IProgressListener;
-import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.scene.control.Label;
@@ -20,15 +19,10 @@ public class TiffProgressListener implements IProgressListener {
 
     private final ProgressBar progressBar;
     private final Label labelText;
-    private double stepContribution;
-
-    private int currentSeries = 0;
-
     private int totalSeries = -1;
-
-    private final PyramidFromDirectoryWriter converter;
-
-    private double progress = 0;
+    private int currentSeries = 0;
+    private long totalChunks = -1;
+    private double completedChunks = 0;
 
     private String elapsedTimeString = "";
 
@@ -38,30 +32,26 @@ public class TiffProgressListener implements IProgressListener {
      * Create a new progress listener that displays a progress bar.
      *
      */
-    public TiffProgressListener(ProgressBar bar, Label label, PyramidFromDirectoryWriter subject) {
+    public TiffProgressListener(ProgressBar bar, Label label) {
         progressBar = bar;
         labelText = label;
-        converter = subject;
     }
 
     public void updateBar() {
         Platform.runLater( () -> {
-            progressBar.setProgress(progress);
+            progressBar.setProgress(completedChunks / totalChunks);
             labelText.setText("Series %d of ?\n %s".formatted(currentSeries + 1, elapsedTimeString));
         });
     }
 
     public void start() {
-        // We do this here because the final series list isn't generated until juuust before we start running
-//        totalSeries = converter.getSeriesCount().size();
-
         long startTime = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 elapsedTimeString = dateFormat.format(new Date(System.currentTimeMillis() - startTime));
-                    updateBar();
+                updateBar();
                 }
             };
         timer.start();
@@ -69,18 +59,17 @@ public class TiffProgressListener implements IProgressListener {
 
     public void stop() {
         if (timer != null) timer.stop();
-    };
+    }
+
+    public void notifySeriesStart(int series, int resolutionCount, int chunkCount) {
+        currentSeries = series;
+    }
 
     @Override
-    public void notifySeriesStart(int series) {
-        System.out.printf("Got series start %d %n", series);
-        if (totalSeries == -1) {
-            start();
-        }
-        currentSeries = series;
-        progress = 0.0;
-        // Todo: figure out total resolutions
-        updateBar();
+    public void notifyStart(int seriesCount, long chunkCount) {
+        totalSeries = seriesCount;
+        totalChunks = chunkCount;
+        start();
     }
 
     @Override
@@ -89,25 +78,22 @@ public class TiffProgressListener implements IProgressListener {
             timer.stop();
         }
         System.out.printf("Got series end %d %n", series);
-        progress = 1;
     }
 
     @Override
     public void notifyResolutionStart(int resolution, int tileCount) {
         System.out.printf("Got res start %d %d%n", resolution, tileCount);
-//        pb.setProgress(pb.getProgress() + stepContribution / 5);
     }
 
     @Override
     public void notifyChunkStart(int plane, int xx, int yy, int zz) {
-        progress += 0.001;
-        updateBar();
-//        progressBar.setProgress(progressBar.getProgress() + 0.01);
         // intentional no-op
     }
 
     @Override
     public void notifyChunkEnd(int plane, int xx, int yy, int zz) {
+        // N.b. we don't trigger a bar refresh here to avoid excessive updates.
+        completedChunks += 1;
     }
 
     @Override

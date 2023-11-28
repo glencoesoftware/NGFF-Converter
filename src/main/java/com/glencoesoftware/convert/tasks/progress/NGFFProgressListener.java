@@ -6,7 +6,6 @@
  */
 package com.glencoesoftware.convert.tasks.progress;
 
-import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.IProgressListener;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -20,41 +19,30 @@ public class NGFFProgressListener implements IProgressListener {
 
     private final ProgressBar progressBar;
     private final Label labelText;
-    private double stepContribution;
-
-    private int currentSeries = 0;
-
     private int totalSeries = -1;
-
-    private final Converter converter;
-
-    private double progress = 0;
-
+    private int currentSeries = 0;
+    private long totalChunks = -1;
+    private double completedChunks = 0;
     private String elapsedTimeString = "";
-
     private AnimationTimer timer;
 
     /**
      * Create a new progress listener that displays a progress bar.
      *
      */
-    public NGFFProgressListener(ProgressBar bar, Label label, Converter subject) {
+    public NGFFProgressListener(ProgressBar bar, Label label) {
         progressBar = bar;
         labelText = label;
-        converter = subject;
     }
 
     public void updateBar() {
         Platform.runLater( () -> {
-            progressBar.setProgress(progress);
+            progressBar.setProgress(completedChunks / totalChunks);
             labelText.setText("Series %d of %d\n%s".formatted(currentSeries + 1, totalSeries, elapsedTimeString));
         });
     }
 
     public void start() {
-        // We do this here because the final series list isn't generated until juuust before we start running
-        totalSeries = converter.getSeriesList().size();
-
         long startTime = System.currentTimeMillis();
         SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
         timer = new AnimationTimer() {
@@ -70,18 +58,18 @@ public class NGFFProgressListener implements IProgressListener {
     public void stop() {
         // Stop the animation timer if it was started
         if (timer != null) timer.stop();
-    };
+    }
 
     @Override
-    public void notifySeriesStart(int series) {
-        System.out.printf("Got series start %d %n", series);
-        if (totalSeries == -1) {
-            start();
-        }
+    public void notifyStart(int seriesCount, long chunkCount) {
+        totalSeries = seriesCount;
+        totalChunks = chunkCount;
+        start();
+    }
+
+    @Override
+    public void notifySeriesStart(int series, int resolutionCount, int chunkCount) {
         currentSeries = series;
-        progress = 0.0;
-        // Todo: figure out total resolutions
-        updateBar();
     }
 
     @Override
@@ -90,30 +78,27 @@ public class NGFFProgressListener implements IProgressListener {
             timer.stop();
         }
         System.out.printf("Got series end %d %n", series);
-        progress = 1;
     }
 
     @Override
     public void notifyResolutionStart(int resolution, int tileCount) {
-        System.out.printf("Got res start %d %d%n", resolution, tileCount);
-//        pb.setProgress(pb.getProgress() + stepContribution / 5);
+        // intentional no-op
     }
 
     @Override
     public void notifyChunkStart(int plane, int xx, int yy, int zz) {
-        progress += 0.001;
-        updateBar();
-//        progressBar.setProgress(progressBar.getProgress() + 0.01);
         // intentional no-op
     }
 
     @Override
     public void notifyChunkEnd(int plane, int xx, int yy, int zz) {
+        // N.b. we don't trigger a bar refresh here to avoid excessive updates.
+        completedChunks += 1;
     }
 
     @Override
     public void notifyResolutionEnd(int resolution) {
-        System.out.printf("Got res end %d%n", resolution);
+        // intentional no-op
     }
 
 }

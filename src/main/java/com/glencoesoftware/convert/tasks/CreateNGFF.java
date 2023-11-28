@@ -348,7 +348,7 @@ public class CreateNGFF extends BaseTask{
         // Apply GUI configurations first
         setupIO();
 
-        NGFFProgressListener listener = new NGFFProgressListener(progressBar, progressLabel, converter);
+        NGFFProgressListener listener = new NGFFProgressListener(progressBar, progressLabel);
         converter.setProgressListener(listener);
 
         LOGGER.info("Running bioformats2raw");
