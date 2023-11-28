@@ -40,7 +40,7 @@ public class TiffProgressListener implements IProgressListener {
     public void updateBar() {
         Platform.runLater( () -> {
             progressBar.setProgress(completedChunks / totalChunks);
-            labelText.setText("Series %d of ?\n %s".formatted(currentSeries + 1, elapsedTimeString));
+            labelText.setText("Series %d of %d\n%s".formatted(currentSeries + 1, totalSeries, elapsedTimeString));
         });
     }
 

@@ -19,6 +19,7 @@ import javafx.scene.control.*;
 import loci.formats.codec.CodecOptions;
 import loci.formats.codec.JPEG2000CodecOptions;
 import org.controlsfx.control.ToggleSwitch;
+import picocli.CommandLine;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -30,7 +31,8 @@ import java.util.prefs.Preferences;
 // Run raw2ometiff on a file
 public class CreateTiff extends BaseTask {
 
-    private PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
+    private final PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
+    private final CommandLine cli = new CommandLine(converter);
 
     public static String name = "Convert to TIFF";
 
@@ -58,6 +60,8 @@ public class CreateTiff extends BaseTask {
 
     public CreateTiff(BaseWorkflow parent) {
         super(parent);
+        // Apply default args from cli
+        cli.parseArgs();
         // Load the preferences stored as defaults
         applyDefaults();
     }
@@ -295,8 +299,8 @@ public class CreateTiff extends BaseTask {
     }
 
     public void resetConverter() {
-        // Todo: Revise once r2o resetters are implemented
-        converter = new PyramidFromDirectoryWriter();
+        // Apply default args from cli
+        cli.parseArgs();
     }
 
     public void exportSettings(JsonGenerator generator) throws IOException {

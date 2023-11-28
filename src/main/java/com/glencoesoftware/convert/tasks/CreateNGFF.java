@@ -28,6 +28,7 @@ import javafx.scene.control.cell.CheckBoxListCell;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import ome.xml.model.enums.DimensionOrder;
+import picocli.CommandLine;
 
 import java.awt.*;
 import java.io.File;
@@ -46,7 +47,8 @@ import static java.util.stream.Collectors.joining;
 // Run bioformats2raw on a file
 public class CreateNGFF extends BaseTask{
 
-    public Converter converter = new Converter();
+    public final Converter converter = new Converter();
+    private final CommandLine cli = new CommandLine(converter);
 
     public static String name = "Convert to NGFF";
 
@@ -59,7 +61,7 @@ public class CreateNGFF extends BaseTask{
     }
 
 
-    private final Class<?>[] allReaders = converter.getExtraReaders();
+    private final Class<?>[] allReaders;
 
     private static final ArrayList<Node> standardSettings = new ArrayList<>();
     private static final ArrayList<Node> advancedSettings = new ArrayList<>();
@@ -105,6 +107,10 @@ public class CreateNGFF extends BaseTask{
 
     public CreateNGFF(BaseWorkflow parent) {
         super(parent);
+        // Load default args from picocli
+        cli.parseArgs();
+        // Populate available readers
+        allReaders = converter.getExtraReaders();
         // Load the preferences stored as defaults
         applyDefaults();
         converter.setOverwrite(Output.overwriteBox.selectedProperty().get());
@@ -316,6 +322,11 @@ public class CreateNGFF extends BaseTask{
 
 
     public void calculateOutput(String basePath) {
+        if (input.getAbsolutePath().endsWith(".zarr")) {
+            LOGGER.info("Input file appears to already be NGFF, will skip conversion step");
+            this.output = this.input;
+            return;
+        }
         this.output = Paths.get(
                 basePath, this.outputName + ".zarr").toFile();
     }
@@ -334,6 +345,11 @@ public class CreateNGFF extends BaseTask{
         if (this.output == null | this.input == null) {
             this.status = JobState.status.WARNING;
             this.warningMessage = "I/O not configured";
+            return;
+        }
+        if (this.input.getName().endsWith(".zarr")) {
+            this.status = JobState.status.WARNING;
+            this.warningMessage = "Input already appears to be NGFF, this step will be skipped";
             return;
         }
         if (this.output.exists() & !converter.getOverwrite()) {
@@ -1164,8 +1180,8 @@ public class CreateNGFF extends BaseTask{
     }
 
     public void resetConverter() {
-        // Todo: Revise once b2r resetters are implemented
-        converter = new Converter();
+        // Load default args from picocli
+        cli.parseArgs();
     }
 
 }
