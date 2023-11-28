@@ -82,7 +82,7 @@ public class TiffProgressListener implements IProgressListener {
 
     @Override
     public void notifyResolutionStart(int resolution, int tileCount) {
-        System.out.printf("Got res start %d %d%n", resolution, tileCount);
+        // intentional no-op
     }
 
     @Override
@@ -98,7 +98,7 @@ public class TiffProgressListener implements IProgressListener {
 
     @Override
     public void notifyResolutionEnd(int resolution) {
-        System.out.printf("Got res end %d%n", resolution);
+        // intentional no-op
     }
 
 }
