@@ -2,6 +2,7 @@ plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.10'
     id 'org.beryx.runtime' version '1.12.5'
+    id "com.github.hierynomus.license" version "0.16.1"
 }
 
 version = '1.1.5'
@@ -141,4 +142,27 @@ runtime {
         dependsOn jpackageImage
         from layout.buildDirectory.dir("jpackage")
     }
+}
+
+downloadLicenses {
+    includeProjectDependencies = true
+    dependencyConfiguration = 'runtimeClasspath'
+    licenses = [
+        // See https://github.com/Unidata/netcdf-java/blob/v5.3.3/LICENSE
+        (group('edu.ucar')): license('The 3-Clause BSD License', 'https://opensource.org/license/bsd-3-clause/'),
+        // See https://github.com/openjdk/jfx/blob/17%2B2/LICENSE
+        (group('org.openjfx')): license('GNU General Public License version 2 with Classpath Exception', 'https://openjdk.org/legal/gplv2+ce.html'),
+        // See https://github.com/javaee/jaxb-v2/blob/2.3.0/LICENSE
+        (group('javax.xml.bind')): license('Common Development and Distribution License 1.1 and GNU General Public License version 2 with Classpath Exception', 'https://oss.oracle.com/licenses/CDDL+GPL-1.1'),
+        // See https://github.com/openpnp/opencv/blob/v3.4.2-0/LICENSE
+        (group('org.openpnp')): license('The 3-Clause BSD License', 'https://opensource.org/license/bsd-3-clause/'),
+    ]
+    aliases = [
+        (license('Apache License, Version 2.0', 'http://www.apache.org/licenses/LICENSE-2.0')) : ['The Apache Software License, Version 2.0', 'Apache 2', 'Apache License Version 2.0', 'Apache License 2.0', 'The Apache License, Version 2.0', 'Apache 2.0', 'Apache-2.0'],
+        (license('GNU Lesser General Public License version 2.1', 'https://opensource.org/license/lgpl-2-1/')) : ['GNU Lesser General Public License v2.1+'],
+        (license('GNU General Public License version 2', 'https://opensource.org/license/gpl-2/')) : ['GNU General Public License v2+'],
+        (license('The 2-Clause BSD License', 'https://opensource.org/license/bsd-2-clause/')) : ['Simplified BSD License', 'The BSD License', 'New BSD License'],
+        (license('The 3-Clause BSD License', 'https://opensource.org/license/bsd-3-clause/')) : ['The BSD 3-Clause License (BSD3)', '3-Clause BSD License'],
+        (license('The MIT License', 'https://opensource.org/license/mit/')) : ['MIT License', 'MIT']
+    ]
 }
