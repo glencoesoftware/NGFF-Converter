@@ -252,7 +252,7 @@ public abstract class BaseWorkflow {
         for (int i = 0; i < tasks.size() - 1; ++i) {
             BaseTask task = tasks.get(i);
             File output = task.getOutput();
-            if (!Objects.equals(output, finalOutput)) {
+            if (!Objects.equals(output, finalOutput) && !Objects.equals(output, firstInput)) {
                 if (!output.exists()){
                     continue;
                 }
