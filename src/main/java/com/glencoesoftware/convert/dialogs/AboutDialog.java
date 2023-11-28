@@ -13,6 +13,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import loci.formats.ImageReader;
 
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 public class AboutDialog {
     @FXML
     private Label guiVersion;
@@ -29,5 +34,15 @@ public class AboutDialog {
         b2rVersion.setText(b2rVersion.getText() + Converter.class.getPackage().getImplementationVersion());
         r2oVersion.setText(r2oVersion.getText() +
                 PyramidFromDirectoryWriter.class.getPackage().getImplementationVersion());
+    }
+
+    @FXML
+    public void licenseLink() {
+        try {
+            Desktop.getDesktop().browse(
+                    new URI("https://github.com/glencoesoftware/NGFF-Converter/blob/main/LICENSE.txt"));
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

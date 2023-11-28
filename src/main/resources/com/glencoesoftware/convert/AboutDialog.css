@@ -7,8 +7,13 @@
     -fx-font-family: "Helvetica";
 }
 
-.label {
+.label, .hyperlink-label {
     -fx-text-fill: primary;
+    -fx-font-size: 13px;
+}
+
+.hyperlink-label * {
+    -fx-text-alignment: center;
 }
 
 .tooltip
@@ -22,7 +27,7 @@
 
 
 .mainLabel {
-    -fx-font-size: 24px;
+    -fx-font-size: 22px;
     -fx-font-weight: 900;
 }
 

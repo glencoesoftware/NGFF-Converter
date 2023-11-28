@@ -5,6 +5,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import org.controlsfx.control.*?>
 
 <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="230.0" styleClass="container" stylesheets="@AboutDialog.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AboutDialog">
    <ImageView fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true">
@@ -27,12 +28,14 @@
    <Label fx:id="b2rVersion" text="bioformats2raw - " />
    <Label fx:id="r2oVersion" text="raw2ometiff - " />
    <Label fx:id="bfVersion" text="Bio-Formats - " />
-   <Label text="Copyright © Glencoe Software">
+   <Label focusTraversable="false" text="Copyright © Glencoe Software">
       <VBox.margin>
          <Insets top="10.0" />
       </VBox.margin>
-      <font>
-         <Font name="System Italic" size="12.0" />
-      </font>
    </Label>
+   <HyperlinkLabel focusTraversable="false" onAction="#licenseLink" text="License: [GPL 2.0]">
+      <VBox.margin>
+         <Insets top="5.0" />
+      </VBox.margin>
+   </HyperlinkLabel>
 </VBox>
