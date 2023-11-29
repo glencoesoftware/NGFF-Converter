@@ -146,3 +146,7 @@ runtime {
         from layout.buildDirectory.dir("jpackage")
     }
 }
+
+startScripts {
+    applicationDefaultJvmArgs = ["-Dprism.order=sw"]
+}
