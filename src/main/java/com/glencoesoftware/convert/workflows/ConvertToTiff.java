@@ -22,7 +22,9 @@ public class ConvertToTiff extends BaseWorkflow{
     public ConvertToTiff(PrimaryController controller, File input) {
         super(controller, input);
         ObservableList<BaseTask> tasks = FXCollections.observableArrayList();
-        tasks.addAll(new CreateNGFF(this), new CreateTiff(this), new Output(this));
+        // Only need to convert to NGFF if the input isn't a zarr
+        if (input.getName().endsWith(".zarr")) tasks.addAll(new CreateTiff(this), new Output(this));
+        else tasks.addAll(new CreateNGFF(this), new CreateTiff(this), new Output(this));
         this.setTasks(tasks);
     }
 
