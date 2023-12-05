@@ -7,7 +7,6 @@
 package com.glencoesoftware.convert.tables;
 
 import com.glencoesoftware.convert.App;
-import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -29,27 +28,36 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
     private final HBox container;
     private final Button showLog = new Button();
     private final Button removeJob = new Button();
-    private final Button stopRunning = new Button();
+    private final Button removeJobDisabled = new Button();
+    private final Button stopJob = new Button();
+    private final Button stopJobDisabled = new Button();
+    private final Button startJob = new Button();
     private final Button configureTasks = new Button();
     private final Button resetJob = new Button();
     private final Button showFile = new Button();
     private final FontIcon removeIcon = new FontIcon("bi-trash-fill");
     private final FontIcon logIcon = new FontIcon("bi-terminal-fill");
-    private final FontIcon stopRunningIcon = new FontIcon("bi-stop-fill");
+    private final FontIcon stopJobIcon = new FontIcon("bi-stop-fill");
+    private final FontIcon startJobIcon = new FontIcon("bi-play-fill");
     private final FontIcon configureIcon = new FontIcon("bi-gear-fill");
     private final FontIcon restartIcon = new FontIcon("bi-arrow-repeat");
     private final FontIcon openDirIcon = new FontIcon("bi-folder-symlink-fill");
 
     {
-        for (FontIcon icon: Arrays.asList(removeIcon, logIcon, stopRunningIcon, configureIcon, restartIcon, openDirIcon)) {
+        for (FontIcon icon: Arrays.asList(removeIcon, logIcon, stopJobIcon, startJobIcon,
+                configureIcon, restartIcon, openDirIcon)) {
             icon.setIconSize(16);
             icon.getStyleClass().add("icon-graphic");
         }
-        for (Button button: Arrays.asList(showLog, removeJob, stopRunning, configureTasks, resetJob, showFile)) {
+        for (Button button: Arrays.asList(showLog, removeJob, removeJobDisabled, stopJob, stopJobDisabled, startJob,
+                configureTasks, resetJob, showFile)) {
             button.getStyleClass().add("icon-button");
             button.setPrefWidth(32);
             button.setPrefHeight(32);
         }
+
+        removeJobDisabled.setDisable(true);
+        stopJobDisabled.setDisable(true);
 
         showLog.setGraphic(logIcon);
         showLog.setTooltip(new Tooltip("Show execution logs"));
@@ -62,16 +70,29 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
             getTableView().getItems().remove(getIndex());
         });
 
-        stopRunning.setGraphic(stopRunningIcon);
-        stopRunning.setTooltip(new Tooltip("Stop execution"));
-        stopRunning.setOnAction(evt -> {
+        removeJobDisabled.setGraphic(removeIcon);
+        removeJobDisabled.setTooltip(new Tooltip("Cannot delete job while queued"));
+
+        stopJobDisabled.setGraphic(stopJobIcon);
+        removeJobDisabled.setTooltip(new Tooltip("Job is already stopping"));
+
+        startJob.setGraphic(startJobIcon);
+        startJob.setTooltip(new Tooltip("Stop execution"));
+        startJob.setOnAction(evt -> {
             // Stop an ongoing run
             BaseWorkflow subject = getTableRow().getItem();
-            if (subject.status.get() == JobState.status.RUNNING) {
-                subject.controller.runnerThread.interrupt();
-            } else {
-                subject.shutdown();
-            }
+            if (subject.canRun()) subject.queueJob();
+            subject.controller.updateRunButton();
+            subject.controller.updateStatus("Queued " + subject.firstInput.getName());
+        });
+
+        stopJob.setGraphic(stopJobIcon);
+        stopJob.setTooltip(new Tooltip("Stop execution"));
+        stopJob.setOnAction(evt -> {
+            // Stop an ongoing run
+            BaseWorkflow subject = getTableRow().getItem();
+            subject.cancelJob();
+            subject.controller.updateStatus("Cancelling " + subject.firstInput.getName());
         });
 
         configureTasks.setGraphic(configureIcon);
@@ -85,7 +106,7 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         resetJob.setTooltip(new Tooltip("Reset job to run again"));
         resetJob.setOnAction(evt -> {
             BaseWorkflow subject = getTableRow().getItem();
-            subject.reset();
+            subject.resetJob();
             App.controller.updateRunButton();
             getTableView().refresh();
         });
@@ -121,11 +142,11 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         this.container.getChildren().clear();
         BaseWorkflow current = getTableView().getItems().get(getIndex());
         switch (current.status.get()) {
-            case COMPLETED -> this.container.getChildren().addAll(this.showLog, this.showFile, this.removeJob);
-            case RUNNING, QUEUED -> this.container.getChildren().addAll(this.showLog, this.stopRunning);
-            case FAILED -> this.container.getChildren().addAll(this.showLog, this.resetJob, this.removeJob);
-            case WARNING, READY -> this.container.getChildren().addAll(
-                    this.showLog, this.configureTasks, this.removeJob);
+            case COMPLETED -> this.container.getChildren().addAll(showFile, showLog, removeJob);
+            case RUNNING, QUEUED -> this.container.getChildren().addAll(stopJob, showLog, removeJobDisabled);
+            case STOPPING -> this.container.getChildren().addAll(stopJobDisabled, showLog, removeJobDisabled);
+            case FAILED -> this.container.getChildren().addAll(resetJob, showLog, removeJob);
+            case WARNING, READY -> this.container.getChildren().addAll(startJob, configureTasks, removeJob);
         }
     }
 

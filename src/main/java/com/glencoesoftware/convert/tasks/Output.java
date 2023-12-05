@@ -173,12 +173,12 @@ public class Output extends BaseTask {
         if (outputText == null || outputLocation == outputLocationType.INPUT_FOLDER) outputFolder = null;
         else outputFolder = new File(outputText);
         setOutputFromWidgets();
+        overwrite = overwriteBox.selectedProperty().get();
         if (parent.tasks != null) {
             // Overwrite applies to all tasks, not just this one
             // Won't work on init, but this is handled by the task defaults
-            parent.setOverwrite(overwriteBox.selectedProperty().get());
+            parent.setOverwrite(overwrite);
         }
-
         directWrite = directWriteBox.selectedProperty().get();
         logToFile = logChoice.getValue();
         switch (logToFile) {
@@ -284,6 +284,10 @@ public class Output extends BaseTask {
     @Override
     public void prepareToRun() {
         calculateOutput("");
+        if (output.exists() && !overwrite) {
+            parent.statusText = "Output file already exists (file overwrite setting is disabled)";
+            throw new IllegalArgumentException("Output file already exists");
+        }
         BaseTask secondLastTask = parent.tasks.get(parent.tasks.size() - 2);
         secondLastTask.output = output;
     }

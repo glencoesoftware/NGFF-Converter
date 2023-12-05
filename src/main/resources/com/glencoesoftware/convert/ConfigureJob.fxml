@@ -71,11 +71,11 @@
             </MenuButton>
         <Region styleClass="hbox" HBox.hgrow="ALWAYS" />
 
-          <Button mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" styleClass="minor-button" text="Close">
+          <Button mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" styleClass="minor-button" text="Cancel">
             <padding>
                <Insets left="12.0" right="12.0" />
             </padding></Button>
-        <Button mnemonicParsing="false" onAction="#applySettings" prefHeight="32.0" styleClass="major-button" text="Apply Settings">
+        <Button mnemonicParsing="false" onAction="#applySettings" prefHeight="32.0" styleClass="major-button" text="Apply">
             <padding>
                <Insets left="12.0" right="12.0" />
             </padding></Button>

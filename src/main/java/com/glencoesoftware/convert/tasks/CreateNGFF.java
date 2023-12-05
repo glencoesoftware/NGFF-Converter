@@ -389,6 +389,7 @@ public class CreateNGFF extends BaseTask{
             }
         } catch (Exception e) {
             LOGGER.error("NGFF creation failed - " + e);
+            parent.statusText = "Job Failed: " + e;
             this.status = JobState.status.FAILED;
         } finally {
             listener.stop();

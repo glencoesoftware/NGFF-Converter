@@ -33,6 +33,7 @@ public class ConvertToNGFF extends BaseWorkflow {
 
     public String getFullName() { return fullName; }
 
+    public String getTechnicalName() { return "bioformats2raw"; }
 
     public FileChooser.ExtensionFilter[] getExtensionFilters() {
         return new FileChooser.ExtensionFilter[]{

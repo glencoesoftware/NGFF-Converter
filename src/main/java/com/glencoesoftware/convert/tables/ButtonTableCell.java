@@ -43,7 +43,7 @@ public class ButtonTableCell extends TableCell<BaseTask, Void> {
         if (empty) return;
         BaseTask current = getTableView().getItems().get(getIndex());
         switch (current.status) {
-            case RUNNING, QUEUED, COMPLETED, FAILED -> configureButton.setDisable(true);
+            case RUNNING, QUEUED, COMPLETED, FAILED, STOPPING -> configureButton.setDisable(true);
             case READY, WARNING -> configureButton.setDisable(false);
         }
 

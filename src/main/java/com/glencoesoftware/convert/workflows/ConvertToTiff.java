@@ -35,6 +35,10 @@ public class ConvertToTiff extends BaseWorkflow{
 
     public String getFullName() { return fullName; }
 
+    public String getTechnicalName() {
+        if (firstInput.getName().endsWith(".zarr")) return "raw2ometiff";
+        return "bioformats2raw-raw2ometiff";
+    }
 
     public FileChooser.ExtensionFilter[] getExtensionFilters() {
         return new FileChooser.ExtensionFilter[]{

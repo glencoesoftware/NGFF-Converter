@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class JobState {
 
-    public enum status {READY, QUEUED, RUNNING, COMPLETED, FAILED, WARNING}
+    public enum status {READY, QUEUED, RUNNING, COMPLETED, FAILED, WARNING, STOPPING}
 
     public static Map<status, String> iconCodes = new HashMap<>();
     public static Map<status, String> iconColors = new HashMap<>();
@@ -28,6 +28,7 @@ public class JobState {
         iconCodes.put(status.COMPLETED, "bi-check-circle-fill");
         iconCodes.put(status.FAILED, "bi-x-circle-fill");
         iconCodes.put(status.WARNING, "bi-exclamation-circle-fill");
+        iconCodes.put(status.STOPPING, "bi-stop-circle-fill");
 
         iconColors.put(status.READY, "#2980B8");
         iconColors.put(status.QUEUED, "#2980B8");
@@ -35,6 +36,7 @@ public class JobState {
         iconColors.put(status.COMPLETED, "#057204");
         iconColors.put(status.FAILED, "#E02D3C");
         iconColors.put(status.WARNING, "ORANGE");
+        iconColors.put(status.STOPPING, "#E02D3C");
     }
 
     public static FontIcon getStatusIcon(status statusCode, int size) {

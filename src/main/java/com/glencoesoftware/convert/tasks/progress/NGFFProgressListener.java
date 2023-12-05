@@ -77,7 +77,6 @@ public class NGFFProgressListener implements IProgressListener {
         if (series == totalSeries - 1) {
             timer.stop();
         }
-        System.out.printf("Got series end %d %n", series);
     }
 
     @Override

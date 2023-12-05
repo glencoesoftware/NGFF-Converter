@@ -78,6 +78,7 @@
                            </padding>
                            <Button fx:id="removeSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#removeSelected" styleClass="minor-button" text="Remove Selected" textAlignment="CENTER" />
                            <Button fx:id="configureSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#configureSelected" styleClass="minor-button" text="Configure Selected" textAlignment="CENTER" />
+                           <Button fx:id="runSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#runSelected" styleClass="minor-button" text="Run Selected" textAlignment="CENTER" />
                            <Region HBox.hgrow="ALWAYS" />
                            <Button layoutX="479.0" layoutY="15.0" mnemonicParsing="false" onAction="#clearFinished" styleClass="minor-button" text="Clear Completed" textAlignment="CENTER" />
 

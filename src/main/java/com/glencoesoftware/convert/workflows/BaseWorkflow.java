@@ -18,8 +18,11 @@ import com.glencoesoftware.convert.*;
 import com.glencoesoftware.convert.dialogs.LogDisplayDialog;
 import com.glencoesoftware.convert.tasks.BaseTask;
 import com.glencoesoftware.convert.tasks.Output;
+import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
@@ -35,15 +38,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-import static com.glencoesoftware.convert.JobState.status.READY;
+import static com.glencoesoftware.convert.JobState.status.*;
 
-public abstract class BaseWorkflow {
+public abstract class BaseWorkflow extends Service<Void> {
 
     // Keep a reference to the parent controller
     public PrimaryController controller;
 
     public BaseWorkflow(PrimaryController parentController, File input) {
         controller = parentController;
+        // Use the single thread executor assigned to NGFF-Converter
+        setExecutor(App.executor);
         status.addListener((i, o, n) -> {
             // Update job/task display when jobs update
             controller.jobList.refresh();
@@ -65,6 +70,8 @@ public abstract class BaseWorkflow {
     abstract public String getShortName();
 
     abstract public String getFullName();
+
+    abstract public String getTechnicalName();
 
 
     public String getStatusString() {
@@ -162,7 +169,7 @@ public abstract class BaseWorkflow {
         loop: for (BaseTask task : tasks) {
             task.updateStatus();
             switch (task.status) {
-                case RUNNING, FAILED -> {
+                case RUNNING, FAILED, STOPPING -> {
                     finalStatus = task.status;
                     break loop;
                 }
@@ -201,50 +208,44 @@ public abstract class BaseWorkflow {
         respondToUpdate();
     }
 
-    public void reset() {
+    public void resetJob() {
+        reset();
         currentStage.set(-1);
-        status.set(READY);
         calculateIO();
         for (BaseTask task : tasks) {
             task.status = READY;
-            task.updateStatus();
         }
+        respondToUpdate();
     }
 
     public void prepareGUI() {
         for (BaseTask task : tasks) task.prepareForDisplay();
     }
 
-    public void execute() throws InterruptedException {
-        // Presumes input/outputs are pre-calculated
-        status.set(JobState.status.RUNNING);
-        currentStage.set(0);
-        // Setup logging
-        fileAppender = getFileAppender(getLogFile());
-        logBoxAppender = logControl.getAppender();
-        rootLogger.addAppender(logBoxAppender);
-        if (fileAppender != null) rootLogger.addAppender(fileAppender);
-        LOGGER.info("Beginning conversion of " + firstInput.getName());
-
-        LOGGER.info("Preparing to run tasks");
-        for (BaseTask task : tasks) {
-            task.prepareToRun();
-        }
-        LOGGER.info("Executing tasks");
-        for (BaseTask task : tasks) {
-            LOGGER.info("Running task " + task.getClass().getSimpleName());
-            task.run();
-            if (task.status != JobState.status.COMPLETED) break;
-            currentStage.set(currentStage.get() + 1);
-        }
-        LOGGER.info("Tasks finished");
-        shutdown();
-    }
-
-    public void prepareToActivate() {
-        if (status.get() == JobState.status.READY | status.get() == JobState.status.WARNING) {
+    public void queueJob() {
+        if (canRun()) {
             status.set(JobState.status.QUEUED);
             for (BaseTask task : tasks) task.status = JobState.status.QUEUED;
+            start();
+            controller.queuedJobs += 1;
+        } else {
+            LOGGER.error("Workflow %s is not in a state to be queued (%s)".formatted(
+                    firstInput.getName(), status.getValue()));
+        }
+    }
+
+    public void cancelJob() {
+        cancel();
+        if (status.get() == JobState.status.QUEUED) {
+            // Task wasn't started, so we can reset immediately.
+            resetJob();
+            controller.queuedJobs -= 1;
+        } else {
+            status.set(STOPPING);
+            statusText = "Waiting for task to stop safely";
+            for (BaseTask task: tasks) {
+                if (task.status == RUNNING) task.status = STOPPING;
+            }
         }
     }
 
@@ -343,6 +344,83 @@ public abstract class BaseWorkflow {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode node = mapper.readTree(targetFile);
         for (BaseTask task: tasks) task.importSettings(node);
+    }
+
+    public boolean canRun() {
+        return !isRunning() &&
+                (status.getValue() == JobState.status.READY || status.getValue() == JobState.status.WARNING);
+    }
+
+
+    // Execute the conversion as a task on the worker thread
+    protected Task<Void> createTask() {
+        return new Task<>() {
+            protected Void call() {
+                // Don't run if cancelled or already completed
+                if (isCancelled() || (status.get() == JobState.status.COMPLETED) ||
+                        (status.get() == JobState.status.FAILED)) {
+                    return null;
+                }
+                // Give the progress bar a very small value to trigger display.
+                if (controller.completedJobs == 0) controller.updateProgress(0.01);
+
+                status.set(JobState.status.RUNNING);
+                currentStage.set(0);
+                Platform.runLater(() -> {
+                    // Display this job on the task tree
+                    controller.jobList.getSelectionModel().select(BaseWorkflow.this);
+                    controller.jobList.refresh();
+                });
+                controller.updateStatus("Working on %s".formatted(firstInput.getName()));
+                // Setup logging
+                fileAppender = getFileAppender(getLogFile());
+                logBoxAppender = logControl.getAppender();
+                rootLogger.addAppender(logBoxAppender);
+                if (fileAppender != null) rootLogger.addAppender(fileAppender);
+                LOGGER.info("Beginning conversion of " + firstInput.getName());
+                try {
+                    LOGGER.info("Preparing to run tasks");
+                    for (BaseTask task : tasks) {
+                        task.prepareToRun();
+                    }
+                    LOGGER.info("Executing tasks");
+                    for (BaseTask task : tasks) {
+                        LOGGER.info("Running task " + task.getClass().getSimpleName());
+                        task.run();
+                        if (task.status != JobState.status.COMPLETED) break;
+                        currentStage.set(currentStage.get() + 1);
+                    }
+                    LOGGER.info("Tasks finished");
+                } finally {
+                    shutdown();
+                }
+
+                switch (status.get()) {
+                    case COMPLETED -> {
+                        LOGGER.info("Successfully created: " + finalOutput.getName() + "\n");
+                        controller.updateStatus(firstInput.getName() + " completed");
+                    }
+                    case FAILED -> {
+                        controller.updateStatus(firstInput.getName() + " failed");
+                        if (isCancelled()) {
+                            LOGGER.info("User aborted job: " + finalOutput.getName() + "\n");
+                        } else {
+                            LOGGER.info("Job failed, see logs \n");
+                        }
+                    }
+                    default -> LOGGER.info("Job status is invalid????: " + status);
+                }
+                controller.updateProgress((double) controller.completedJobs / controller.queuedJobs);
+
+                String finalStatus = String.format("Completed conversion of %s files.", controller.completedJobs);
+                Platform.runLater(() -> {
+                    LOGGER.info(finalStatus);
+                    controller.jobFinished();
+                    controller.jobList.refresh();
+                });
+                return null;
+            }
+        };
     }
 
 }

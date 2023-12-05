@@ -139,7 +139,6 @@ public class ConfigureJobDialog {
     private void applySettings() {
         // Different handling if configuring multiple jobs
         if (multiMode) {
-            int count = 0;
             // Iterate through tasks
             for (int i = 0; i < this.tasks.size(); i++) {
                 // Fetch settings from the template task used in the dialog
@@ -155,9 +154,9 @@ public class ConfigureJobDialog {
                     otherTask.applySettings();
                     otherTask.updateStatus();
                 }
-                count++;
             }
-            currentTask.parent.controller.updateStatus("Applied settings to %d jobs".formatted(count));
+            currentTask.parent.controller.updateStatus("Applied settings to %d jobs".formatted(jobs.size()));
+            onClose();
             return;
         }
         // If there's just one task we do it this easy way.
@@ -166,6 +165,7 @@ public class ConfigureJobDialog {
             task.updateStatus();
         }
         currentTask.parent.controller.updateStatus("Applied job settings");
+        onClose();
     }
 
     @FXML

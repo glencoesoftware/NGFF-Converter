@@ -71,6 +71,9 @@ public class PrimaryController {
     private static final ch.qos.logback.classic.Logger LOGGER =
             (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(App.class);
 
+    public int completedJobs = 0;
+    public int queuedJobs = 0;
+
     @FXML
     public Label jobsText;
     public Label taskNameText;
@@ -90,6 +93,7 @@ public class PrimaryController {
     public Button runJobsButton;
     public FontIcon runJobsButtonIcon;
     public Button configureSelectedButton;
+    public Button runSelectedButton;
     public Button removeSelectedButton;
     public VBox jobsBox;
     public MenuItem menuOutputFormat;
@@ -103,9 +107,6 @@ public class PrimaryController {
 
     private Stage b2rHelpWindow;
     private Stage r2oHelpWindow;
-    public boolean isRunning = false;
-    public Thread runnerThread;
-    private WorkflowRunner worker;
     private List<MenuItem> menuControlButtons;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
@@ -386,14 +387,19 @@ public class PrimaryController {
     }
 
     @FXML
+    private void runSelected() {
+        for (BaseWorkflow job: jobList.getItems())
+            if (job.getSelected().getValue() && job.canRun()) job.queueJob();
+    }
+
+    @FXML
     private void handleSelectionChange() {
         HashSet<String> selectedTypes = new HashSet<>();
-        boolean allowConfig = true;
+        boolean allowConfig = !jobList.getItems().isEmpty();
         for (BaseWorkflow job: jobList.getItems()) {
             if (job.getSelected().getValue()) {
-                selectedTypes.add(job.getShortName());
-                if (job.status.getValue() != JobState.status.READY &&
-                        job.status.getValue() != JobState.status.WARNING) {
+                selectedTypes.add(job.getTechnicalName());
+                if (!job.canRun()) {
                     // A selected job is already running, completed or failed = should not change config.
                     allowConfig = false;
                     break;
@@ -402,8 +408,10 @@ public class PrimaryController {
         }
         removeSelectedButton.setVisible(false);
         configureSelectedButton.setVisible(false);
+        runSelectedButton.setVisible(false);
         if (!selectedTypes.isEmpty()) {
             removeSelectedButton.setVisible(true);
+            runSelectedButton.setVisible(allowConfig);
             if (allowConfig && selectedTypes.size() < 2) {
                 configureSelectedButton.setVisible(true);
             }
@@ -421,7 +429,6 @@ public class PrimaryController {
 
     @FXML
     private void handleFileDrop(DragEvent event) {
-        if (isRunning) {return;}
         Dragboard db = event.getDragboard();
         if (db.hasFiles()) {
             event.setDropCompleted(true);
@@ -492,7 +499,7 @@ public class PrimaryController {
 
     @FXML
     private void listKeyHandler(KeyEvent event) {
-        if (!isRunning && event.getCode().equals(KeyCode.DELETE)) {
+        if (!jobsRunning() && event.getCode().equals(KeyCode.DELETE)) {
             removeFile();
         }
     }
@@ -561,7 +568,7 @@ public class PrimaryController {
     }
 
     public void updateRunButton() {
-        if (isRunning) {
+        if (jobsRunning()) {
             menuRun.setText("Stop job(s)");
             runJobsButton.setText("Stop job(s)");
             runJobsButtonIcon.setIconLiteral("bi-stop-fill");
@@ -613,21 +620,29 @@ public class PrimaryController {
                 updateStatus("No newer versions of NGFF-Converter are available");
             }
         }
-        System.out.println("Check completed");
-
     }
 
-    public void runCompleted() {
-        isRunning = false;
+    public boolean jobsRunning() {
+        for (BaseWorkflow job: jobList.getItems()) {
+            if (job.status.get() == JobState.status.QUEUED || job.status.get() == JobState.status.RUNNING) return true;
+        }
+        return false;
+    }
+
+    public void jobFinished() {
+        completedJobs += 1;
         updateRunButton();
+        if (jobsRunning()) return;
         menuControlButtons.forEach((control -> control.setDisable(false)));
         addJobButton.setDisable(false);
         updateStatus("Run finished");
         updateProgress(0.0);
         Notifications.create()
                 .title("NGFF-Converter")
-                .text("Conversions have finished")
+                .text("%d conversions have finished".formatted(completedJobs))
                 .showInformation();
+        queuedJobs = 0;
+        completedJobs = 0;
     }
 
     @FXML
@@ -635,31 +650,18 @@ public class PrimaryController {
         Platform.exit();
     }
 
-    public void runCancel() throws InterruptedException {
-        worker.interrupted = true;
-        updateStatus("Stopping run");
-        runnerThread.interrupt();
-        runnerThread.join();
+    public void runCancel() {
+        updateStatus("Stopping all tasks");
         jobList.getItems().forEach((job) -> {
-            // If we're stopping a running job we need to shut it down
-            if (job.status.get() == JobState.status.RUNNING) {
-                job.shutdown();
-            }
-            else if (job.status.get() == JobState.status.QUEUED) {
-                job.status.set(JobState.status.READY);
-                for (BaseTask task: job.tasks) task.status = JobState.status.READY;
-                // Recalculate current status now that we're not queued
-                job.respondToUpdate();
-            }
+            if (job.status.get() == JobState.status.QUEUED ||
+                    job.status.get() == JobState.status.RUNNING) job.cancelJob();
         });
-
         jobList.refresh();
-        runCompleted();
     }
 
     @FXML
-    private void runConvert() throws Exception {
-        if (isRunning) {
+    private void runConvert() {
+        if (jobsRunning()) {
             // Jobs are already running, need to stop.
             runCancel();
             return;
@@ -692,16 +694,14 @@ public class PrimaryController {
 
         menuControlButtons.forEach((control -> control.setDisable(true)));
         addJobButton.setDisable(true);
-        isRunning = true;
         updateRunButton();
         LOGGER.info("Beginning file conversion...\n");
         updateStatus("Beginning file conversion");
-
-        worker = new WorkflowRunner(this);
-        worker.interrupted = false;
-        runnerThread = new Thread(worker, "Converter");
-        runnerThread.setDaemon(true);
-        runnerThread.start();
+        for (BaseWorkflow job: jobList.getItems()) {
+            if (job.canRun()) {
+                job.queueJob();
+            }
+        }
     }
 
     private static Optional<ButtonType> warnLowDriveSpace(Path drive, long neededSpace, long freeSpace) {
@@ -739,5 +739,3 @@ public class PrimaryController {
     }
 
 }
-
-// Todo: Expand about dialog

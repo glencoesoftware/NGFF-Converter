@@ -11,11 +11,17 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * JavaFX App
@@ -43,15 +49,40 @@ public class App extends Application {
         stage.setTitle("NGFF-Converter - %s".formatted(version));
         Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
         stage.getIcons().add(icon);
-        stage.setOnCloseRequest(event -> Platform.exit());
+        stage.setOnCloseRequest(event -> {
+            if (controller.jobsRunning()) {
+                // Confirm exit if tasks are running
+                Alert choice = new Alert(Alert.AlertType.CONFIRMATION);
+                choice.setTitle("Close NGFF-Converter");
+                choice.setHeaderText("Conversions are still running!");
+                choice.setContentText(
+                        "File conversions are still running, are you sure you want to quit?"
+                );
+                choice.getDialogPane().getStylesheets().add(
+                        Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+                choice.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.CANCEL) {
+                        event.consume();
+                    } else {
+                        stop();
+                        Platform.exit();
+                    }
+                });
+            } else {
+                stop();
+                Platform.exit();
+            }
+        }
+        );
         stage.show();
     }
 
     @Override
-    public void stop() throws InterruptedException {
-        if (controller.isRunning) {
+    public void stop() {
+        if (controller.jobsRunning()) {
             controller.runCancel();
         }
+        executor.shutdownNow();
     }
 
     public static Scene getScene() {
@@ -62,4 +93,13 @@ public class App extends Application {
         launch();
     }
 
+    public static final ExecutorService executor = Executors.newFixedThreadPool(1, r -> {
+        Thread t = new Thread(r, "Conversion-Executor");
+        t.setDaemon(true);
+        return t ;
+    });
+
+    private static final BlockingQueue<Runnable> queue = ((ThreadPoolExecutor) executor).getQueue();
+
+    public static int queueSize() { return queue.size(); }
 }

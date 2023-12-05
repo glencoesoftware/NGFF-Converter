@@ -46,7 +46,7 @@ public abstract class BaseTask {
     public String warningMessage = "";
 
     protected final ProgressBar progressBar = new ProgressBar();
-    protected final Label progressLabel = new Label("Running", progressBar);
+    protected final Label progressLabel = new Label("Preparing", progressBar);
 
     abstract public String getName();
 
@@ -243,6 +243,4 @@ public abstract class BaseTask {
         container.setAlignment(Pos.CENTER_LEFT);
         return container;
     }
-
-
 }
