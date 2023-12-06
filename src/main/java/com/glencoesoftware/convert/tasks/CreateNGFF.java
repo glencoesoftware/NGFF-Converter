@@ -315,9 +315,6 @@ public class CreateNGFF extends BaseTask{
 
         desiredReaders.clear();
         desiredReaders.addAll(source.desiredReaders);
-
-        // Todo: Handle null return values
-
     }
 
 
