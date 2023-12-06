@@ -9,7 +9,7 @@ package com.glencoesoftware.convert.tasks;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.convert.JobState;
-import com.glencoesoftware.convert.tasks.progress.TiffProgressListener;
+import com.glencoesoftware.convert.tasks.progress.ConverterProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.pyramid.CompressionType;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
@@ -120,7 +120,7 @@ public class CreateTiff extends BaseTask {
     public void run() {
         // Apply GUI configurations first
         setupIO();
-        TiffProgressListener listener = new TiffProgressListener(progressBar, progressLabel, timerLabel);
+        ConverterProgressListener listener = new ConverterProgressListener(progressBar, progressLabel, timerLabel);
         converter.setProgressListener(listener);
         LOGGER.info("Running raw2ometiff");
         this.status = JobState.status.RUNNING;

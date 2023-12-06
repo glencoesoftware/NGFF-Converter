@@ -12,7 +12,7 @@ import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
 import com.glencoesoftware.convert.JobState;
-import com.glencoesoftware.convert.tasks.progress.NGFFProgressListener;
+import com.glencoesoftware.convert.tasks.progress.ConverterProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.google.common.base.Splitter;
 import javafx.beans.property.BooleanProperty;
@@ -361,7 +361,7 @@ public class CreateNGFF extends BaseTask{
         // Apply GUI configurations first
         setupIO();
 
-        NGFFProgressListener listener = new NGFFProgressListener(progressBar, progressLabel, timerLabel);
+        ConverterProgressListener listener = new ConverterProgressListener(progressBar, progressLabel, timerLabel);
         converter.setProgressListener(listener);
 
         LOGGER.info("Running bioformats2raw");

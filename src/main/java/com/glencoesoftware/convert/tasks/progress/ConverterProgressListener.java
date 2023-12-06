@@ -15,7 +15,7 @@ import javafx.scene.control.ProgressBar;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class TiffProgressListener implements IProgressListener {
+public class ConverterProgressListener implements IProgressListener {
 
     private final ProgressBar progressBar;
     private final Label labelText;
@@ -24,16 +24,14 @@ public class TiffProgressListener implements IProgressListener {
     private int currentSeries = 0;
     private long totalChunks = -1;
     private double completedChunks = 0;
-
     private String elapsedTimeString = "";
-
     private AnimationTimer timer;
 
     /**
      * Create a new progress listener that displays a progress bar.
      *
      */
-    public TiffProgressListener(ProgressBar bar, Label label, Label timer) {
+    public ConverterProgressListener(ProgressBar bar, Label label, Label timer) {
         progressBar = bar;
         labelText = label;
         timerText = timer;
@@ -54,18 +52,15 @@ public class TiffProgressListener implements IProgressListener {
             @Override
             public void handle(long now) {
                 elapsedTimeString = dateFormat.format(new Date(System.currentTimeMillis() - startTime));
-                updateBar();
+                    updateBar();
                 }
             };
         timer.start();
     }
 
     public void stop() {
+        // Stop the animation timer if it was started
         if (timer != null) timer.stop();
-    }
-
-    public void notifySeriesStart(int series, int resolutionCount, int chunkCount) {
-        currentSeries = series;
     }
 
     @Override
@@ -73,6 +68,11 @@ public class TiffProgressListener implements IProgressListener {
         totalSeries = seriesCount;
         totalChunks = chunkCount;
         start();
+    }
+
+    @Override
+    public void notifySeriesStart(int series, int resolutionCount, int chunkCount) {
+        currentSeries = series;
     }
 
     @Override
