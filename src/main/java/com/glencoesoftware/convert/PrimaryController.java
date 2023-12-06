@@ -398,6 +398,11 @@ public class PrimaryController {
         boolean allowConfig = !jobList.getItems().isEmpty();
         for (BaseWorkflow job: jobList.getItems()) {
             if (job.getSelected().getValue()) {
+                if (job.status.get() == JobState.status.RUNNING) {
+                    // Absolutely can't remove/configure a running job
+                    selectedTypes.clear();
+                    break;
+                }
                 selectedTypes.add(job.getTechnicalName());
                 if (!job.canRun()) {
                     // A selected job is already running, completed or failed = should not change config.
@@ -406,14 +411,14 @@ public class PrimaryController {
                 }
             }
         }
-        removeSelectedButton.setVisible(false);
-        configureSelectedButton.setVisible(false);
-        runSelectedButton.setVisible(false);
+        removeSelectedButton.setDisable(true);
+        configureSelectedButton.setDisable(true);
+        runSelectedButton.setDisable(true);
         if (!selectedTypes.isEmpty()) {
-            removeSelectedButton.setVisible(true);
-            runSelectedButton.setVisible(allowConfig);
+            removeSelectedButton.setDisable(false);
+            runSelectedButton.setDisable(!allowConfig);
             if (allowConfig && selectedTypes.size() < 2) {
-                configureSelectedButton.setVisible(true);
+                configureSelectedButton.setDisable(false);
             }
         }
     }
@@ -670,8 +675,7 @@ public class PrimaryController {
         // Validate there is enough space to perform conversions.
         updateStatus("Validating drive space");
         HashMap<Path, Double> spaceMap = new HashMap<>();
-        jobList.getItems().stream().filter(job ->
-                job.status.get() != JobState.status.COMPLETED).forEach(job -> {
+        jobList.getItems().stream().filter(BaseWorkflow::canRun).forEach(job -> {
                     double estimatedSize = job.firstInput.length() * 1.3;
                     Path targetDrive = Paths.get(job.finalOutput.getAbsolutePath()).getRoot();
                     double neededSpace = spaceMap.getOrDefault(targetDrive, 0.0);
