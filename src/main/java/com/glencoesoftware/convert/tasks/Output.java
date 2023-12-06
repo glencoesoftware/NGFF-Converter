@@ -36,7 +36,7 @@ import java.util.prefs.Preferences;
 // Virtual task to allow configuration of the output file destination and other misc options
 public class Output extends BaseTask {
 
-    public static String name = "Output";
+    public static final String name = "Output";
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
     public enum prefKeys {OVERWRITE, DIRECT_WRITE, LOG_CHOICE, LOG_LOCATION,
         WORKING_CHOICE, WORKING_DIR, OUTPUT_CHOICE, OUTPUT_DIR}
@@ -100,8 +100,8 @@ public class Output extends BaseTask {
     private static final Label outputTitle;
     private static final FontIcon fileBrowseButton;
     private static final FontIcon fileResetButton;
-    private static HBox logDirWidget;
-    private static HBox workingDirWidget;
+    private static final HBox logDirWidget;
+    private static final HBox workingDirWidget;
     private static final VBox logSettingsBox = getSettingGroupContainer();
     private static final VBox workingSettingsBox = getSettingGroupContainer();
     private static File sysTemp = null;
@@ -385,12 +385,6 @@ public class Output extends BaseTask {
 
         standardSettings.add(logSettingsBox);
 
-        logChoice.getItems().setAll(logFileType.values());
-        logChoice.getSelectionModel().selectedIndexProperty().addListener((e, oldVal, newVal) -> {
-                logDirWidget.getParent().setVisible(newVal.intValue() == 2);
-                logDirWidget.getParent().setManaged(newVal.intValue() == 2);
-                }
-        );
         logSettingsBox.getChildren().add(getSettingContainer(
                 logChoice,
                 "Log to File",
@@ -403,6 +397,14 @@ public class Output extends BaseTask {
         ));
 
         logDirWidget = getDirectorySelectWidget(logDirectory, "Choose log directory", null);
+
+        logChoice.getItems().setAll(logFileType.values());
+        logChoice.getSelectionModel().selectedIndexProperty().addListener((e, oldVal, newVal) -> {
+                    logDirWidget.getParent().setVisible(newVal.intValue() == 2);
+                    logDirWidget.getParent().setManaged(newVal.intValue() == 2);
+                }
+        );
+
         logSettingsBox.getChildren().add(
                 getSettingContainer(logDirWidget, "Log file location",
                         """
@@ -413,11 +415,6 @@ public class Output extends BaseTask {
         standardSettings.add(workingSettingsBox);
         addFilesSettings.add(workingSettingsBox);
 
-        workingDirectoryChoice.getItems().setAll(workingDirectoryType.values());
-        workingDirectoryChoice.getSelectionModel().selectedIndexProperty().addListener((i, o, v) -> {
-                workingDirWidget.getParent().setVisible(v.intValue() == 2);
-                workingDirWidget.getParent().setManaged(v.intValue() == 2);
-                });
         workingSettingsBox.getChildren().add(
                 getSettingContainer(workingDirectoryChoice, "Working directory location",
                         """
@@ -431,6 +428,12 @@ public class Output extends BaseTask {
 
         workingDirWidget = getDirectorySelectWidget(workingDirectoryField, "Choose working directory",
                 getSysTemp());
+
+        workingDirectoryChoice.getItems().setAll(workingDirectoryType.values());
+        workingDirectoryChoice.getSelectionModel().selectedIndexProperty().addListener((i, o, v) -> {
+            workingDirWidget.getParent().setVisible(v.intValue() == 2);
+            workingDirWidget.getParent().setManaged(v.intValue() == 2);
+        });
 
         workingSettingsBox.getChildren().add(
                 getSettingContainer(workingDirWidget, "Working directory",

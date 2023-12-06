@@ -34,7 +34,7 @@ public class CreateTiff extends BaseTask {
     private final PyramidFromDirectoryWriter converter = new PyramidFromDirectoryWriter();
     private final CommandLine cli = new CommandLine(converter);
 
-    public static String name = "Convert to TIFF";
+    public static final String name = "Convert to TIFF";
 
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, LEGACY, RGB, SPLIT, COMPRESSION_OPTS}

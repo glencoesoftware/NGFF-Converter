@@ -14,7 +14,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
 import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 

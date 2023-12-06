@@ -1,6 +1,7 @@
 .root {
     primary: #455A64;
     highlight: #2980B8;
+    -fx-accent: highlight;
 }
 
 .root * {

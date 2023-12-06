@@ -4,6 +4,7 @@
     secondary: #F0F6FF;
     neutral: #F8FAFC;
     tertiary: #DBE3F0;
+    -fx-accent: highlight;
 }
 
 .root * {

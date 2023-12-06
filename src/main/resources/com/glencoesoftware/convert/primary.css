@@ -4,6 +4,7 @@
     secondary: #F0F6FF;
     neutral: #F8FAFC;
     tertiary: #DBE3F0;
+    -fx-accent: highlight;
 }
 
 .root * {
@@ -114,7 +115,10 @@ minor-button > .text-button-icon {
     -fx-padding: 6px, 8px, 6px, 8px;
     -fx-border-radius: 100px;
     -fx-border-insets: -4px;
+}
 
+.progress-bar {
+    -fx-control-inner-background: tertiary;
 }
 
 .workflow-choice {

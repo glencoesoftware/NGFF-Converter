@@ -20,8 +20,8 @@ public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
 
     private final HBox container = new HBox();
 
-    ProgressBar stoppingBar = new ProgressBar();
-    Label stoppingLabel = new Label("Stopping", stoppingBar);
+    final ProgressBar stoppingBar = new ProgressBar();
+    final Label stoppingLabel = new Label("Stopping", stoppingBar);
 
 
     {

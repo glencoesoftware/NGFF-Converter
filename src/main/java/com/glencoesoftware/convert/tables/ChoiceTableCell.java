@@ -12,8 +12,6 @@ import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 
-import javafx.scene.control.TableCell;
-
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

@@ -10,7 +10,6 @@ import com.glencoesoftware.convert.tasks.BaseTask;
 import javafx.collections.FXCollections;
 import javafx.scene.control.*;
 
-import javafx.scene.control.TableCell;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 

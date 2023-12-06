@@ -28,8 +28,8 @@ public class ConvertToTiff extends BaseWorkflow{
         this.setTasks(tasks);
     }
 
-    public static String shortName = "OME-TIFF";
-    public static String fullName = "Convert to OME-TIFF";
+    public static final String shortName = "OME-TIFF";
+    public static final String fullName = "Convert to OME-TIFF";
 
     public String getShortName() { return shortName; }
 

@@ -121,19 +121,18 @@ public class PrimaryController {
     private Stage addFilesStage;
     private AddFilesDialog addFilesController;
 
-    private Stage updaterStage;
     private UpdateDialog updaterController;
     @FXML
     private StatusBar statusBar;
 
-    public ChangeListener<Number> taskWatcher = new ChangeListener<>() {
+    public final ChangeListener<Number> taskWatcher = new ChangeListener<>() {
         @Override
         public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
             taskList.refresh();
         }
     };
 
-    public static Map<String, Class<? extends BaseWorkflow>> installedWorkflows  =  Map.ofEntries(
+    public static final Map<String, Class<? extends BaseWorkflow>> installedWorkflows  =  Map.ofEntries(
             entry(ConvertToNGFF.shortName, ConvertToNGFF.class),
             entry(ConvertToTiff.shortName, ConvertToTiff.class)
     );
@@ -277,7 +276,7 @@ public class PrimaryController {
         updaterLoader.setLocation(App.class.getResource("UpdateDialog.fxml"));
         Scene updaterScene = new Scene(updaterLoader.load());
         updaterScene.setFill(Color.TRANSPARENT);
-        updaterStage = new Stage();
+        Stage updaterStage = new Stage();
         updaterStage.setScene(updaterScene);
         updaterStage.initModality(Modality.APPLICATION_MODAL);
         updaterStage.initStyle(StageStyle.UNIFIED);

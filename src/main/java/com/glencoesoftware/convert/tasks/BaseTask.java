@@ -32,7 +32,7 @@ import java.util.prefs.BackingStoreException;
 // Abstract base class for Tasks.
 public abstract class BaseTask {
 
-    public BaseWorkflow parent;
+    public final BaseWorkflow parent;
     public final ch.qos.logback.classic.Logger LOGGER =
             (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(this.getClass());
 
@@ -57,6 +57,7 @@ public abstract class BaseTask {
         progressLabel.setContentDisplay(ContentDisplay.TOP);
         progressLabel.setTextAlignment(TextAlignment.CENTER);
         progressBar.setMaxWidth(95);
+        progressBar.getStyleClass().add("fancy-progress");
     }
 
     public Label getProgressWidget() {

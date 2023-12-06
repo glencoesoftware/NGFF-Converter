@@ -25,8 +25,8 @@ public class ConvertToNGFF extends BaseWorkflow {
         this.setTasks(tasks);
     }
 
-    public static String shortName = "OME-NGFF";
-    public static String fullName = "Convert to OME-NGFF";
+    public static final String shortName = "OME-NGFF";
+    public static final String fullName = "Convert to OME-NGFF";
 
 
     public String getShortName() { return shortName; }

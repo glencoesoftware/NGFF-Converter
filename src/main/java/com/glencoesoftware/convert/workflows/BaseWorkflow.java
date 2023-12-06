@@ -90,7 +90,7 @@ public abstract class BaseWorkflow extends Service<Void> {
     }
 
 
-    public ObjectProperty<JobState.status> status = new SimpleObjectProperty<>(READY);
+    public final ObjectProperty<JobState.status> status = new SimpleObjectProperty<>(READY);
 
     public String statusText = "";
 
@@ -104,7 +104,7 @@ public abstract class BaseWorkflow extends Service<Void> {
     }
 
     // Index of the current running task
-    public IntegerProperty currentStage = new SimpleIntegerProperty(-1);
+    public final IntegerProperty currentStage = new SimpleIntegerProperty(-1);
 
     public ObservableList<BaseTask> tasks;
     protected void setTasks(ObservableList<BaseTask> newTasks) {

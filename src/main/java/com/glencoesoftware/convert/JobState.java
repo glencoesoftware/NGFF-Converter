@@ -18,8 +18,8 @@ public class JobState {
 
     public enum status {READY, QUEUED, RUNNING, COMPLETED, FAILED, WARNING, STOPPING}
 
-    public static Map<status, String> iconCodes = new HashMap<>();
-    public static Map<status, String> iconColors = new HashMap<>();
+    public static final Map<status, String> iconCodes = new HashMap<>();
+    public static final Map<status, String> iconColors = new HashMap<>();
 
     static {
         iconCodes.put(status.READY, "bi-circle-fill");

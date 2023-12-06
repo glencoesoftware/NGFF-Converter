@@ -50,7 +50,7 @@ public class CreateNGFF extends BaseTask{
     public final Converter converter = new Converter();
     private final CommandLine cli = new CommandLine(converter);
 
-    public static String name = "Convert to NGFF";
+    public static final String name = "Convert to NGFF";
 
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
