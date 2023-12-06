@@ -40,13 +40,12 @@ public abstract class BaseTask {
 
     public File input = null;
     public File output = null;
-
     public String outputName = "";
-
     public String warningMessage = "";
-
     protected final ProgressBar progressBar = new ProgressBar();
-    protected final Label progressLabel = new Label("Preparing", progressBar);
+    protected final Label progressLabel = new Label("Preparing");
+    protected final Label timerLabel = new Label("");
+    protected final VBox progressContainer = new VBox(progressLabel, progressBar, timerLabel);
 
     abstract public String getName();
 
@@ -54,14 +53,14 @@ public abstract class BaseTask {
         this.parent = parent;
         // We want some basic log messages to always show
         LOGGER.setLevel(Level.INFO);
-        progressLabel.setContentDisplay(ContentDisplay.TOP);
+        progressContainer.setAlignment(Pos.CENTER);
+        progressContainer.setSpacing(1);
         progressLabel.setTextAlignment(TextAlignment.CENTER);
         progressBar.setMaxWidth(95);
-        progressBar.getStyleClass().add("fancy-progress");
     }
 
-    public Label getProgressWidget() {
-        return progressLabel;
+    public VBox getProgressWidget() {
+        return progressContainer;
     }
 
     public File getInput(){

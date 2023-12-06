@@ -116,7 +116,7 @@
                            </padding>
                      <Label fx:id="taskNameText" styleClass="subheading" />
                        </HBox>
-                       <TableView fx:id="taskList" fixedCellSize="75.0" VBox.vgrow="ALWAYS">
+                       <TableView fx:id="taskList" fixedCellSize="60.0" VBox.vgrow="ALWAYS">
                            <columns>
                                <TableColumn fx:id="taskNameColumn" editable="false" maxWidth="-Infinity" minWidth="100.0" prefWidth="125.0" resizable="false" sortable="false" style="-fx-alignment: CENTER-LEFT;" text="Name" />
                                <TableColumn fx:id="taskStatusColumn" editable="false" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Status" />

@@ -19,6 +19,7 @@ public class NGFFProgressListener implements IProgressListener {
 
     private final ProgressBar progressBar;
     private final Label labelText;
+    private final Label timerText;
     private int totalSeries = -1;
     private int currentSeries = 0;
     private long totalChunks = -1;
@@ -30,15 +31,17 @@ public class NGFFProgressListener implements IProgressListener {
      * Create a new progress listener that displays a progress bar.
      *
      */
-    public NGFFProgressListener(ProgressBar bar, Label label) {
+    public NGFFProgressListener(ProgressBar bar, Label label, Label timer) {
         progressBar = bar;
         labelText = label;
+        timerText = timer;
     }
 
     public void updateBar() {
         Platform.runLater( () -> {
             progressBar.setProgress(completedChunks / totalChunks);
-            labelText.setText("Series %d of %d\n%s".formatted(currentSeries + 1, totalSeries, elapsedTimeString));
+            labelText.setText("Series %d of %d".formatted(currentSeries + 1, totalSeries));
+            timerText.setText(elapsedTimeString);
         });
     }
 

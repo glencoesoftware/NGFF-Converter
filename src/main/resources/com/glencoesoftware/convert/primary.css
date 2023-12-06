@@ -118,7 +118,13 @@ minor-button > .text-button-icon {
 }
 
 .progress-bar {
+    -fx-pref-height: 15px;
+    -fx-background-radius: 100px;
     -fx-control-inner-background: tertiary;
+}
+
+.progress-bar > .bar, .track {
+    -fx-background-radius: 100px;
 }
 
 .workflow-choice {

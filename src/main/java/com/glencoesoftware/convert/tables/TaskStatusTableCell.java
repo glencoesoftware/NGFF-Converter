@@ -11,7 +11,7 @@ import com.glencoesoftware.convert.tasks.BaseTask;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.text.TextAlignment;
+import javafx.scene.layout.VBox;
 
 public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
     private final Label mainLabel = new Label();
@@ -21,17 +21,17 @@ public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
     private final HBox container = new HBox();
 
     final ProgressBar stoppingBar = new ProgressBar();
-    final Label stoppingLabel = new Label("Stopping", stoppingBar);
+    final Label stoppingLabel = new Label("Stopping");
+    final VBox stoppingWidget = new VBox(stoppingLabel, stoppingBar, new Label(""));
 
 
     {
         container.setAlignment(Pos.CENTER);
         mainLabel.setTooltip(labelTooltip);
         mainLabel.getStyleClass().add("status-cell");
-        stoppingLabel.setContentDisplay(ContentDisplay.TOP);
-        stoppingLabel.setTextAlignment(TextAlignment.CENTER);
+        stoppingWidget.setAlignment(Pos.CENTER);
+        stoppingWidget.setSpacing(1);
         stoppingBar.setMaxWidth(95);
-
     }
 
     @Override
@@ -50,7 +50,7 @@ public class TaskStatusTableCell extends TableCell<BaseTask, Void> {
                 container.getChildren().add(mainLabel);
             }
             case RUNNING -> container.getChildren().addAll(current.getProgressWidget());
-            case STOPPING -> container.getChildren().addAll(stoppingLabel);
+            case STOPPING -> container.getChildren().addAll(stoppingWidget);
             case WARNING -> {
                 mainLabel.setGraphic(JobState.getStatusIcon(current.status, 15));
                 labelTooltip.setText(current.warningMessage);
