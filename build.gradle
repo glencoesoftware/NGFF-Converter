@@ -7,6 +7,7 @@ plugins {
 }
 
 version = '1.1.5'
+String bfversion = "7.0.1"
 String b2rversion = "0.8.0"
 String r2oversion = "0.6.0"
 
@@ -42,6 +43,7 @@ javafx {
 dependencies {
     implementation "com.glencoesoftware:raw2ometiff:${r2oversion}"
     implementation "com.glencoesoftware:bioformats2raw:${b2rversion}"
+    implementation "ome:formats-gpl:${bfversion}"
     implementation 'info.picocli:picocli:4.6.2'
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.0'
