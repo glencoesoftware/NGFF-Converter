@@ -22,6 +22,8 @@ import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.application.Platform;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -71,8 +73,8 @@ public class PrimaryController {
     private static final ch.qos.logback.classic.Logger LOGGER =
             (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(App.class);
 
-    public int completedJobs = 0;
-    public int queuedJobs = 0;
+    public IntegerProperty completedJobs = new SimpleIntegerProperty(0);
+    public IntegerProperty queuedJobs = new SimpleIntegerProperty(0);
 
     @FXML
     public Label jobsText;
@@ -216,6 +218,10 @@ public class PrimaryController {
         taskList.setPlaceholder(new Label("Select a job for details"));
         // Disable entry selection on the task list
         taskList.setSelectionModel(null);
+
+        // Bind progress meters
+        queuedJobs.addListener((o, oldPos, newPos) -> Platform.runLater(this::updateProgress));
+        completedJobs.addListener((o, oldPos, newPos) -> Platform.runLater(this::updateProgress));
 
         // Array of menu controls we want to lock during a run.
         menuControlButtons = Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
@@ -634,19 +640,20 @@ public class PrimaryController {
     }
 
     public void jobFinished() {
-        completedJobs += 1;
         updateRunButton();
-        if (jobsRunning()) return;
+        if (jobsRunning()) {
+            completedJobs.setValue(completedJobs.getValue() + 1);
+            return;
+        }
         menuControlButtons.forEach((control -> control.setDisable(false)));
         addJobButton.setDisable(false);
         updateStatus("Run finished");
-        updateProgress(0.0);
         Notifications.create()
                 .title("NGFF-Converter")
-                .text("%d conversions have finished".formatted(completedJobs))
+                .text("%d conversions have finished".formatted(completedJobs.getValue()))
                 .showInformation();
-        queuedJobs = 0;
-        completedJobs = 0;
+        completedJobs.setValue(0);;
+        queuedJobs.setValue(0);
     }
 
     @FXML
@@ -732,8 +739,11 @@ public class PrimaryController {
         Platform.runLater(() -> statusBar.setText(newStatus));
     }
 
-    public void updateProgress(double newProgress) {
-        Platform.runLater(() -> statusBar.setProgress(newProgress));
+    public void updateProgress() {
+        double newProgress = jobsRunning() ? 0.01 : 0;
+        int completed = completedJobs.getValue();
+        if (completed > 0) newProgress = (double) completed / queuedJobs.getValue();
+        statusBar.setProgress(newProgress);
         // Javafx doesn't support native taskbar interaction, but on some platforms we can do this with basic awt.
         Taskbar taskbar = Taskbar.getTaskbar();
         if (taskbar.isSupported(Taskbar.Feature.PROGRESS_VALUE)) {

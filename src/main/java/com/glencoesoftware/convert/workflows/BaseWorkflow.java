@@ -227,7 +227,7 @@ public abstract class BaseWorkflow extends Service<Void> {
             status.set(JobState.status.QUEUED);
             for (BaseTask task : tasks) task.status = JobState.status.QUEUED;
             start();
-            controller.queuedJobs += 1;
+            controller.queuedJobs.setValue(controller.queuedJobs.getValue() + 1);
         } else {
             LOGGER.error("Workflow %s is not in a state to be queued (%s)".formatted(
                     firstInput.getName(), status.getValue()));
@@ -239,7 +239,7 @@ public abstract class BaseWorkflow extends Service<Void> {
         if (status.get() == JobState.status.QUEUED) {
             // Task wasn't started, so we can reset immediately.
             resetJob();
-            controller.queuedJobs -= 1;
+            controller.queuedJobs.setValue(controller.queuedJobs.getValue() - 1);
         } else {
             status.set(STOPPING);
             statusText = "Waiting for task to stop safely";
@@ -361,8 +361,6 @@ public abstract class BaseWorkflow extends Service<Void> {
                         (status.get() == JobState.status.FAILED)) {
                     return null;
                 }
-                // Give the progress bar a very small value to trigger display.
-                if (controller.completedJobs == 0) controller.updateProgress(0.01);
 
                 status.set(JobState.status.RUNNING);
                 currentStage.set(0);
@@ -410,7 +408,6 @@ public abstract class BaseWorkflow extends Service<Void> {
                     }
                     default -> LOGGER.info("Job status is invalid????: " + status);
                 }
-                controller.updateProgress((double) controller.completedJobs / controller.queuedJobs);
 
                 String finalStatus = String.format("Completed conversion of %s files.", controller.completedJobs);
                 Platform.runLater(() -> {
