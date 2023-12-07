@@ -651,7 +651,8 @@ public class PrimaryController {
 
     @FXML
     public void onExit() {
-        Platform.exit();
+        Stage stage = (Stage) addJobButton.getScene().getWindow();
+        stage.fireEvent(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     public void runCancel() {

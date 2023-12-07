@@ -15,7 +15,7 @@
                <Insets bottom="10.0" />
            </BorderPane.margin>
            <Menu mnemonicParsing="false" text="File">
-               <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run job(s)" />
+               <MenuItem fx:id="menuRun" disable="true" mnemonicParsing="false" onAction="#runConvert" text="Run job(s)" />
                <MenuItem fx:id="menuOutputFormat" mnemonicParsing="false" onAction="#configureDefaultFormat" text="Configure output format" />
                <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
            </Menu>
