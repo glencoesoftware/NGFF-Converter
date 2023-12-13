@@ -103,6 +103,9 @@ public class UpdateDialog {
         // Don't check with dev versions
         if (currentVersion.equals("DEV")) return false;
         // Versions differ, figure out which is newer
+        // Strip any RC/Snapshot tags
+        if (currentVersion.contains("-")) currentVersion = currentVersion.substring(0, currentVersion.indexOf("-"));
+        // Consider numeric version numbers
         String[] currentVersionParts = currentVersion.split("\\.");
         String[] latestVersionParts = latestVersion.split("\\.");
         if (currentVersionParts.length != latestVersionParts.length) {
