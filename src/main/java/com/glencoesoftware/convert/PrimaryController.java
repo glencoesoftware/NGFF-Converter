@@ -7,7 +7,6 @@
 package com.glencoesoftware.convert;
 
 import ch.qos.logback.classic.Level;
-import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.convert.dialogs.AddFilesDialog;
 import com.glencoesoftware.convert.dialogs.ConfigureJobDialog;
 import com.glencoesoftware.convert.dialogs.UpdateDialog;
@@ -19,7 +18,6 @@ import com.glencoesoftware.convert.tasks.Output;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import com.glencoesoftware.convert.workflows.ConvertToNGFF;
 import com.glencoesoftware.convert.workflows.ConvertToTiff;
-import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
 import javafx.application.Platform;
 
 import javafx.beans.property.IntegerProperty;
@@ -36,7 +34,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.*;
 import javafx.scene.input.*;
@@ -50,13 +47,14 @@ import org.controlsfx.control.Notifications;
 import org.controlsfx.control.StatusBar;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
-import picocli.CommandLine;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -107,8 +105,6 @@ public class PrimaryController {
     public MenuItem menuResetPrefs;
     public MenuBar menuBar;
 
-    private Stage b2rHelpWindow;
-    private Stage r2oHelpWindow;
     private List<MenuItem> menuControlButtons;
 
     public final Set<String> supportedExtensions = new HashSet<>(Arrays.asList(new ImageReader().getSuffixes()));
@@ -250,7 +246,6 @@ public class PrimaryController {
             return false;
         }
         return true;
-
     }
 
     private void initSecondaryDialogs() throws IOException {
@@ -311,44 +306,23 @@ public class PrimaryController {
         }
     }
 
-
     @FXML
-    private void b2rHelp() throws IOException {
-        if (b2rHelpWindow != null) {
-            b2rHelpWindow.show();
-        } else {
-            createHelpWindow("bioformats2raw");
+    private void b2rHelp() {
+        try {
+            Desktop.getDesktop().browse(new URI("https://www.nature.com/articles/s41592-021-01326-w"));
+        } catch (IOException | URISyntaxException e) {
+            LOGGER.error("Failed to open URL");
+            throw new RuntimeException(e);
         }
     }
     @FXML
-    private void r2oHelp() throws IOException {
-        if (r2oHelpWindow != null) {
-            r2oHelpWindow.show();
-        } else {
-            createHelpWindow("raw2ometiff");
+    private void r2oHelp() {
+        try {
+            Desktop.getDesktop().browse(new URI("https://ome-model.readthedocs.io/en/stable/ome-tiff/"));
+        } catch (IOException | URISyntaxException e) {
+            LOGGER.error("Failed to open URL");
+            throw new RuntimeException(e);
         }
-    }
-
-    private void createHelpWindow(String command) throws IOException {
-        FXMLLoader helpLoader = new FXMLLoader();
-        helpLoader.setLocation(getClass().getResource("HelpWindow.fxml"));
-        Scene helpScene = new Scene(helpLoader.load());
-        Stage helpWindow = new Stage();
-        helpWindow.setScene(helpScene);
-        Label helpHeader = (Label) helpScene.lookup("#helpHeader");
-        TextArea helpContents = (TextArea) helpScene.lookup("#helpBox");
-        helpHeader.setText(helpHeader.getText() + command);
-        CommandLine cmd;
-        if (command.equals("bioformats2raw")) {
-            cmd = new CommandLine(new Converter());
-            b2rHelpWindow = helpWindow;
-        } else {
-            cmd = new CommandLine(new PyramidFromDirectoryWriter());
-            r2oHelpWindow = helpWindow;
-        }
-        helpContents.appendText(cmd.getUsageMessage());
-        helpWindow.show();
-        helpContents.setScrollTop(0);
     }
 
     @FXML
@@ -652,7 +626,7 @@ public class PrimaryController {
                 .title("NGFF-Converter")
                 .text("%d conversions have finished".formatted(completedJobs.getValue()))
                 .showInformation();
-        completedJobs.setValue(0);;
+        completedJobs.setValue(0);
         queuedJobs.setValue(0);
     }
 

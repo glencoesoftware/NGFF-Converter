@@ -27,8 +27,8 @@
                <MenuItem fx:id="menuResetPrefs" mnemonicParsing="false" onAction="#resetPrefs" text="Clear saved settings" />
            </Menu>
            <Menu mnemonicParsing="false" text="Help">
-               <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="bioformats2raw help" />
-               <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="raw2ometiff help" />
+               <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="OME-NGFF Docs" />
+               <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="OME-TIFF Docs" />
                <MenuItem mnemonicParsing="false" onAction="#manualCheckForUpdate" text="Check for Updates" />
                <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />
            </Menu>
