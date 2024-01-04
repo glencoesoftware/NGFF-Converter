@@ -297,7 +297,6 @@ public class Output extends BaseTask {
         this.status = JobState.status.RUNNING;
         if (directWrite){
             if (this.output.exists()) {
-                LOGGER.error("Output file was written sucessfully");
                 this.status = JobState.status.COMPLETED;
             } else {
                 this.status = JobState.status.FAILED;

@@ -259,6 +259,7 @@ public class PrimaryController {
         addFilesStage.initModality(Modality.APPLICATION_MODAL);
         addFilesStage.initStyle(StageStyle.UNIFIED);
         addFilesStage.setResizable(false);
+        addFilesStage.getIcons().add(App.appIcon);
         addFilesController = fileLoader.getController();
 
         // Job settings window
@@ -270,6 +271,7 @@ public class PrimaryController {
         jobSettingsStage.setScene(jobScene);
         jobSettingsStage.initModality(Modality.APPLICATION_MODAL);
         jobSettingsStage.initStyle(StageStyle.UNIFIED);
+        jobSettingsStage.getIcons().add(App.appIcon);
         jobSettingsController = settingsLoader.getController();
 
         // Updater Window
@@ -281,6 +283,7 @@ public class PrimaryController {
         updaterStage.setScene(updaterScene);
         updaterStage.initModality(Modality.APPLICATION_MODAL);
         updaterStage.initStyle(StageStyle.UNIFIED);
+        updaterStage.getIcons().add(App.appIcon);
         updaterController = updaterLoader.getController();
     }
 
@@ -543,6 +546,7 @@ public class PrimaryController {
         stage.initStyle(StageStyle.UNIFIED);
         stage.initOwner(App.getScene().getWindow());
         stage.setResizable(false);
+        stage.getIcons().add(App.appIcon);
         stage.show();
     }
 

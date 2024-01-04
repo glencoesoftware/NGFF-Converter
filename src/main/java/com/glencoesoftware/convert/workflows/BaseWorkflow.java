@@ -132,6 +132,7 @@ public abstract class BaseWorkflow extends Service<Void> {
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
         consoleWindow.initStyle(StageStyle.UNIFIED);
+        consoleWindow.getIcons().add(App.appIcon);
         textAreaStream = logControl.stream;
     }
 
@@ -204,7 +205,7 @@ public abstract class BaseWorkflow extends Service<Void> {
         }
         LOGGER.info("Path calculation complete. Final output will be:");
         LOGGER.info(workingInput.getAbsolutePath());
-        logControl.setTitle("%s (→ %s)".formatted(firstInput.getName(), getShortName()));
+        logControl.setTitle("%s (to %s)".formatted(firstInput.getName(), getShortName()));
         respondToUpdate();
     }
 

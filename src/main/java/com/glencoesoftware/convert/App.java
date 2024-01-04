@@ -34,6 +34,8 @@ public class App extends Application {
 
     public static String version;
 
+    public static Image appIcon = new Image(Objects.requireNonNull(App.class.getResourceAsStream("main-icon.png")));
+
     static {
         version = App.class.getPackage().getImplementationVersion();
         if (version == null) { version = "DEV"; }
@@ -47,8 +49,7 @@ public class App extends Application {
         controller = fxmlLoader.getController();
         stage.setScene(scene);
         stage.setTitle("NGFF-Converter - %s".formatted(version));
-        Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("main-icon.png")));
-        stage.getIcons().add(icon);
+        stage.getIcons().add(appIcon);
         stage.setOnCloseRequest(event -> {
             if (controller.jobsRunning()) {
                 // Confirm exit if tasks are running
@@ -94,7 +95,7 @@ public class App extends Application {
     }
 
     public static final ExecutorService executor = Executors.newFixedThreadPool(1, r -> {
-        Thread t = new Thread(r, "Conversion-Executor");
+        Thread t = new Thread(r, "Converter");
         t.setDaemon(true);
         return t ;
     });
