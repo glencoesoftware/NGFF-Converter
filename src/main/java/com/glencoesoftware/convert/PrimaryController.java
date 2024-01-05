@@ -257,7 +257,6 @@ public class PrimaryController {
         addFilesStage = new Stage();
         addFilesStage.setScene(fileScene);
         addFilesStage.initModality(Modality.APPLICATION_MODAL);
-        addFilesStage.initStyle(StageStyle.UNIFIED);
         addFilesStage.setResizable(false);
         addFilesStage.getIcons().add(App.appIcon);
         addFilesController = fileLoader.getController();
@@ -270,7 +269,6 @@ public class PrimaryController {
         jobSettingsStage = new Stage();
         jobSettingsStage.setScene(jobScene);
         jobSettingsStage.initModality(Modality.APPLICATION_MODAL);
-        jobSettingsStage.initStyle(StageStyle.UNIFIED);
         jobSettingsStage.getIcons().add(App.appIcon);
         jobSettingsController = settingsLoader.getController();
 
@@ -282,7 +280,7 @@ public class PrimaryController {
         Stage updaterStage = new Stage();
         updaterStage.setScene(updaterScene);
         updaterStage.initModality(Modality.APPLICATION_MODAL);
-        updaterStage.initStyle(StageStyle.UNIFIED);
+        updaterStage.initStyle(StageStyle.UTILITY);
         updaterStage.getIcons().add(App.appIcon);
         updaterController = updaterLoader.getController();
     }
@@ -543,7 +541,7 @@ public class PrimaryController {
         stage.setScene(scene);
         stage.setAlwaysOnTop(true);
         stage.initModality(Modality.WINDOW_MODAL);
-        stage.initStyle(StageStyle.UNIFIED);
+        stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(App.getScene().getWindow());
         stage.setResizable(false);
         stage.getIcons().add(App.appIcon);

@@ -131,7 +131,6 @@ public abstract class BaseWorkflow extends Service<Void> {
         logControl = logLoader.getController();
         consoleWindow = new Stage();
         consoleWindow.setScene(scene);
-        consoleWindow.initStyle(StageStyle.UNIFIED);
         consoleWindow.getIcons().add(App.appIcon);
         textAreaStream = logControl.stream;
     }
