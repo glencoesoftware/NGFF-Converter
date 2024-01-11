@@ -286,6 +286,7 @@ public class Output extends BaseTask {
         calculateOutput("");
         if (output.exists() && !overwrite) {
             parent.statusText = "Output file already exists (file overwrite setting is disabled)";
+            LOGGER.error("Output file already exists (overwriting is disabled). Aborting run.");
             throw new IllegalArgumentException("Output file already exists");
         }
         BaseTask secondLastTask = parent.tasks.get(parent.tasks.size() - 2);

@@ -272,7 +272,7 @@ public abstract class BaseWorkflow extends Service<Void> {
         // Cleanup intermediates
         LOGGER.info("Cleaning up intermediates");
         cleanupIntermediates();
-        LOGGER.info("Conversion finished");
+        LOGGER.info("Execution finished\n");
 
         // Print anything left in the console buffer.
         textAreaStream.forceFlush();
