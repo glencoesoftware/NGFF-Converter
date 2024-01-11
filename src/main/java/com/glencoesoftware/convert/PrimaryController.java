@@ -626,7 +626,7 @@ public class PrimaryController {
         updateStatus("Run finished");
         Notifications.create()
                 .title("NGFF-Converter")
-                .text("%d conversions have finished".formatted(completedJobs.getValue()))
+                .text("%d conversions have finished".formatted(completedJobs.getValue() + 1))
                 .showInformation();
         completedJobs.setValue(0);
         queuedJobs.setValue(0);
