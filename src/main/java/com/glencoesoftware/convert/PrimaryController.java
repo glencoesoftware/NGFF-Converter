@@ -417,7 +417,7 @@ public class PrimaryController {
         Dragboard db = event.getDragboard();
         if (db.hasFiles()) {
             event.setDropCompleted(true);
-            addFilesToList(db.getFiles());
+            Platform.runLater(() -> addFilesToList(db.getFiles()));
         } else event.setDropCompleted(false);
         event.consume();
     }
