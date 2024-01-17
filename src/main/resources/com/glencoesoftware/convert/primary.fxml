@@ -21,6 +21,7 @@
            </Menu>
            <Menu mnemonicParsing="false" text="Edit">
                <MenuItem fx:id="menuAddFiles" mnemonicParsing="false" onAction="#addFiles" text="Add Files" />
+               <MenuItem fx:id="menuAddZarr" mnemonicParsing="false" onAction="#addFolder" text="Add Folder or Zarr" />
                <MenuItem fx:id="menuRemoveFile" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
                <MenuItem fx:id="menuClearFinished" mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
                <MenuItem fx:id="menuClearAll" mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />

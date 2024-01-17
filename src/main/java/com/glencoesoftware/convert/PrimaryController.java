@@ -99,6 +99,7 @@ public class PrimaryController {
     public MenuItem menuOutputFormat;
     public MenuItem menuRun;
     public MenuItem menuAddFiles;
+    public MenuItem menuAddZarr;
     public MenuItem menuRemoveFile;
     public MenuItem menuClearFinished;
     public MenuItem menuClearAll;
@@ -220,7 +221,7 @@ public class PrimaryController {
         completedJobs.addListener((o, oldPos, newPos) -> Platform.runLater(this::updateProgress));
 
         // Array of menu controls we want to lock during a run.
-        menuControlButtons = Arrays.asList(menuOutputFormat, menuAddFiles, menuRemoveFile,
+        menuControlButtons = Arrays.asList(menuOutputFormat, menuAddFiles, menuAddZarr, menuRemoveFile,
                 menuClearFinished, menuClearAll, menuResetPrefs);
         initSecondaryDialogs();
         autoCheckForUpdate();
@@ -334,6 +335,16 @@ public class PrimaryController {
         List<File> newFiles = addFileChooser.showOpenMultipleDialog(stage);
         if (newFiles != null && !newFiles.isEmpty()) {
             addFilesToList(newFiles);
+        }
+    }
+    @FXML
+    private void addFolder() {
+        Stage stage = (Stage) addJobButton.getScene().getWindow();
+        DirectoryChooser addDirChooser = new DirectoryChooser();
+        addDirChooser.setTitle("Select Zarr root folder to load...");
+        File directory = addDirChooser.showDialog(stage);
+        if (directory != null) {
+            addFilesToList(List.of(directory));
         }
     }
 
