@@ -537,6 +537,8 @@ public class Output extends BaseTask {
     }
 
     public void exportSettings(JsonGenerator generator) throws IOException {
+        // Ensure displayed settings are what gets saved
+        applySettings();
         generator.writeFieldName(getName());
         generator.writeStartObject();
         generator.writeFieldName(prefKeys.OUTPUT_CHOICE.name());

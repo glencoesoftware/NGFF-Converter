@@ -822,6 +822,8 @@ public class CreateNGFF extends BaseTask{
     }
 
     public void setDefaults() throws BackingStoreException {
+        // Ensure displayed settings are what gets stored
+        applySettings();
         taskPreferences.clear();
         taskPreferences.put(prefKeys.LOG_LEVEL.name(), converter.getLogLevel());
         taskPreferences.putInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers());
@@ -973,6 +975,8 @@ public class CreateNGFF extends BaseTask{
     }
 
     public void exportSettings(JsonGenerator generator) throws IOException {
+        // Ensure displayed settings are what gets saved
+        applySettings();
         generator.writeFieldName(getName());
         generator.writeStartObject();
         generator.writeFieldName(prefKeys.LOG_LEVEL.name());
