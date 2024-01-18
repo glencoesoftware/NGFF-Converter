@@ -54,6 +54,7 @@ public class App extends Application {
             if (controller.jobsRunning()) {
                 // Confirm exit if tasks are running
                 Alert choice = new Alert(Alert.AlertType.CONFIRMATION);
+                choice.initOwner(getScene().getWindow());
                 choice.setTitle("Close NGFF-Converter");
                 choice.setHeaderText("Conversions are still running!");
                 choice.setContentText(

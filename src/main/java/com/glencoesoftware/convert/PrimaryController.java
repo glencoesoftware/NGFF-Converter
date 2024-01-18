@@ -483,9 +483,11 @@ public class PrimaryController {
         LOGGER.info("Added %d jobs".formatted(count));
         updateStatus("Added %d jobs".formatted(count));
         if (count == 0) {
+            Window primary = App.getScene().getWindow();
             Alert alert = new Alert(Alert.AlertType.WARNING,
                     "Selected file(s) were either not supported or already in the job list",
                     ButtonType.OK);
+            alert.initOwner(primary);
             alert.setTitle("Add Jobs");
             alert.setHeaderText("No jobs added");
             alert.getDialogPane().getStylesheets().add(
@@ -518,6 +520,8 @@ public class PrimaryController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "This will reset all Workflow defaults.", ButtonType.YES, ButtonType.NO
                 );
+        Window primary = App.getScene().getWindow();
+        confirm.initOwner(primary);
         confirm.setTitle("Reset all settings");
         confirm.setHeaderText("Clear all saved settings?");
         confirm.getDialogPane().getStylesheets().add(
@@ -716,6 +720,8 @@ public class PrimaryController {
                         freeSpace / 1048576),
                 ButtonType.YES,
                 ButtonType.NO);
+        Window primary = App.getScene().getWindow();
+        alert.initOwner(primary);
         alert.setTitle("NGFF-Converter");
         alert.setHeaderText("Possible storage space issue");
 

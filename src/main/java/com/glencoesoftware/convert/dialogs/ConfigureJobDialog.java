@@ -195,6 +195,7 @@ public class ConfigureJobDialog {
                 "Reset settings for this task (%s) or all tasks?".formatted(currentTask.getName()),
                 ButtonType.CANCEL, thisTask, allTasks
         );
+        choice.initOwner(configureJob.getScene().getWindow());
         choice.setTitle("Restore defaults");
         choice.setHeaderText("Choose which settings to reset");
         choice.getDialogPane().getStylesheets().add(
@@ -229,6 +230,7 @@ public class ConfigureJobDialog {
                 "Set defaults for this task (%s) or all tasks?".formatted(currentTask.getName()),
                 ButtonType.CANCEL, thisTask, allTasks
         );
+        choice.initOwner(configureJob.getScene().getWindow());
         choice.setTitle("Set defaults");
         choice.setHeaderText("Choose which settings to reset");
         choice.getDialogPane().getStylesheets().add(
@@ -261,6 +263,7 @@ public class ConfigureJobDialog {
     private void applyToAll() {
         BaseWorkflow thisJob = currentTask.parent;
         Alert choice = new Alert(Alert.AlertType.CONFIRMATION);
+        choice.initOwner(configureJob.getScene().getWindow());
         choice.setTitle("Apply to all");
         choice.setHeaderText("Are you sure?");
         choice.setContentText(
@@ -304,6 +307,7 @@ public class ConfigureJobDialog {
                 "Export settings for this task (%s) or all tasks?".formatted(currentTask.getName()),
                 ButtonType.CANCEL, thisTask, allTasks
         );
+        choice.initOwner(configureJob.getScene().getWindow());
         choice.setTitle("Export settings");
         choice.setHeaderText("Choose settings to export");
         choice.getDialogPane().getStylesheets().add(
