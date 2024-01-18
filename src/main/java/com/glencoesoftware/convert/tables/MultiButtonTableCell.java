@@ -81,7 +81,6 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
             // Stop an ongoing run
             BaseWorkflow subject = getTableRow().getItem();
             if (subject.canRun()) subject.queueJob();
-            subject.controller.updateRunButton();
             subject.controller.updateStatus("Queued " + subject.firstInput.getName());
         });
 
@@ -106,7 +105,6 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         resetJob.setOnAction(evt -> {
             BaseWorkflow subject = getTableRow().getItem();
             subject.resetJob();
-            App.controller.updateRunButton();
             getTableView().refresh();
         });
 

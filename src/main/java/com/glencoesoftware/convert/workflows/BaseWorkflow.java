@@ -52,6 +52,7 @@ public abstract class BaseWorkflow extends Service<Void> {
             // Update job/task display when jobs update
             controller.jobList.refresh();
             controller.taskList.refresh();
+            controller.updateRunButton();
         });
         firstInput = input;
     }

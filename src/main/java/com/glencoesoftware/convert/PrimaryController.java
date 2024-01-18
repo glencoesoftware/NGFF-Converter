@@ -566,6 +566,7 @@ public class PrimaryController {
     }
 
     public void updateRunButton() {
+        // Update "Run/Stop Jobs" button state
         if (jobsRunning()) {
             menuRun.setText("Stop job(s)");
             runJobsButton.setText("Stop job(s)");
@@ -628,7 +629,6 @@ public class PrimaryController {
     }
 
     public void jobFinished() {
-        updateRunButton();
         if (jobsRunning()) {
             completedJobs.setValue(completedJobs.getValue() + 1);
             return;
@@ -693,7 +693,6 @@ public class PrimaryController {
 
         menuControlButtons.forEach((control -> control.setDisable(true)));
         addJobButton.setDisable(true);
-        updateRunButton();
         LOGGER.info("Beginning file conversion...\n");
         updateStatus("Beginning file conversion");
         for (BaseWorkflow job: jobList.getItems()) {
