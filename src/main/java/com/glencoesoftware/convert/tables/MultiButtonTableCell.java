@@ -6,7 +6,6 @@
  */
 package com.glencoesoftware.convert.tables;
 
-import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
