@@ -270,6 +270,8 @@ public class ConfigureJobDialog {
                 Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
         choice.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
+                // Apply settings from GUI before cloning
+                for (BaseTask task : thisJob.tasks) {task.applySettings();}
                 List<BaseWorkflow> allJobs = currentTask.parent.controller.jobList.getItems();
                 int count = 0;
                 for (BaseWorkflow job: allJobs) {
