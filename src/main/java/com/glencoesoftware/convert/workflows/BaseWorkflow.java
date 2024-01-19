@@ -50,9 +50,11 @@ public abstract class BaseWorkflow extends Service<Void> {
         setExecutor(App.executor);
         status.addListener((i, o, n) -> {
             // Update job/task display when jobs update
-            controller.jobList.refresh();
-            controller.taskList.refresh();
-            controller.updateRunButton();
+            Platform.runLater(() -> {
+                controller.jobList.refresh();
+                controller.taskList.refresh();
+                controller.updateRunButton();
+            });
         });
         firstInput = input;
     }
@@ -381,6 +383,8 @@ public abstract class BaseWorkflow extends Service<Void> {
                     for (BaseTask task : tasks) {
                         task.prepareToRun();
                     }
+                    LOGGER.info("Will convert %s\nto %s".formatted(firstInput.getAbsolutePath(),
+                            finalOutput.getAbsolutePath()));
                     LOGGER.info("Executing tasks");
                     for (BaseTask task : tasks) {
                         LOGGER.info("Running task " + task.getClass().getSimpleName());
