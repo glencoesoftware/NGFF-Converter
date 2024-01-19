@@ -485,7 +485,7 @@ public class PrimaryController {
         if (count == 0) {
             Window primary = App.getScene().getWindow();
             Alert alert = new Alert(Alert.AlertType.WARNING,
-                    "Selected file(s) were either not supported or already in the job list",
+                    "Selected file(s) already in the job list or not supported",
                     ButtonType.OK);
             alert.initOwner(primary);
             alert.setTitle("Add Jobs");
