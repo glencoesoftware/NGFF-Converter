@@ -322,8 +322,11 @@ public class Output extends BaseTask {
             LOGGER.error("Output file already exists (overwriting is disabled). Aborting run.");
             throw new IllegalArgumentException("Output file already exists");
         }
-        BaseTask secondLastTask = parent.tasks.get(parent.tasks.size() - 2);
-        secondLastTask.output = output;
+        if (directWrite) {
+            // Replace the final runner task's output with the target directory
+            BaseTask secondLastTask = parent.tasks.get(parent.tasks.size() - 2);
+            secondLastTask.output = output;
+        }
     }
 
     public void run() {
@@ -351,6 +354,7 @@ public class Output extends BaseTask {
         } catch (IOException e) {
             this.status = JobState.status.FAILED;
             LOGGER.error("Failed to copy");
+            LOGGER.error(String.valueOf(e));
         }
     }
 
