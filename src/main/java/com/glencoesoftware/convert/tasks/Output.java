@@ -214,7 +214,7 @@ public class Output extends BaseTask {
         // Recalculate job IO in case the user switched temp directory
         if (input != null) parent.calculateIO();
         outputFileName.getStyleClass().remove("setting-warn");
-        if (output != null && !output.canWrite()) {
+        if (output != null && !output.getParentFile().canWrite()) {
             errors++;
             if (!outputFileName.getStyleClass().contains("setting-warn"))
                 outputFileName.getStyleClass().add("setting-warn");
