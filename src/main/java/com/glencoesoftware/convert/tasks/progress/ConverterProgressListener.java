@@ -40,7 +40,12 @@ public class ConverterProgressListener implements IProgressListener {
     public void updateBar() {
         Platform.runLater( () -> {
             progressBar.setProgress(completedChunks / totalChunks);
-            labelText.setText("Series %d of %d".formatted(currentSeries + 1, totalSeries));
+            if (totalSeries < 100)
+                labelText.setText("Series %d of %d".formatted(currentSeries + 1, totalSeries));
+            else if (totalSeries < 1000)
+                labelText.setText("Series %d/%d".formatted(currentSeries + 1, totalSeries));
+            else
+                labelText.setText("%d/%d".formatted(currentSeries + 1, totalSeries));
             timerText.setText(elapsedTimeString);
         });
     }
