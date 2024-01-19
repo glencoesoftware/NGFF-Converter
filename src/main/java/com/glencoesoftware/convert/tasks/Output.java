@@ -167,7 +167,8 @@ public class Output extends BaseTask {
                 });
     }
 
-    public void applySettings() {
+    public int applySettings() {
+        int errors = 0;
         outputLocation = outputChoice.getValue();
         String outputText = outputDirectory.getText();
         if (outputText == null || outputLocation == outputLocationType.INPUT_FOLDER) outputFolder = null;
@@ -181,29 +182,61 @@ public class Output extends BaseTask {
         }
         directWrite = directWriteBox.selectedProperty().get();
         logToFile = logChoice.getValue();
+        logDirectory.getStyleClass().remove("setting-warn");
         switch (logToFile) {
-            case DISABLED -> logFileLocation = null;
-            case OUTPUT_FOLDER -> logFileLocation = output.getParentFile();
+            case DISABLED, OUTPUT_FOLDER -> logFileLocation = null;
             case CUSTOM_FOLDER -> {
                 String txt = logDirectory.getText();
                 if (txt == null || txt.isEmpty()) logFileLocation = output.getParentFile();
-                else logFileLocation = new File(txt);
+                else {
+                    logFileLocation = new File(txt);
+                    if (!logFileLocation.canWrite()) {
+                        errors++;
+                        if (!logDirectory.getStyleClass().contains("setting-warn"))
+                            logDirectory.getStyleClass().add("setting-warn");
+                    }
+                }
             }
         }
 
         workingDirectoryLocation = workingDirectoryChoice.getValue();
         String txt = workingDirectoryField.getText();
+        workingDirectoryField.getStyleClass().remove("setting-warn");
         if (txt == null || txt.isEmpty()) trueWorkingDirectory = null;
-        else trueWorkingDirectory = new File(txt);
+        else {
+            trueWorkingDirectory = new File(txt);
+            if (!trueWorkingDirectory.canWrite()) {
+                errors++;
+                if (!workingDirectoryField.getStyleClass().contains("setting-warn"))
+                    workingDirectoryField.getStyleClass().add("setting-warn");
+            }
+        }
         // Recalculate job IO in case the user switched temp directory
         if (input != null) parent.calculateIO();
+        outputFileName.getStyleClass().remove("setting-warn");
+        if (output != null && !output.canWrite()) {
+            errors++;
+            if (!outputFileName.getStyleClass().contains("setting-warn"))
+                outputFileName.getStyleClass().add("setting-warn");
+        }
+        // No settings
+        return errors;
     }
 
 
     public File getLogFile() {
-        if (logToFile == logFileType.DISABLED) return null;
-        return new File(logFileLocation, "%s.log".formatted(output.getName()));
+        switch (logToFile) {
+            case DISABLED -> {
+                return null;
+            }
+            case OUTPUT_FOLDER -> {
+                return new File(output.getParentFile(), "%s.log".formatted(output.getName()));
+            }
+            default -> {
+                return new File(logFileLocation, "%s.log".formatted(output.getName()));
+            }
         }
+    }
 
     public void setOverwrite(boolean shouldOverwrite) {
         overwrite = shouldOverwrite;
