@@ -311,7 +311,7 @@ public class PrimaryController {
     @FXML
     private void b2rHelp() {
         try {
-            Desktop.getDesktop().browse(new URI("https://www.nature.com/articles/s41592-021-01326-w"));
+            Desktop.getDesktop().browse(new URI("https://ngff.openmicroscopy.org/"));
         } catch (IOException | URISyntaxException e) {
             LOGGER.error("Failed to open URL");
             throw new RuntimeException(e);
