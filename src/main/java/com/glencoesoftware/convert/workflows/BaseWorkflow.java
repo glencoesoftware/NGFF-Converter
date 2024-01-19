@@ -260,7 +260,11 @@ public abstract class BaseWorkflow extends Service<Void> {
                     continue;
                 }
                 try {
-                    if (output.isDirectory()) FileUtils.deleteDirectory(output);
+                    if (output.isDirectory()) {
+                        // This is silly but sometimes deleteDirectory alone fails on an incomplete zarr
+                        FileUtils.cleanDirectory(output);
+                        FileUtils.deleteDirectory(output);
+                    }
                     else FileUtils.delete(output);
                 } catch (IOException ioe) {
                     LOGGER.error("Failed to clean up intermediates - %s - Error was: %s".formatted(
