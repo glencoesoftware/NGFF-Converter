@@ -47,6 +47,12 @@ public class App extends Application {
         Parent primary = fxmlLoader.load();
         scene = new Scene(primary, 1024, 600);
         controller = fxmlLoader.getController();
+
+        Thread.setDefaultUncaughtExceptionHandler((Thread t, Throwable e) -> {
+            if (Platform.isFxApplicationThread()) controller.showExceptionDialog(e);
+            else System.err.println("An unexpected error occurred in " + t);
+        });
+
         stage.setScene(scene);
         stage.setTitle("NGFF-Converter - %s".formatted(version));
         stage.getIcons().add(appIcon);

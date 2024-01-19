@@ -35,22 +35,28 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.*;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.*;
 import javafx.scene.input.*;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.*;
 import javafx.stage.Window;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
+import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.Notifications;
 import org.controlsfx.control.StatusBar;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
@@ -743,6 +749,49 @@ public class PrimaryController {
             if (newProgress == 0) Taskbar.getTaskbar().setProgressValue(-1);
             else Taskbar.getTaskbar().setProgressValue((int) (newProgress * 100));
         }
+    }
+
+    public void showExceptionDialog(Throwable ex) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.initOwner(App.getScene().getWindow());
+        alert.setTitle("NGFF-Converter Error");
+        alert.setHeaderText("Unhandled Exception!");
+        alert.setContentText("NGFF-Converter encountered an error:\n\n%s\n\n".formatted(ex));
+
+        // Fetch exception text.
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        String exceptionText = sw.toString();
+
+        HyperlinkLabel link = new HyperlinkLabel("Please consider reporting this on [GitHub]");
+        link.setOnAction(event -> {
+            try {
+                Desktop.getDesktop().browse(new URI("https://github.com/glencoesoftware/NGFF-Converter/issues"));
+            } catch (IOException | URISyntaxException e) {
+                LOGGER.error("Failed to open URL");
+            }
+        });
+
+        TextArea textArea = new TextArea(exceptionText);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        VBox.setVgrow(textArea, Priority.ALWAYS);
+
+        Button copyButton = new Button("Copy to Clipboard");
+        copyButton.setOnAction(e -> Toolkit.getDefaultToolkit()
+                .getSystemClipboard()
+                .setContents(new StringSelection(exceptionText), null));
+
+        VBox expContent = new VBox(5, new Label("The exception traceback was:"), textArea, copyButton, link);
+        expContent.setMaxWidth(Double.MAX_VALUE);
+
+        // Set expandable Exception into the dialog pane.
+        alert.getDialogPane().setExpandableContent(expContent);
+        alert.show();
     }
 
 }
