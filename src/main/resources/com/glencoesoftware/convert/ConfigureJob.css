@@ -29,9 +29,16 @@
     -fx-padding: 5px;
 }
 
-.tooltip
-{
+.setting-warn {
+    -fx-effect: dropshadow(gaussian, red, 5, 0.7, 0, 0)
+}
+
+.tooltip {
     -fx-text-fill: white;
+}
+
+.tooltip-big {
+    -fx-font-size: 16px;
 }
 
 .expando-title

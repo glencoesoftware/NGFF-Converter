@@ -111,7 +111,7 @@ public abstract class BaseTask {
     // Used when the user clicks 'Apply' on the settings config window. Should take set values from the JavaFX widgets
     // and apply them to the task engine itself. I.e. settings entered by the user don't get applied to the task until
     // they hit the 'Apply' button.
-    abstract public void applySettings();
+    abstract public int applySettings();
 
     // Should store current task settings as default values for each (where applicable)
     abstract public void setDefaults() throws BackingStoreException;

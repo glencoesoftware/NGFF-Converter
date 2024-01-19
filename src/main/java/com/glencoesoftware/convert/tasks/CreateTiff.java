@@ -86,22 +86,25 @@ public class CreateTiff extends BaseTask {
 
 
     // Save settings from widgets into the converter's values
-    public void applySettings() {
+    public int applySettings() {
+        resetConverter();
         converter.setLogLevel(logLevel.getValue());
-        converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
+        if (!maxWorkers.getText().isEmpty()) converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
         converter.setCompression(compression.getValue());
         converter.setLegacyTIFF(legacy.isSelected());
         converter.setRGB(rgb.isSelected());
         converter.setSplitTIFFs(split.isSelected());
         if (compression.getValue() == CompressionType.JPEG_2000) {
             CodecOptions codec = JPEG2000CodecOptions.getDefaultOptions();
-            if (!compressionQuality.getText().isEmpty()) {
+            if (compressionQuality.getText() != null && !compressionQuality.getText().isEmpty()) {
                 codec.quality = Double.parseDouble(compressionQuality.getText());
             }
             converter.setCompressionOptions(codec);
         } else {
             converter.setCompressionOptions(null);
         }
+        // This task doesn't have settings which can fail to be set
+        return 0;
     }
 
     public void calculateOutput(String basePath) {

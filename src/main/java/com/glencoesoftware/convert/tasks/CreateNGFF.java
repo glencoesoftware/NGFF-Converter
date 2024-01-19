@@ -224,58 +224,78 @@ public class CreateNGFF extends BaseTask{
     }
 
     // Save settings from widgets into the converter's values
-    public void applySettings() {
+    public int applySettings() {
+        // Todo: Expand warnings, set safely
+        resetConverter();
+        int errorCount = 0;
         converter.setLogLevel(logLevel.getValue());
-        converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
+        if (!maxWorkers.getText().isEmpty()) converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
         converter.setCompression(compression.getValue());
-        converter.setTileHeight(Integer.parseInt(tileHeight.getText()));
-        converter.setTileWidth(Integer.parseInt(tileWidth.getText()));
+        if (!tileHeight.getText().isEmpty()) converter.setTileHeight(Integer.parseInt(tileHeight.getText()));
+        if (!tileWidth.getText().isEmpty()) converter.setTileWidth(Integer.parseInt(tileWidth.getText()));
 
-        if (!resolutions.getText().isEmpty()) {
-            converter.setResolutions(Integer.parseInt(resolutions.getText()));
-        }
+        if (!resolutions.getText().isEmpty()) converter.setResolutions(Integer.parseInt(resolutions.getText()));
+        series.getStyleClass().remove("setting-warn");
         if (!series.getText().isEmpty()) {
-            converter.setSeriesList(Arrays.stream(series.getText().split(",")).map(Integer::parseInt).toList());
+            try {
+                converter.setSeriesList(
+                        Arrays.stream(series.getText().split(",")).map(Integer::parseInt).toList());
+            } catch (Exception e) {
+                if (!series.getStyleClass().contains("setting-warn"))
+                    series.getStyleClass().add("setting-warn");
+                errorCount++;
+            }
         }
         converter.setDimensionOrder(dimensionOrder.getValue());
         converter.setDownsampling(downsampling.getValue());
-        converter.setMinImageSize(Integer.parseInt(minImageSize.getText()));
+        if (!minImageSize.getText().isEmpty()) converter.setMinImageSize(Integer.parseInt(minImageSize.getText()));
         converter.setReuseExistingResolutions(useExistingResolutions.isSelected());
-        converter.setChunkDepth(Integer.parseInt(chunkDepth.getText()));
+        if (!chunkDepth.getText().isEmpty()) converter.setChunkDepth(Integer.parseInt(chunkDepth.getText()));
         converter.setScaleFormat(scaleFormatString.getText());
-        if (scaleFormatCSV.getText() != null) {
+        if (scaleFormatCSV.getText() != null && !scaleFormatCSV.getText().isEmpty())
             converter.setAdditionalScaleFormatCSV(Paths.get(scaleFormatCSV.getText()));
-        }
-        if (!fillValue.getText().isEmpty()) {
-            converter.setFillValue(Short.valueOf(fillValue.getText()));
-        }
+        if (!fillValue.getText().isEmpty()) converter.setFillValue(Short.valueOf(fillValue.getText()));
         Map<String, Object> compressionProps = getCompressionProps();
         converter.setCompressionProperties(compressionProps);
 
-        converter.setMaxCachedTiles(Integer.parseInt(maxCachedTiles.getText()));
+        if (!maxCachedTiles.getText().isEmpty()) converter.setMaxCachedTiles(
+                Integer.parseInt(maxCachedTiles.getText()));
         converter.setCalculateOMEROMetadata(disableMinMax.isSelected());
         converter.setNoHCS(disableHCS.isSelected());
 
         converter.setUnnested(!nested.isSelected());
         converter.setNoOMEMeta(noOMEMeta.isSelected());
         converter.setNoRootGroup(noRoot.isSelected());
-        if (pyramidName.getText() != null) {
+        if (pyramidName.getText() != null && !pyramidName.getText().isEmpty())
             converter.setPyramidName(pyramidName.getText());
-        }
         converter.setKeepMemoFiles(keepMemos.isSelected());
-        if (memoDirectory.getText() != null) {
+        if (memoDirectory.getText() != null && !memoDirectory.getText().isEmpty()) {
             converter.setMemoDirectory(new File(memoDirectory.getText()));
         }
-        if (readerOptions.getText() != null) {
-            converter.setReaderOptions(Arrays.stream(readerOptions.getText().split(",")).toList());
+        readerOptions.getStyleClass().remove("setting-warn");
+        if (readerOptions.getText() != null && !readerOptions.getText().isEmpty()) {
+            try {
+                converter.setReaderOptions(Arrays.stream(readerOptions.getText().split(",")).toList());
+            } catch (Exception e) {
+                if (!readerOptions.getStyleClass().contains("setting-warn"))
+                    readerOptions.getStyleClass().add("setting-warn");
+                errorCount++;
+            }
         }
-        if (outputOptions.getText() != null) {
-            converter.setOutputOptions(Splitter.on(",")
-                    .withKeyValueSeparator("=")
-                    .split(outputOptions.getText()));
+        outputOptions.getStyleClass().remove("setting-warn");
+        if (outputOptions.getText() != null && !outputOptions.getText().isEmpty()) {
+            try {
+                converter.setOutputOptions(Splitter.on(",")
+                        .withKeyValueSeparator("=")
+                        .split(outputOptions.getText()));
+            } catch (Exception e) {
+                if (!outputOptions.getStyleClass().contains("setting-warn"))
+                    outputOptions.getStyleClass().add("setting-warn");
+                errorCount++;
+            }
         }
         converter.setExtraReaders(desiredReaders.toArray(new Class<?>[0]));
-
+        return errorCount;
     }
 
     // Duplicate settings from another supplied instance (except input/output)
@@ -854,12 +874,17 @@ public class CreateNGFF extends BaseTask{
         taskPreferences.remove(prefKeys.BLOSC_SHUFFLE.name());
         taskPreferences.remove(prefKeys.ZLIB_LEVEL.name());
         if (converter.getCompression() == ZarrCompression.blosc) {
-            taskPreferences.put(prefKeys.BLOSC_CNAME.name(), (String) compressionProps.get("cname"));
-            taskPreferences.putInt(prefKeys.BLOSC_CLEVEL.name(), (Integer) compressionProps.get("clevel"));
-            taskPreferences.putInt(prefKeys.BLOSC_BLOCKSIZE.name(), (Integer) compressionProps.get("blocksize"));
-            taskPreferences.putInt(prefKeys.BLOSC_SHUFFLE.name(), (Integer) compressionProps.get("shuffle"));
+            if (compressionProps.containsKey(prefKeys.BLOSC_CNAME.name()))
+                taskPreferences.put(prefKeys.BLOSC_CNAME.name(), (String) compressionProps.get("cname"));
+            if (compressionProps.containsKey(prefKeys.BLOSC_CLEVEL.name()))
+                taskPreferences.putInt(prefKeys.BLOSC_CLEVEL.name(), (Integer) compressionProps.get("clevel"));
+            if (compressionProps.containsKey(prefKeys.BLOSC_BLOCKSIZE.name()))
+                taskPreferences.putInt(prefKeys.BLOSC_BLOCKSIZE.name(), (Integer) compressionProps.get("blocksize"));
+            if (compressionProps.containsKey(prefKeys.BLOSC_SHUFFLE.name()))
+                taskPreferences.putInt(prefKeys.BLOSC_SHUFFLE.name(), (Integer) compressionProps.get("shuffle"));
         } else if (converter.getCompression() == ZarrCompression.zlib) {
-            taskPreferences.putInt(prefKeys.ZLIB_LEVEL.name(), (Integer) compressionProps.get("level"));
+            if (compressionProps.containsKey(prefKeys.ZLIB_LEVEL.name()))
+                taskPreferences.putInt(prefKeys.ZLIB_LEVEL.name(), (Integer) compressionProps.get("level"));
         }
         taskPreferences.putInt(prefKeys.MAX_CACHED_TILES.name(), converter.getMaxCachedTiles());
 
@@ -899,7 +924,7 @@ public class CreateNGFF extends BaseTask{
 
         String seriesList = taskPreferences.get(prefKeys.SERIES.name(), null);
         if (seriesList != null && !seriesList.isEmpty()) {
-            converter.setSeriesList(Arrays.stream(series.getText().split(",")).map(Integer::parseInt).toList());
+            converter.setSeriesList(Arrays.stream(seriesList.split(",")).map(Integer::parseInt).toList());
         }
 
         converter.setDimensionOrder(DimensionOrder.valueOf(taskPreferences.get(prefKeys.DIMENSION_ORDER.name(),

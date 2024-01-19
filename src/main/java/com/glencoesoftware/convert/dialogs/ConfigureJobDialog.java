@@ -17,14 +17,17 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.prefs.BackingStoreException;
@@ -84,6 +87,25 @@ public class ConfigureJobDialog {
 
     }
 
+    private void displayErrorPopup(HashMap<String, Integer> errorMap) {
+        StringBuilder message = new StringBuilder();
+        message.append("Unable to apply settings:\n");
+        for (HashMap.Entry<String, Integer> entry: errorMap.entrySet()) {
+            String name = entry.getKey();
+            Integer count = entry.getValue();
+            message.append("\n%s - %d errors".formatted(name, count));
+        }
+        Stage stage = (Stage) configureJob.getScene().getWindow();
+        Tooltip tooltip = new Tooltip();
+        tooltip.setAutoHide(true);
+        tooltip.setText(message.toString());
+        tooltip.setShowDuration(Duration.seconds(2));
+        tooltip.setHideDelay(Duration.seconds(1));
+        tooltip.setTextAlignment(TextAlignment.CENTER);
+        tooltip.getStyleClass().add("tooltip-big");
+        tooltip.show(stage);
+    }
+
     private void resetDialog() {
         this.jobs = null;
         standardSettings.getChildren().clear();
@@ -137,6 +159,7 @@ public class ConfigureJobDialog {
     }
     @FXML
     private void applySettings() {
+        HashMap<String, Integer> errors = new HashMap<>();
         // Different handling if configuring multiple jobs
         if (multiMode) {
             // Iterate through tasks
@@ -144,7 +167,12 @@ public class ConfigureJobDialog {
                 // Fetch settings from the template task used in the dialog
                 BaseTask task = this.tasks.get(i);
                 // Remember to apply settings to the first task
-                task.applySettings();
+
+                int errorCount = task.applySettings();
+                if (errorCount > 0) {
+                    errors.put(task.getName(), errorCount);
+                }
+                if (!errors.isEmpty()) continue;
                 task.updateStatus();
                 // Iterate through the other selected jobs and apply the same settings
                 for (int j = 1; j < this.jobs.size(); j++) {
@@ -156,16 +184,22 @@ public class ConfigureJobDialog {
                 }
             }
             currentTask.parent.controller.updateStatus("Applied settings to %d jobs".formatted(jobs.size()));
+        } else {
+            // If there's just one task we do it this easy way.
+            for (BaseTask task : this.tasks) {
+                int errorCount = task.applySettings();
+                if (errorCount > 0) {
+                    errors.put(task.getName(), errorCount);
+                }
+                task.updateStatus();
+            }
+            currentTask.parent.controller.updateStatus("Applied job settings");
+        }
+        if (errors.isEmpty()) {
             onClose();
-            return;
+        } else {
+            displayErrorPopup(errors);
         }
-        // If there's just one task we do it this easy way.
-        for (BaseTask task : this.tasks) {
-            task.applySettings();
-            task.updateStatus();
-        }
-        currentTask.parent.controller.updateStatus("Applied job settings");
-        onClose();
     }
 
     @FXML
