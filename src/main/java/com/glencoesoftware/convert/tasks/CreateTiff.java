@@ -267,7 +267,7 @@ public class CreateTiff extends BaseTask {
     public void applyDefaults() {
         converter.setLogLevel(taskPreferences.get(prefKeys.LOG_LEVEL.name(), converter.getLogLevel()));
         converter.setMaxWorkers(taskPreferences.getInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers()));
-        converter.setCompression(CompressionType.lookup(
+        converter.setCompression(CompressionType.valueOf(
                 taskPreferences.get(prefKeys.COMPRESSION.name(), converter.getCompression().name())));
         converter.setLegacyTIFF(taskPreferences.getBoolean(prefKeys.LEGACY.name(), converter.getLegacyTIFF()));
         converter.setRGB(taskPreferences.getBoolean(prefKeys.RGB.name(), converter.getRGB()));
