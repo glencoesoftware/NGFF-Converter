@@ -225,7 +225,6 @@ public class CreateNGFF extends BaseTask{
 
     // Save settings from widgets into the converter's values
     public int applySettings() {
-        // Todo: Expand warnings, set safely
         resetConverter();
         int errorCount = 0;
         converter.setLogLevel(logLevel.getValue());
