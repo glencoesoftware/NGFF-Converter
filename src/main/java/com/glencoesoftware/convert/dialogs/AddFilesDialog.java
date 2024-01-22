@@ -51,6 +51,10 @@ public class AddFilesDialog {
     public void initialize() {
         workflowChoiceBox.getItems().setAll(PrimaryController.installedWorkflows.keySet());
         workflowChoiceBox.setValue(userPreferences.get(DEFAULT_FORMAT.name(), ConvertToNGFF.shortName));
+        shouldNotShow.selectedProperty().addListener((obs, oldSelection, newSelection) -> {
+            wantDefault.setDisable(newSelection);
+            if (newSelection) wantDefault.setSelected(true);
+        });
     }
 
     public void prepareForDisplay() {
@@ -63,6 +67,7 @@ public class AddFilesDialog {
         settingsPanel.getChildren().addAll(settings);
         settingsPanel.getChildren().addAll(wantDefault, shouldNotShow, finalLabel);
         shouldNotShow.setSelected(userPreferences.getBoolean(SHOW_FORMAT_DLG.name(), false));
+        if (shouldNotShow.isSelected()) wantDefault.setSelected(true);
         shouldProceed = false;
     }
 

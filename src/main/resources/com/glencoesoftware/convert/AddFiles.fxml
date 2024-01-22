@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane styleClass="addFiles" prefHeight="550.0" prefWidth="440.0" stylesheets="@AddFiles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AddFilesDialog">
+<BorderPane styleClass="addFiles" prefHeight="585.0" prefWidth="440.0" stylesheets="@AddFiles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AddFilesDialog">
    <top>
       <VBox BorderPane.alignment="CENTER">
          <HBox alignment="CENTER">
@@ -45,7 +45,7 @@
             </CheckBox>
             <CheckBox fx:id="shouldNotShow" layoutX="10.0" layoutY="208.0" mnemonicParsing="false"
                       text="Don't show this again"/>
-            <Label fx:id="finalLabel" text="(You can view this options later using the File menu)"/>
+            <Label fx:id="finalLabel" text="(You can view these options later using the File menu)"/>
          </VBox>
       </ScrollPane>
    </center>
