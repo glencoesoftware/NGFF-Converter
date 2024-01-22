@@ -326,8 +326,10 @@ public class CreateTiff extends BaseTask {
         generator.writeBoolean(converter.getRGB());
         generator.writeFieldName(prefKeys.SPLIT.name());
         generator.writeBoolean(converter.getSplitTIFFs());
-        generator.writeFieldName(prefKeys.COMPRESSION_OPTS.name());
-        generator.writeString(String.valueOf(converter.getCompressionOptions().quality));
+        if (converter.getCompressionOptions() != null) {
+            generator.writeFieldName(prefKeys.COMPRESSION_OPTS.name());
+            generator.writeString(String.valueOf(converter.getCompressionOptions().quality));
+        }
         generator.writeEndObject();
     }
 
