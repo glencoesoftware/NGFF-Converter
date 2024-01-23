@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
+import com.glencoesoftware.convert.workflows.ConvertToTiff;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
@@ -21,14 +22,17 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.controlsfx.control.ToggleSwitch;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -322,6 +326,7 @@ public class Output extends BaseTask {
             LOGGER.error("Output file already exists (overwriting is disabled). Aborting run.");
             throw new IllegalArgumentException("Output file already exists");
         }
+        if (workingDirectoryLocation == workingDirectoryType.OUTPUT_FOLDER) directWrite = true;
         if (directWrite) {
             // Replace the final runner task's output with the target directory
             BaseTask secondLastTask = parent.tasks.get(parent.tasks.size() - 2);
@@ -344,10 +349,33 @@ public class Output extends BaseTask {
 
         LOGGER.info("Saving final output file");
         try {
-            if (!Objects.equals(input.getAbsolutePath(), output.getAbsolutePath())) {
-                if (this.input.isDirectory()) FileUtils.moveDirectory(input, output);
-                else if (overwrite) FileUtils.moveFile(input, output, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-                else FileUtils.moveFile(input, output);
+            File[] toMove;
+            String baseName = input.getName().replace(".ome.tiff", "");
+            String finalName = output.getName().replace(".ome.tiff", "");
+            if (directWrite || !parent.getShortName().equals(ConvertToTiff.shortName)) toMove = new File[]{input};
+            else {
+                File[] matching = input.getParentFile().listFiles(
+                        (FilenameFilter) new WildcardFileFilter(
+                                input.getName().replace(".ome.tiff", "*.ome.tiff")));
+                // Look for companion file from split mode
+                File companion = new File(input.getParent(), baseName + ".companion.ome");
+                if (companion.exists()) {
+                    toMove = Arrays.copyOf(Objects.requireNonNull(matching), matching.length + 1);
+                    toMove[matching.length] = companion;
+                } else toMove = matching;
+            }
+            for (File fileToMove : Objects.requireNonNull(toMove)) {
+                if (!Objects.equals(fileToMove.getAbsolutePath(), output.getAbsolutePath())) {
+                    if (fileToMove.isDirectory()) FileUtils.moveDirectory(fileToMove, output);
+                    else {
+                        String moveName = fileToMove.getName().replace(baseName, finalName);
+                        File targetFile = new File(output.getParentFile().getAbsolutePath(), moveName);
+                        if (overwrite)
+                            FileUtils.moveFile(fileToMove, targetFile,
+                                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                        else FileUtils.moveFile(fileToMove, targetFile);
+                    }
+                }
             }
             LOGGER.error("Output file was written sucessfully");
             this.status = JobState.status.COMPLETED;
@@ -467,10 +495,17 @@ public class Output extends BaseTask {
                 getSysTemp());
 
         workingDirectoryChoice.getItems().setAll(workingDirectoryType.values());
-        workingDirectoryChoice.getSelectionModel().selectedIndexProperty().addListener((i, o, v) -> {
-            workingDirWidget.getParent().setVisible(v.intValue() == 2);
-            workingDirWidget.getParent().setManaged(v.intValue() == 2);
-        });
+        workingDirectoryChoice.getSelectionModel().selectedItemProperty().addListener(
+                (observableValue, oldVal, newVal) -> {
+                    // Only show custom folder entry if selected
+                    workingDirWidget.getParent().setVisible(newVal == workingDirectoryType.CUSTOM_FOLDER);
+                    workingDirWidget.getParent().setManaged(newVal == workingDirectoryType.CUSTOM_FOLDER);
+                    if (newVal == workingDirectoryType.OUTPUT_FOLDER) {
+                        // DirectWrite mode is irrelevant if writing to output anyway
+                        directWriteBox.setSelected(true);
+                        directWriteBox.setDisable(true);
+                    } else directWriteBox.setDisable(false);
+                });
 
         workingSettingsBox.getChildren().add(
                 getSettingContainer(workingDirWidget, "Working directory",
