@@ -37,7 +37,7 @@ public class CreateTiff extends BaseTask {
     public static final String name = "Convert to TIFF";
 
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
-    public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, LEGACY, RGB, SPLIT, COMPRESSION_OPTS}
+    public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, LEGACY, RGB, SPLIT, SPLIT_PLANES, COMPRESSION_OPTS}
 
     private static final ArrayList<Node> standardSettings = new ArrayList<>();
 
@@ -49,10 +49,9 @@ public class CreateTiff extends BaseTask {
     private static final ToggleSwitch legacy;
     private static final TextField maxWorkers;
     private static final TextField compressionQuality;
-
     private static final ToggleSwitch rgb;
-
     private static final ToggleSwitch split;
+    private static final ToggleSwitch splitPlanes;
 
     private boolean overwrite = Output.overwriteBox.selectedProperty().get();
 
@@ -74,6 +73,7 @@ public class CreateTiff extends BaseTask {
         compression.setValue(converter.getCompression());
         rgb.setSelected(converter.getRGB());
         split.setSelected(converter.getSplitTIFFs());
+        splitPlanes.setSelected(converter.getSplitSinglePlaneTIFFs());
         legacy.setSelected(converter.getLegacyTIFF());
         CodecOptions opts = converter.getCompressionOptions();
         if (opts != null) {
@@ -94,6 +94,7 @@ public class CreateTiff extends BaseTask {
         converter.setLegacyTIFF(legacy.isSelected());
         converter.setRGB(rgb.isSelected());
         converter.setSplitTIFFs(split.isSelected());
+        converter.setSplitSinglePlaneTIFFs(splitPlanes.isSelected());
         if (compression.getValue() == CompressionType.JPEG_2000) {
             CodecOptions codec = JPEG2000CodecOptions.getDefaultOptions();
             if (compressionQuality.getText() != null && !compressionQuality.getText().isEmpty()) {
@@ -212,6 +213,13 @@ public class CreateTiff extends BaseTask {
                 "Split output into one OME-TIFF file per OME Image/Zarr group"
         ));
 
+        splitPlanes = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                splitPlanes,
+                "Split Planes",
+                "Split output into one OME-TIFF file per plane (takes precedence over 'Split Series')"
+        ));
+
         legacy = new ToggleSwitch();
         advancedSettings.add(getSettingContainer(
                 legacy,
@@ -263,6 +271,7 @@ public class CreateTiff extends BaseTask {
         taskPreferences.putBoolean(prefKeys.LEGACY.name(), converter.getLegacyTIFF());
         taskPreferences.putBoolean(prefKeys.RGB.name(), converter.getRGB());
         taskPreferences.putBoolean(prefKeys.SPLIT.name(), converter.getSplitTIFFs());
+        taskPreferences.putBoolean(prefKeys.SPLIT_PLANES.name(), converter.getSplitSinglePlaneTIFFs());
         taskPreferences.putDouble(prefKeys.COMPRESSION_OPTS.name(), converter.getCompressionOptions().quality);
         taskPreferences.flush();
     }
@@ -275,6 +284,8 @@ public class CreateTiff extends BaseTask {
         converter.setLegacyTIFF(taskPreferences.getBoolean(prefKeys.LEGACY.name(), converter.getLegacyTIFF()));
         converter.setRGB(taskPreferences.getBoolean(prefKeys.RGB.name(), converter.getRGB()));
         converter.setSplitTIFFs(taskPreferences.getBoolean(prefKeys.SPLIT.name(), converter.getSplitTIFFs()));
+        converter.setSplitSinglePlaneTIFFs(taskPreferences.getBoolean(
+                prefKeys.SPLIT_PLANES.name(), converter.getSplitSinglePlaneTIFFs()));
         CodecOptions codec = null;
         if (converter.getCompression() == CompressionType.JPEG_2000) {
             codec = JPEG2000CodecOptions.getDefaultOptions();
@@ -296,6 +307,7 @@ public class CreateTiff extends BaseTask {
         converter.setLegacyTIFF(source.converter.getLegacyTIFF());
         converter.setRGB(source.converter.getRGB());
         converter.setSplitTIFFs(source.converter.getSplitTIFFs());
+        converter.setSplitSinglePlaneTIFFs(source.converter.getSplitSinglePlaneTIFFs());
         converter.setCompressionOptions(source.converter.getCompressionOptions());
     }
 
@@ -326,6 +338,8 @@ public class CreateTiff extends BaseTask {
         generator.writeBoolean(converter.getRGB());
         generator.writeFieldName(prefKeys.SPLIT.name());
         generator.writeBoolean(converter.getSplitTIFFs());
+        generator.writeFieldName(prefKeys.SPLIT_PLANES.name());
+        generator.writeBoolean(converter.getSplitSinglePlaneTIFFs());
         if (converter.getCompressionOptions() != null) {
             generator.writeFieldName(prefKeys.COMPRESSION_OPTS.name());
             generator.writeString(String.valueOf(converter.getCompressionOptions().quality));
@@ -357,6 +371,9 @@ public class CreateTiff extends BaseTask {
 
         subject = settings.get(prefKeys.SPLIT.name());
         if (subject != null) split.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.SPLIT_PLANES.name());
+        if (subject != null) splitPlanes.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.COMPRESSION_OPTS.name());
         if (subject != null) compressionQuality.setText(subject.textValue());
