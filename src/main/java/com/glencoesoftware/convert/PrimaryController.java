@@ -29,6 +29,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -45,6 +46,7 @@ import javafx.stage.*;
 import javafx.stage.Window;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.Notifications;
 import org.controlsfx.control.StatusBar;
@@ -643,11 +645,14 @@ public class PrimaryController {
             completedJobs.setValue(completedJobs.getValue() + 1);
             return;
         }
+        Pos position = Pos.BOTTOM_RIGHT;
+        if (SystemUtils.IS_OS_MAC) position = Pos.TOP_RIGHT;
         menuControlButtons.forEach((control -> control.setDisable(false)));
         addJobButton.setDisable(false);
         updateStatus("Run finished");
         Notifications.create()
                 .title("NGFF-Converter")
+                .position(position)
                 .text("%d conversions have finished".formatted(completedJobs.getValue() + 1))
                 .showInformation();
         completedJobs.setValue(0);
