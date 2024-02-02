@@ -272,7 +272,8 @@ public class CreateTiff extends BaseTask {
         taskPreferences.putBoolean(prefKeys.RGB.name(), converter.getRGB());
         taskPreferences.putBoolean(prefKeys.SPLIT.name(), converter.getSplitTIFFs());
         taskPreferences.putBoolean(prefKeys.SPLIT_PLANES.name(), converter.getSplitSinglePlaneTIFFs());
-        taskPreferences.putDouble(prefKeys.COMPRESSION_OPTS.name(), converter.getCompressionOptions().quality);
+        if (converter.getCompressionOptions() != null)
+            taskPreferences.putDouble(prefKeys.COMPRESSION_OPTS.name(), converter.getCompressionOptions().quality);
         taskPreferences.flush();
     }
 
