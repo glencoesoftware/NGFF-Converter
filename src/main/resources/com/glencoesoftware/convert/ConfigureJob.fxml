@@ -12,7 +12,7 @@
               <HBox.margin>
                   <Insets />
               </HBox.margin>
-              <Label fx:id="mainLabel" maxWidth="1.7976931348623157E308" text="Configuring {{Workflow}}" textAlignment="CENTER" HBox.hgrow="ALWAYS" />
+              <Label fx:id="mainLabel" maxWidth="1.7976931348623157E308" text="Configuring {{Workflow}}" textAlignment="CENTER" textOverrun="CENTER_ELLIPSIS" HBox.hgrow="ALWAYS" />
           </HBox>
             <HBox alignment="CENTER_LEFT" spacing="5.0" VBox.vgrow="NEVER">
                 <Button fx:id="prevButton" mnemonicParsing="false" onAction="#prevTask" prefHeight="32.0" prefWidth="32.0" styleClass="task-arrow">
