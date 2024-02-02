@@ -20,6 +20,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
@@ -381,6 +382,8 @@ public class ConfigureJobDialog {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName("exported-settings.json");
         fileChooser.setTitle("Choose file to load settings from");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("JSON Files", "*.json", "*.txt"));
         File selectedFile = fileChooser.showOpenDialog(App.getScene().getWindow());
         if (selectedFile == null) return;
         try {
@@ -388,7 +391,16 @@ public class ConfigureJobDialog {
             currentTask.parent.controller.updateStatus("Imported settings successfully");
         } catch (IOException e) {
             currentTask.parent.controller.updateStatus("Failed to import settings");
-            throw new RuntimeException(e);
+            Window primary = App.getScene().getWindow();
+            Alert alert = new Alert(Alert.AlertType.ERROR,
+                    "Imported settings file appears to be invalid\n\n" + e,
+                    ButtonType.OK);
+            alert.initOwner(primary);
+            alert.setTitle("Import Settings from JSON");
+            alert.setHeaderText("Unable to read settings file");
+            alert.getDialogPane().getStylesheets().add(
+                    Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+            alert.showAndWait();
         }
 
 
