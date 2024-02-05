@@ -338,12 +338,8 @@ public class Output extends BaseTask {
         // Apply GUI configurations first
         this.status = JobState.status.RUNNING;
         if (directWrite){
-            if (this.output.exists()) {
-                this.status = JobState.status.COMPLETED;
-            } else {
-                this.status = JobState.status.FAILED;
-                LOGGER.error("Output file not detected");
-            }
+            // No work to do in this mode
+            this.status = JobState.status.COMPLETED;
             return;
         }
 
