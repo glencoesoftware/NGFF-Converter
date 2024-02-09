@@ -317,6 +317,16 @@ public class PrimaryController {
     }
 
     @FXML
+    private void programHelp() {
+        try {
+            Desktop.getDesktop().browse(new URI("https://github.com/glencoesoftware/NGFF-Converter?tab=readme-ov-file#usage"));
+        } catch (IOException | URISyntaxException e) {
+            LOGGER.error("Failed to open URL");
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     private void b2rHelp() {
         try {
             Desktop.getDesktop().browse(new URI("https://ngff.openmicroscopy.org/"));
