@@ -42,10 +42,6 @@ steps. The "help" icon next to each setting provides warnings about particularly
 
 If you need further help, please feel free to [raise an issue](https://github.com/glencoesoftware/NGFF-Converter/issues).
 
-
-## License
-NGFF-converter is distributed under the terms of the GPL license. Please see LICENSE.txt for further details.
-
 ## License
 NGFF-converter is distributed under the terms of the GPL license. Please see LICENSE.txt for further details.
 
