@@ -137,7 +137,7 @@ public class Output extends BaseTask {
         else if (!fileName.toLowerCase().endsWith(extension)) {
             fileName += extension;
             outputFileName.setText(fileName);
-        };
+        }
         if (outputChoice.getValue() == outputLocationType.INPUT_FOLDER)
             this.output = new File(parent.firstInput.getParent(), fileName);
         else this.output = new File(outputDirectory.getText(), fileName);
