@@ -35,6 +35,8 @@ public class ConvertToNGFF extends BaseWorkflow {
 
     public String getTechnicalName() { return "bioformats2raw"; }
 
+    public String getOutputExtension() { return ".zarr"; }
+
     public FileChooser.ExtensionFilter[] getExtensionFilters() {
         return new FileChooser.ExtensionFilter[]{
                 new FileChooser.ExtensionFilter("NGFF Files", "*.zarr", "*.ngff")

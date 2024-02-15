@@ -40,6 +40,8 @@ public class ConvertToTiff extends BaseWorkflow{
         return "bioformats2raw-raw2ometiff";
     }
 
+    public String getOutputExtension() { return ".ome.tiff"; }
+
     public FileChooser.ExtensionFilter[] getExtensionFilters() {
         return new FileChooser.ExtensionFilter[]{
                 new FileChooser.ExtensionFilter("OME-TIFF Files", "*.ome.tiff", "*.ome.tif"),

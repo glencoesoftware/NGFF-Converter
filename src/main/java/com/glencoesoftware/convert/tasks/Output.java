@@ -131,8 +131,13 @@ public class Output extends BaseTask {
         // Can only do this if input was already set
         if (input == null) return;
         String fileName = outputFileName.getText();
+        String extension = parent.getOutputExtension();
         // User cleared a custom name
         if (fileName.isEmpty()) fileName = input.getName();
+        else if (!fileName.toLowerCase().endsWith(extension)) {
+            fileName += extension;
+            outputFileName.setText(fileName);
+        };
         if (outputChoice.getValue() == outputLocationType.INPUT_FOLDER)
             this.output = new File(parent.firstInput.getParent(), fileName);
         else this.output = new File(outputDirectory.getText(), fileName);

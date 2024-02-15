@@ -336,6 +336,8 @@ public abstract class BaseWorkflow extends Service<Void> {
     // Return a list of extension filters for use with dialogs setting this workflow's final output
     abstract public FileChooser.ExtensionFilter[] getExtensionFilters();
 
+    abstract public String getOutputExtension();
+
     public void writeSettings(File targetFile) throws IOException {
         JsonFactory factory = new JsonFactory();
         JsonGenerator generator = factory.createGenerator(targetFile, JsonEncoding.UTF8);
