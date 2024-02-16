@@ -54,6 +54,11 @@ jobs:
       with:
         arguments: jpackageImageZip
     - if: ${{ matrix.os == 'macos-latest' }}
+      name: Generate dependency report
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: downloadLicenses
+    - if: ${{ matrix.os == 'macos-latest' }}
       name: Upload Mac pkg
       uses: actions/upload-artifact@v2
       with:
@@ -67,6 +72,14 @@ jobs:
       with:
         name: windows-package
         path: ./build/jpackage/*.msi
+        if-no-files-found: error
+        retention-days: 3
+    - if: ${{ matrix.os == 'macos-latest' }}
+      name: Upload Mac pkg
+      uses: actions/upload-artifact@v2
+      with:
+        name: dependency-report
+        path: ./build/reports/license/dependency-license*
         if-no-files-found: error
         retention-days: 3
   upload:
@@ -85,5 +98,6 @@ jobs:
           files: |
             windows-package/*.msi
             macos-package/*.zip
+            dependency-report/*
           draft: true
           fail_on_unmatched_files: true
