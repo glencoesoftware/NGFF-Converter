@@ -7,12 +7,6 @@
         </encoder>
     </appender>
 
-    <appender name="ConsoleAppender" class="com.glencoesoftware.convert.ConsoleStreamAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss} %-5level %logger{15} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
     <root level="info">
         <appender-ref ref="ConsoleAppender" />
         <appender-ref ref="STDOUT" />

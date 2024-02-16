@@ -1,0 +1,158 @@
+.root {
+    primary: #455A64;
+    highlight: #2980B8;
+    secondary: #F0F6FF;
+    neutral: #F8FAFC;
+    tertiary: #DBE3F0;
+    -fx-accent: highlight;
+}
+
+.root * {
+    -fx-font-family: "Helvetica";
+}
+
+.label, .table-view .table-cell {
+    -fx-text-fill: primary;
+}
+
+.table-view:focused {
+    -fx-background-color: -fx-box-border, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 0;
+}
+
+.tooltip
+{
+    -fx-text-fill: white;
+}
+
+.root, .pane, .region, .scroll-pane {
+    -fx-background-color: white;
+}
+
+#mainLabel {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+}
+
+.subheading {
+    -fx-font-size: 16px;
+}
+
+.minor-button {
+    -fx-text-fill: primary;
+    -fx-border-color: tertiary;
+    -fx-border-radius: 4px;
+    -fx-background-color: white;
+}
+
+.major-button {
+    -fx-text-fill: white;
+    -fx-background-color: highlight;
+    -fx-border-radius: 4px;
+    -fx-border-color: highlight;
+}
+
+
+.minor-button:hover, .major-button:hover {
+    -fx-border-color: black;
+    -fx-border-style: solid;
+}
+
+.minor-button:pressed, .major-button:pressed {
+    -fx-background-color: primary;
+    -fx-text-fill: white;
+}
+
+minor-button > .text-button-icon {
+    -fx-fill: primary;
+}
+
+.major-button > .text-button-icon {
+    -fx-fill: white;
+}
+
+
+.icon-graphic {
+    -fx-fill: white;
+}
+
+.icon-button {
+    -fx-background-color: highlight;
+    -fx-padding: 8px;
+    -fx-background-radius: 150;
+    -fx-border-radius: 150;
+    -fx-background-insets: 0;
+    -fx-border-insets: -3;
+    -fx-border-width: 2;
+}
+
+.icon-button:hover {
+    -fx-border-color: highlight;
+}
+
+.icon-button:pressed {
+    -fx-border-color: black;
+}
+
+.table-view {
+    -fx-text-fill: primary;
+    -fx-control-inner-background: white;
+    -fx-control-inner-background-alt: neutral;
+    -fx-table-cell-border-color: transparent;
+    -fx-selection-bar: #9fcdea;
+}
+
+.table-view .column-header {
+    -fx-background-color: tertiary;
+    -fx-text-fill: primary;
+    -fx-font-weight: bold;
+}
+
+.status-cell {
+    -fx-background-color: tertiary;
+    -fx-background-radius: 100px;
+    -fx-padding: 6px, 8px, 6px, 8px;
+    -fx-border-radius: 100px;
+    -fx-border-insets: -4px;
+}
+
+.progress-bar {
+    -fx-pref-height: 15px;
+    -fx-background-radius: 100px;
+    -fx-control-inner-background: tertiary;
+}
+
+.progress-bar > .bar, .track {
+    -fx-background-radius: 100px;
+}
+
+.workflow-choice {
+    -fx-border-color: tertiary;
+    -fx-border-radius: 4px;
+    -fx-background-color: white;
+}
+
+.workflow-choice > * {
+    -fx-text-fill: primary;
+}
+
+.select-all-box {
+    -fx-font-size: 0.8em;
+    -fx-padding: 0 0 1 0;
+}
+
+.select-all-box > .box {
+    -fx-background-color: -fx-outer-border, -fx-background;
+    -fx-background-insets: 0,1;
+    -fx-padding: 3;
+}
+
+.split-pane:horizontal > .split-pane-divider {
+   -fx-background-color: tertiary;
+}
+
+.stack-pane {
+    -fx-border-color: primary;
+    -fx-background-color: neutral;
+}

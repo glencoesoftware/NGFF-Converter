@@ -2,200 +2,154 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import org.controlsfx.control.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 
-<BorderPane prefHeight="500.0" style="-fx-background-color: #EEEEEE;" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
-   <bottom>
-      <ToolBar prefHeight="24.0" prefWidth="800.0" style="-fx-background-color: #EEEEEE; -fx-border-color: #CCCCCC;" BorderPane.alignment="CENTER_LEFT">
-         <BorderPane.margin>
-            <Insets top="10.0" />
-         </BorderPane.margin>
-         <Label fx:id="statusBox" maxWidth="500.0" minWidth="600.0" prefHeight="17.0" prefWidth="600.0" text="Add files to begin" textOverrun="LEADING_ELLIPSIS" />
-      </ToolBar>
-   </bottom>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="400.0" minWidth="600.0" prefHeight="600.0" prefWidth="1024.0" stylesheets="@primary.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.PrimaryController">
    <top>
-      <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
-         <BorderPane.margin>
-            <Insets bottom="10.0" />
-         </BorderPane.margin>
-         <Menu mnemonicParsing="false" text="File">
-            <MenuItem fx:id="menuRun" mnemonicParsing="false" onAction="#runConvert" text="Run Conversions" />
-            <Menu fx:id="menuOutputFormat" mnemonicParsing="false" text="Set output format" />
-            <CheckMenuItem fx:id="menuOverwrite" mnemonicParsing="false" onAction="#overwriteMenu" text="Overwrite existing files" />
-            <CheckMenuItem fx:id="wantLogToFile" mnemonicParsing="false" onAction="#toggleFileLogging" text="Log to file" />
-            <MenuItem fx:id="menuChooseDirectory" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose Output Directory" />
-            <MenuItem fx:id="menuResetDirectory" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Reset Output Directory" />
-            <MenuItem fx:id="menuTempDirectory" mnemonicParsing="false" onAction="#chooseTemporaryDirectory" text="Choose Temporary Directory" />
-            <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
-         </Menu>
-         <Menu mnemonicParsing="false" text="Edit">
-            <MenuItem fx:id="menuAddFiles" mnemonicParsing="false" onAction="#addFiles" text="Add Files" />
-            <MenuItem fx:id="menuRemoveFile" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
-            <MenuItem fx:id="menuClearFinished" mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
-            <MenuItem fx:id="menuClearAll" mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />
-            <MenuItem fx:id="menuSavePrefs" mnemonicParsing="false" onAction="#savePrefs" text="Save settings as defaults" />
-            <MenuItem fx:id="menuResetPrefs" mnemonicParsing="false" onAction="#resetPrefs" text="Clear saved settings" />
-         </Menu>
-         <Menu mnemonicParsing="false" text="View">
-            <Menu fx:id="menuLogLevel" mnemonicParsing="false" text="Log Level" />
-            <MenuItem mnemonicParsing="false" onAction="#displayLog" text="Show Logs" />
-         </Menu>
-         <Menu mnemonicParsing="false" text="Help">
-            <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="bioformats2raw help" />
-            <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="raw2ometiff help" />
-            <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />
-         </Menu>
-      </MenuBar>
+       <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
+           <BorderPane.margin>
+               <Insets bottom="10.0" />
+           </BorderPane.margin>
+           <Menu mnemonicParsing="false" text="File">
+               <MenuItem fx:id="menuRun" disable="true" mnemonicParsing="false" onAction="#runConvert" text="Run job(s)" />
+               <MenuItem fx:id="menuOutputFormat" mnemonicParsing="false" onAction="#configureDefaultFormat" text="Configure Output Options" />
+               <MenuItem mnemonicParsing="false" onAction="#onExit" text="Exit" />
+           </Menu>
+           <Menu mnemonicParsing="false" text="Edit">
+               <MenuItem fx:id="menuAddFiles" mnemonicParsing="false" onAction="#addFiles" text="Add Files" />
+               <MenuItem fx:id="menuAddZarr" mnemonicParsing="false" onAction="#addFolder" text="Add Folder or Zarr" />
+               <MenuItem fx:id="menuRemoveFile" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
+               <MenuItem fx:id="menuClearFinished" mnemonicParsing="false" onAction="#clearFinished" text="Clear Finished" />
+               <MenuItem fx:id="menuClearAll" mnemonicParsing="false" onAction="#clearFiles" text="Clear All" />
+               <MenuItem fx:id="menuResetPrefs" mnemonicParsing="false" onAction="#resetPrefs" text="Clear saved settings" />
+           </Menu>
+           <Menu mnemonicParsing="false" text="Help">
+               <MenuItem mnemonicParsing="false" onAction="#programHelp" text="NGFF-Converter Docs" />
+               <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="OME-NGFF Docs" />
+               <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="OME-TIFF Docs" />
+               <MenuItem mnemonicParsing="false" onAction="#manualCheckForUpdate" text="Check for Updates" />
+               <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />
+           </Menu>
+       </MenuBar>
    </top>
    <center>
-      <VBox alignment="CENTER" spacing="5.0">
-         <padding>
-            <Insets left="3.0" right="10.0" />
-         </padding>
-         <HBox alignment="CENTER" prefHeight="31.0" prefWidth="600.0" VBox.vgrow="NEVER">
-            <Label alignment="CENTER_RIGHT" text="Output Folder" textAlignment="RIGHT" textOverrun="LEADING_ELLIPSIS" HBox.hgrow="NEVER">
+       <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+           <HBox alignment="CENTER" prefHeight="50.0" spacing="5.0">
+               <VBox.margin>
+                   <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+               </VBox.margin>
+               <ImageView fitHeight="40.0" pickOnBounds="true" preserveRatio="true">
+                   <Image url="@logo-small.png" />
+               </ImageView>
+               <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+               <Button fx:id="addJobButton" mnemonicParsing="false" onAction="#addFiles" styleClass="minor-button" text="Add job(s)">
+                    <graphic>
+                        <FontIcon iconColor="black" iconLiteral="bi-plus" iconSize="20" styleClass="text-button-icon" />
+                    </graphic>
+               </Button>
+               <Button fx:id="runJobsButton" disable="true" mnemonicParsing="false" onAction="#runConvert" styleClass="major-button" text="Run job(s)">
+                   <graphic>
+                       <FontIcon fx:id="runJobsButtonIcon" iconColor="black" iconLiteral="bi-play-fill" iconSize="20" styleClass="text-button-icon" />
+                   </graphic>
+
+               </Button>
+           </HBox>
+           <StackPane onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" styleClass="stack-pane" VBox.vgrow="ALWAYS">
+               <SplitPane fx:id="jobsPane" dividerPositions="0.7" style="-fx-background-color: white;">
+                   <VBox fx:id="jobsBox">
+                       <HBox maxHeight="36.0" minHeight="36.0" prefHeight="36.0" spacing="5.0">
+                           <padding>
+                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                           <Label fx:id="jobsText" styleClass="heading" text="Jobs">
+                               <font>
+                                   <Font name="System Bold" size="20.0" />
+                               </font>
+                           </Label>
+                       </HBox>
+                       <HBox alignment="CENTER_RIGHT" maxHeight="36.0" minHeight="36.0" prefHeight="36.0" spacing="5.0">
+                           <VBox.margin>
+                               <Insets />
+                           </VBox.margin>
+                           <padding>
+                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                           <Button fx:id="removeSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#removeSelected" styleClass="minor-button" text="Remove Selected" textAlignment="CENTER" />
+                           <Button fx:id="configureSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#configureSelected" styleClass="minor-button" text="Configure Selected" textAlignment="CENTER" />
+                           <Button fx:id="runSelectedButton" layoutX="593.0" layoutY="15.0" mnemonicParsing="false" onAction="#runSelected" styleClass="minor-button" text="Run Selected" textAlignment="CENTER" />
+                           <Region HBox.hgrow="ALWAYS" />
+                           <Button layoutX="479.0" layoutY="15.0" mnemonicParsing="false" onAction="#clearFinished" styleClass="minor-button" text="Clear Completed" textAlignment="CENTER" />
+
+                       </HBox>
+                       <TableView fx:id="jobList" editable="true" fixedCellSize="40.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onKeyPressed="#listKeyHandler" VBox.vgrow="ALWAYS">
+                           <columns>
+                               <TableColumn fx:id="workflowSelectionColumn" maxWidth="25.0" minWidth="25.0" onEditCommit="#handleSelectionChange" prefWidth="25.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" />
+                               <TableColumn fx:id="workflowNameColumn" editable="false" maxWidth="-Infinity" minWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER-LEFT;" text="File name" />
+                               <TableColumn fx:id="workflowFormatColumn" minWidth="125.0" prefWidth="120.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Format" />
+                               <TableColumn fx:id="workflowStatusColumn" editable="false" prefWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Status" />
+                               <TableColumn fx:id="workflowActionColumn" editable="false" prefWidth="125.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Actions" />
+                           </columns>
+                           <columnResizePolicy>
+                               <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                       </TableView>
+                   </VBox>
+                   <VBox>
+                       <HBox maxHeight="36.0" prefHeight="36.0" minHeight="36.0" spacing="5.0">
+                           <padding>
+                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                           <Label styleClass="heading" text="Tasks" textOverrun="CENTER_ELLIPSIS">
+                               <font>
+                                   <Font name="System Bold" size="20.0" />
+                               </font>
+                           </Label>
+                       </HBox>
+                       <HBox alignment="CENTER" maxHeight="36.0" minHeight="36.0" prefHeight="36.0" spacing="5.0">
+                           <VBox.margin>
+                               <Insets />
+                           </VBox.margin>
+                           <padding>
+                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                     <Label fx:id="taskNameText" styleClass="subheading" />
+                       </HBox>
+                       <TableView fx:id="taskList" fixedCellSize="60.0" VBox.vgrow="ALWAYS">
+                           <columns>
+                               <TableColumn fx:id="taskNameColumn" editable="false" maxWidth="-Infinity" minWidth="100.0" prefWidth="125.0" resizable="false" sortable="false" style="-fx-alignment: CENTER-LEFT;" text="Name" />
+                               <TableColumn fx:id="taskStatusColumn" editable="false" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Status" />
+                               <TableColumn fx:id="taskActionColumn" editable="false" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" resizable="false" sortable="false" style="-fx-alignment: CENTER;" text="Actions" />
+                           </columns>
+                           <columnResizePolicy>
+                               <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                       </TableView>
+                   </VBox>
+               </SplitPane>
+               <Label fx:id="fileListHelpText" contentDisplay="TOP" graphicTextGap="0.0" mouseTransparent="true" pickOnBounds="false" text="Drop files or folders here to add jobs" textFill="#8a8a8a">
+                   <font>
+                       <Font name="System Bold" size="20.0" />
+                   </font>
+                   <graphic>
+                       <ImageView fitHeight="128.0" fitWidth="128.0" opacity="0.5">
+                           <Image url="@logomark.png" />
+                       </ImageView>
+                   </graphic>
                <padding>
-                  <Insets right="5.0" />
+                  <Insets top="-20.0" />
                </padding>
-               <HBox.margin>
-                  <Insets left="10.0" />
-               </HBox.margin>
-            </Label>
-            <TextField fx:id="outputDirectory" promptText="Choose an output directory" text="&lt;Same as input&gt;" HBox.hgrow="ALWAYS">
-               <HBox.margin>
-                  <Insets right="5.0" />
-               </HBox.margin>
-            </TextField>
-            <Button fx:id="chooseDirButton" mnemonicParsing="false" onAction="#chooseOutputDirectory" text="Choose" HBox.hgrow="NEVER" />
-            <Button fx:id="clearDirButton" graphicTextGap="2.0" mnemonicParsing="false" onAction="#resetOutputDirectory" text="Clear" textAlignment="CENTER" HBox.hgrow="NEVER">
-               <HBox.margin>
-                  <Insets left="3.0" right="3.0" />
-               </HBox.margin>
-            </Button>
-         </HBox>
-         <VBox VBox.vgrow="ALWAYS">
-            <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
-               <VBox.margin>
-                  <Insets bottom="10.0" top="10.0" />
-               </VBox.margin>
-               <VBox prefHeight="303.0" prefWidth="572.0" HBox.hgrow="ALWAYS">
-                  <HBox alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="578.0" VBox.vgrow="NEVER">
-                     <Region layoutX="424.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
-                     <Label alignment="CENTER" minWidth="68.0" prefHeight="17.0" prefWidth="68.0" text="Input" textAlignment="CENTER" HBox.hgrow="NEVER">
-                        <HBox.margin>
-                           <Insets />
-                        </HBox.margin>
-                     </Label>
-                     <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-                     <Region layoutX="228.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
-                     <Label alignment="CENTER" minWidth="68.0" prefHeight="17.0" prefWidth="68.0" text="Output" textAlignment="CENTER" HBox.hgrow="ALWAYS" />
-                     <Region layoutX="56.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
-                  </HBox>
-                  <StackPane prefHeight="150.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-                     <ListView fx:id="inputFileList" minWidth="550.0" onDragDropped="#handleFileDrop" onDragOver="#handleFileDragOver" onKeyPressed="#listKeyHandler" onMouseClicked="#listClickHandler" style="-fx-selection-bar: #DDDDDD;">
-                        <padding>
-                           <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
-                        </padding>
-                     </ListView>
-                     <Label fx:id="fileListHelpText" mouseTransparent="true" pickOnBounds="false" text="Drop files or folders here to add jobs" textFill="#8a8a8a">
-                        <font>
-                           <Font name="System Bold" size="26.0" />
-                        </font>
-                     </Label>
-                     <Separator fx:id="listSeparator" mouseTransparent="true" orientation="VERTICAL" pickOnBounds="false" visible="false">
-                        <opaqueInsets>
-                           <Insets />
-                        </opaqueInsets>
-                        <StackPane.margin>
-                           <Insets bottom="5.0" top="5.0" />
-                        </StackPane.margin>
-                        <padding>
-                           <Insets left="10.0" />
-                        </padding>
-                     </Separator>
-                  </StackPane>
-               </VBox>
-            </HBox>
-            <HBox alignment="CENTER" spacing="10.0">
-               <Button fx:id="addFileButton" mnemonicParsing="false" onAction="#addFiles" text="Add files" />
-               <Button fx:id="removeFileButton" mnemonicParsing="false" onAction="#removeFile" text="Remove Selected" />
-               <Button fx:id="clearFileButton" mnemonicParsing="false" onAction="#clearFiles" text="Remove All" />
-               <Button fx:id="clearFinishedButton" mnemonicParsing="false" onAction="#clearFinished" text="Clear Completed" />
-               <Button fx:id="showLogButton" layoutX="406.0" layoutY="10.0" mnemonicParsing="false" onAction="#displayLog" text="Show Logs" />
-            </HBox>
-         </VBox>
-      </VBox>
+               </Label>
+             <VBox.margin>
+                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+             </VBox.margin>
+           </StackPane>
+       </VBox>
    </center>
-   <left>
-      <VBox alignment="CENTER" minWidth="165.0" prefHeight="598.0" prefWidth="165.0" BorderPane.alignment="CENTER">
-         <Label alignment="CENTER" contentDisplay="CENTER" text="NGFF-Converter" textAlignment="CENTER" VBox.vgrow="NEVER">
-            <font>
-               <Font name="System Bold" size="16.0" />
-            </font>
-            <VBox.margin>
-               <Insets />
-            </VBox.margin>
-         </Label>
-         <Label fx:id="versionDisplay" alignment="CENTER" contentDisplay="CENTER" layoutX="10.0" layoutY="10.0" text="Version " textAlignment="CENTER" VBox.vgrow="NEVER">
-            <font>
-               <Font size="10.0" />
-            </font>
-         </Label>
-         <Button fx:id="runButton" mnemonicParsing="false" onAction="#runConvert" prefHeight="35.0" prefWidth="145.0" text="Run Conversions" VBox.vgrow="NEVER">
-            <VBox.margin>
-               <Insets left="8.0" right="8.0" top="15.0" />
-            </VBox.margin>
-            <font>
-               <Font size="15.0" />
-            </font>
-         </Button>
-         <GridPane minHeight="105.0" prefHeight="105.0" prefWidth="160.0" VBox.vgrow="NEVER">
-            <columnConstraints>
-               <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="129.0" minWidth="10.0" prefWidth="60.0" />
-               <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="96.0" />
-            </columnConstraints>
-            <rowConstraints>
-               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
-               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
-               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
-            </rowConstraints>
-            <padding>
-               <Insets bottom="10.0" left="2.0" right="2.0" top="5.0" />
-            </padding>
-            <VBox.margin>
-               <Insets bottom="5.0" top="5.0" />
-            </VBox.margin>
-            <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" layoutX="15.0" layoutY="35.0" prefHeight="17.0" prefWidth="79.0" text="Convert to" textAlignment="RIGHT" />
-            <ChoiceBox fx:id="outputFormat" layoutX="101.0" layoutY="31.0" onAction="#updateFormat" prefHeight="25.0" prefWidth="95.0" GridPane.columnIndex="1">
-               <GridPane.margin>
-                  <Insets bottom="5.0" left="5.0" right="2.0" top="5.0" />
-               </GridPane.margin>
-            </ChoiceBox>
-            <Label alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="79.0" text="Log level" textAlignment="RIGHT" GridPane.rowIndex="1" />
-            <CheckBox fx:id="wantOverwrite" layoutX="15.0" layoutY="149.0" mnemonicParsing="false" onAction="#toggleOverwrite" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Label alignment="CENTER_RIGHT" layoutX="25.0" layoutY="119.0" prefHeight="17.0" prefWidth="81.0" text="Overwrite" GridPane.rowIndex="2" />
-            <ChoiceBox fx:id="logLevel" onAction="#updateLogLevel" prefHeight="25.0" prefWidth="95.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-               <GridPane.margin>
-                  <Insets bottom="5.0" left="5.0" right="2.0" top="5.0" />
-               </GridPane.margin>
-            </ChoiceBox>
-         </GridPane>
-   
-                  <VBox alignment="TOP_CENTER" VBox.vgrow="ALWAYS">
-            <Label text="Extra Arguments" VBox.vgrow="NEVER" />
-            <TextArea fx:id="extraParams" VBox.vgrow="ALWAYS">
-               <VBox.margin>
-                  <Insets left="5.0" right="5.0" />
-               </VBox.margin>
-            </TextArea>
-            <VBox.margin>
-               <Insets />
-            </VBox.margin>
-         </VBox>
-         <BorderPane.margin>
-            <Insets left="3.0" />
-         </BorderPane.margin>
-      </VBox>
-   </left>
+   <bottom>
+      <StatusBar fx:id="statusBar" text="Add jobs to begin" BorderPane.alignment="CENTER" />
+   </bottom>
 </BorderPane>

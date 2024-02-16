@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane styleClass="addFiles" prefHeight="585.0" prefWidth="440.0" stylesheets="@AddFiles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AddFilesDialog">
+   <top>
+      <VBox BorderPane.alignment="CENTER">
+         <HBox alignment="CENTER">
+            <HBox.margin>
+               <Insets />
+            </HBox.margin>
+            <Label styleClass="mainLabel" maxWidth="1.7976931348623157E308" text="Choose Output Options" HBox.hgrow="ALWAYS" />
+         </HBox>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </VBox>
+   </top>
+   <bottom>
+      <HBox spacing="10.0" BorderPane.alignment="CENTER">
+         <Region styleClass="hbox" HBox.hgrow="ALWAYS" />
+
+         <Button cancelButton="true" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" styleClass="minor-button" text="Cancel">
+            <padding>
+               <Insets left="12.0" right="12.0" />
+            </padding></Button>
+         <Button defaultButton="true" mnemonicParsing="false" onAction="#onApply" prefHeight="32.0" styleClass="major-button" text="Apply">
+            <padding>
+               <Insets left="12.0" right="12.0" />
+            </padding></Button>
+         <BorderPane.margin>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </BorderPane.margin>
+      </HBox>
+   </bottom>
+   <center>
+      <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" BorderPane.alignment="CENTER">
+         <VBox fx:id="settingsPanel" prefHeight="200.0" prefWidth="100.0" spacing="10.0" BorderPane.alignment="CENTER">
+            <CheckBox fx:id="wantDefault" mnemonicParsing="false" text="Set as defaults">
+               <VBox.margin>
+                  <Insets top="20.0"/>
+               </VBox.margin>
+            </CheckBox>
+            <CheckBox fx:id="shouldNotShow" layoutX="10.0" layoutY="208.0" mnemonicParsing="false"
+                      text="Don't show this again"/>
+            <Label fx:id="finalLabel" text="(You can view these options later using the File menu)"/>
+         </VBox>
+      </ScrollPane>
+   </center>
+</BorderPane>

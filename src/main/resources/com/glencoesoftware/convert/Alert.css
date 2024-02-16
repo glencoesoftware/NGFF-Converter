@@ -1,0 +1,45 @@
+.root {
+    primary: #455A64;
+    highlight: #2980B8;
+}
+
+.root * {
+    -fx-font-family: "Helvetica";
+}
+
+.label {
+    -fx-text-fill: primary;
+}
+
+.tooltip
+{
+    -fx-text-fill: white;
+}
+
+.root, .pane, .region, .scroll-pane {
+    -fx-background-color: white;
+}
+
+
+.button {
+    -fx-border-color: #E1E7EF;
+    -fx-border-radius: 4px;
+    -fx-background-color: white;
+}
+
+.button:default {
+    -fx-background-color: highlight;
+    -fx-border-radius: 4px;
+    -fx-border-color: highlight;
+    -fx-text-fill: white;
+}
+
+.button:hover {
+    -fx-border-color: black;
+    -fx-border-style: solid;
+}
+
+.button:pressed {
+    -fx-background-color: primary;
+    -fx-text-fill: white;
+}

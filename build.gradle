@@ -1,13 +1,15 @@
+import java.text.SimpleDateFormat
+
 plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.10'
     id 'org.beryx.runtime' version '1.12.5'
 }
 
-version = '1.1.5'
-String bfversion = "6.13.0"
-String b2rversion = "0.7.0"
-String r2oversion = "0.5.0"
+version = '2.0.0'
+String bfversion = "7.1.0"
+String b2rversion = "0.9.1"
+String r2oversion = "0.7.0"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
 applicationName = 'NGFF-Converter'
@@ -34,7 +36,7 @@ sourceCompatibility = 16
 targetCompatibility = 16
 
 javafx {
-    version = '17.0.2'
+    version = '17.0.9'
     modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
@@ -49,12 +51,14 @@ dependencies {
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.4'
     implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.4'
     implementation group: 'ch.qos.logback', name: 'logback-access', version: '1.4.4'
+    implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.2'
+    implementation group: 'com.google.guava', name: 'guava', version: '32.1.3-jre'
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:linux"
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:mac"
 }
 
-configurations.all {
+configurations.configureEach {
     exclude group: 'edu.ucar', 'module': 'cdm'
 }
 
@@ -64,7 +68,7 @@ jar {
             "Created-By": "Gradle ${gradle.gradleVersion}",
             "Build-Jdk": "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
             "Built-By": System.properties['user.name'],
-            "Built-On": new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+            "Built-On": new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
             "Implementation-Build": "git rev-parse --verify HEAD".execute().getText().trim(),
             "Implementation-Title": 'NGFF-Converter',
             "Implementation-Version": archiveVersion,
@@ -77,7 +81,7 @@ jar {
 }
 
 runtime {
-    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    addOptions('--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages')
 
     def currentOs = org.gradle.internal.os.OperatingSystem.current()
 

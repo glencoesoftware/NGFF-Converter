@@ -2,41 +2,39 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
-<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-      prefHeight="300.0" prefWidth="230.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
-   <ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
+<?import org.controlsfx.control.HyperlinkLabel?>
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="230.0" styleClass="container" stylesheets="@AboutDialog.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.glencoesoftware.convert.dialogs.AboutDialog">
+   <ImageView fitHeight="150.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true">
       <VBox.margin>
-         <Insets bottom="10.0"/>
+         <Insets bottom="10.0" />
       </VBox.margin>
-      <Image url="@glencoe-logo.png"/>
+      <Image url="@glencoe-logo.png" />
    </ImageView>
-   <Label text="NGFF-Converter">
-      <font>
-         <Font name="System Bold" size="18.0"/>
-      </font>
+   <Label styleClass="mainLabel" text="NGFF-Converter">
       <VBox.margin>
-         <Insets bottom="10.0"/>
+         <Insets bottom="10.0" />
       </VBox.margin>
    </Label>
    <Label text="Components:">
       <VBox.margin>
-         <Insets bottom="5.0"/>
+         <Insets bottom="5.0" />
       </VBox.margin>
    </Label>
-   <Label text="${'Converter GUI - ' + guiVer}"/>
-   <Label text="${'bioformats2raw - ' + b2rVer}"/>
-   <Label text="${'raw2ometiff - ' + r2oVer}"/>
-   <Label text="${'Bio-Formats - ' + bfVer}"/>
+   <Label fx:id="guiVersion" text="Converter GUI - " />
+   <Label fx:id="b2rVersion" text="bioformats2raw - " />
+   <Label fx:id="r2oVersion" text="raw2ometiff - " />
+   <Label fx:id="bfVersion" text="Bio-Formats - " />
    <Label text="Copyright © Glencoe Software">
       <VBox.margin>
-         <Insets top="10.0"/>
+         <Insets top="10.0" />
       </VBox.margin>
-      <font>
-         <Font name="System Italic" size="12.0"/>
-      </font>
    </Label>
+   <HyperlinkLabel focusTraversable="false" onAction="#licenseLink" text="License: [GPL 2.0]">
+      <VBox.margin>
+         <Insets top="5.0" />
+      </VBox.margin>
+   </HyperlinkLabel>
 </VBox>

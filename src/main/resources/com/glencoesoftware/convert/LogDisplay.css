@@ -1,0 +1,79 @@
+.root {
+    primary: #455A64;
+    highlight: #2980B8;
+    secondary: #F0F6FF;
+    neutral: #F8FAFC;
+    tertiary: #DBE3F0;
+    -fx-accent: highlight;
+}
+
+.root * {
+    -fx-font-family: "Helvetica";
+}
+
+.label {
+    -fx-text-fill: primary;
+}
+
+.header {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+
+.tooltip
+{
+    -fx-text-fill: white;
+}
+
+.root, .pane, .region, .scroll-pane {
+    -fx-background-color: white;
+}
+
+.close-button {
+    -fx-background-color: null;
+    -fx-border-color: white;
+    -fx-border-radius: 4px;
+}
+
+.minor-button {
+    -fx-border-color: #E1E7EF;
+    -fx-border-radius: 4px;
+    -fx-background-color: white;
+}
+
+.major-button {
+    -fx-background-color: highlight;
+    -fx-border-radius: 4px;
+    -fx-border-color: highlight;
+    -fx-text-fill: white;
+}
+
+.minor-button:hover, .major-button:hover, .task-arrow:hover {
+    -fx-border-color: black;
+    -fx-border-style: solid;
+}
+
+.minor-button:pressed, .major-button:pressed, .task-arrow:pressed {
+    -fx-background-color: primary;
+}
+
+.close-icon {
+    -fx-fill: primary;
+}
+
+.close-icon:hover {
+    -fx-fill: black;
+}
+
+#logBox {
+    -fx-border-color:primary;
+}
+
+#logBox .content {
+    -fx-background-color: neutral;
+}
+
+.root-container {
+    -fx-padding: 10px;
+}

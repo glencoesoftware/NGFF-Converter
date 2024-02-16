@@ -1,0 +1,120 @@
+.root {
+    primary: #455A64;
+    highlight: #2980B8;
+    -fx-accent: highlight;
+}
+
+.root * {
+    -fx-font-family: "Helvetica";
+}
+
+.label {
+    -fx-text-fill: primary;
+}
+
+.setting-label {
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+    -fx-alignment: center-left;
+}
+
+.setting-subcontainer {
+    -fx-border-style: solid;
+    -fx-border-color: primary;
+    -fx-border-radius: 5;
+    -fx-padding: 5px;
+}
+
+.tooltip
+{
+    -fx-text-fill: white;
+}
+
+.expando-title
+{
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: highlight;
+    -fx-padding: 10px;
+}
+
+#settingsPanel {
+    -fx-background-color: white;
+}
+
+.root, .pane, .region, .scroll-pane {
+    -fx-background-color: white;
+}
+
+.titled-pane:focused > .title
+{
+    -fx-background-color: white;
+}
+
+.titled-pane > .title > .arrow-button
+{
+    visibility: hidden;
+}
+
+.titled-pane2 > *.content
+{
+    -fx-background-color: white;
+    -fx-box-border: null;
+}
+
+.task-arrow {
+    -fx-background-color: #F0F6FF;
+    -fx-padding: 0px;
+    -fx-background-radius: 150;
+    -fx-border-radius: 150;
+
+}
+
+.mainLabel {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+}
+
+.close-button {
+    -fx-background-color: null;
+    -fx-border-color: white;
+    -fx-border-radius: 4px;
+}
+
+.minor-button {
+    -fx-border-color: #E1E7EF;
+    -fx-border-radius: 4px;
+    -fx-background-color: white;
+}
+
+.major-button {
+    -fx-background-color: highlight;
+    -fx-border-radius: 4px;
+    -fx-border-color: highlight;
+    -fx-text-fill: white;
+}
+
+.minor-button:hover, .major-button:hover, .task-arrow:hover {
+    -fx-border-color: black;
+    -fx-border-style: solid;
+}
+
+.minor-button:pressed, .major-button:pressed, .task-arrow:pressed {
+    -fx-background-color: primary;
+}
+
+.close-icon {
+    -fx-fill: primary;
+}
+
+.close-icon:hover {
+    -fx-fill: black;
+}
+
+.help-icon {
+    -fx-fill: primary;
+}
+
+.addFiles {
+    -fx-padding: 10px;
+}
