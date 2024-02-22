@@ -6,6 +6,12 @@ Formats [supported by the bio-formats library](https://bio-formats.readthedocs.i
 Internally NGFF-Converter uses the [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw) and [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff) packages for conversion.
 With default settings, the resulting files should automatically have resolution pyramids generated if needed.
 
+## Prebuilt Binaries
+
+Download NGFF-Converter using the following link
+
+<img src="https://img.shields.io/badge/Downloads_Page-2980B8?style=flat" height="35"  alt="Downloads Page"/>
+
 ## Usage
 
 Running the tool will display a desktop GUI:
