@@ -8,7 +8,7 @@ With default settings, the resulting files should automatically have resolution 
 
 ## Prebuilt Binaries
 
-Download NGFF-Converter using the following link
+NGFF-Converter releases can be downloaded here:
 
 <img src="https://img.shields.io/badge/Downloads_Page-2980B8?style=flat" height="35"  alt="Downloads Page"/>
 
