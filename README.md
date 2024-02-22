@@ -10,7 +10,7 @@ With default settings, the resulting files should automatically have resolution 
 
 NGFF-Converter releases can be downloaded here:
 
-<img src="https://img.shields.io/badge/Downloads_Page-2980B8?style=flat" height="35"  alt="Downloads Page"/>
+[<img src="https://img.shields.io/badge/Downloads_Page-2980B8?style=flat" height="35"  alt="Downloads Page"/>](https://downloads.glencoesoftware.com/public/NGFF-Converter/latest/)
 
 ## Usage
 
