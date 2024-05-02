@@ -1,3 +1,16 @@
+# v2.0.1 (2024-05-02)
+
+### Bugfixes/Maintenance:
+* Updated component package versions
+  * bioformats 7.2.0
+  * bioformats2raw 0.9.2
+* Fixed a bug when trying to open a deleted image
+* Custom directories which do not exist will now be created when saving task settings
+
+### Known issues:
+* The underlying bioformats package is currently unable to read some formats on ARM-based MacOS systems.
+* raw2ometiff execution cannot be reliably interrupted until it finishes the initial scan of a .zarr file.
+
 # v2.0.0 (2024-02-16)
 
 ### Features:

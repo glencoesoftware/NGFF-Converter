@@ -7,9 +7,9 @@ plugins {
     id "com.github.hierynomus.license-report" version "0.16.1"
 }
 
-version = '2.0.0'
-String bfversion = "7.1.0"
-String b2rversion = "0.9.1"
+version = '2.0.1'
+String bfversion = "7.2.0"
+String b2rversion = "0.9.2"
 String r2oversion = "0.7.0"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
@@ -49,9 +49,9 @@ dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.0'
     implementation 'org.kordamp.ikonli:ikonli-bootstrapicons-pack:12.3.0'
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.4'
-    implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.4'
-    implementation group: 'ch.qos.logback', name: 'logback-access', version: '1.4.4'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.12'
+    implementation group: 'ch.qos.logback', name: 'logback-core', version: '1.4.12'
+    implementation group: 'ch.qos.logback', name: 'logback-access', version: '1.4.12'
     implementation group: 'org.controlsfx', name: 'controlsfx', version: '11.1.2'
     implementation group: 'com.google.guava', name: 'guava', version: '32.1.3-jre'
     runtimeOnly "org.openjfx:javafx-graphics:$javafx.version:win"
