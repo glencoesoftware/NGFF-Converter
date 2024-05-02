@@ -199,6 +199,7 @@ public class Output extends BaseTask {
                 if (txt == null || txt.isEmpty()) logFileLocation = output.getParentFile();
                 else {
                     logFileLocation = new File(txt);
+                    if (logFileLocation.mkdirs()) { LOGGER.debug("Created directory: " + logFileLocation); }
                     if (!logFileLocation.canWrite()) {
                         errors++;
                         if (!logDirectory.getStyleClass().contains("setting-warn"))
@@ -214,6 +215,7 @@ public class Output extends BaseTask {
         if (txt == null || txt.isEmpty()) trueWorkingDirectory = null;
         else {
             trueWorkingDirectory = new File(txt);
+            if (trueWorkingDirectory.mkdirs()) { LOGGER.debug("Created directory: " + trueWorkingDirectory); }
             if (!trueWorkingDirectory.canWrite()) {
                 errors++;
                 if (!workingDirectoryField.getStyleClass().contains("setting-warn"))
@@ -223,6 +225,9 @@ public class Output extends BaseTask {
         // Recalculate job IO in case the user switched temp directory
         if (input != null) parent.calculateIO();
         outputFileName.getStyleClass().remove("setting-warn");
+        if (output != null && output.getParentFile().mkdirs()) {
+            LOGGER.debug("Created output directory: " + output.getParent());
+        }
         if (output != null && !output.getParentFile().canWrite()) {
             errors++;
             if (!outputFileName.getStyleClass().contains("setting-warn"))
