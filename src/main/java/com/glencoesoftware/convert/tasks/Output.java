@@ -378,7 +378,7 @@ public class Output extends BaseTask {
                     }
                 }
             }
-            LOGGER.error("Output file was written sucessfully");
+            LOGGER.info("Output file was written successfully");
             this.status = JobState.status.COMPLETED;
         } catch (IOException e) {
             this.status = JobState.status.FAILED;
