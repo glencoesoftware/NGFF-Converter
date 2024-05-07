@@ -45,17 +45,17 @@ jobs:
         c:\msys64\usr\bin\wget.exe 'https://github.com/glencoesoftware/c-blosc-windows-x86_64/releases/download/20220919/blosc.dll'
     - if: ${{ matrix.os == 'windows-latest' }}
       name: Run jpackage with Gradle (installer)
-      uses: gradle/gradle-build-action@v3
+      uses: gradle/actions/setup-gradle@v3
       with:
         arguments: jpackage
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Run jpackage with Gradle (application image only)
-      uses: gradle/gradle-build-action@v3
+      uses: gradle/actions/setup-gradle@v3
       with:
         arguments: jpackageImageZip
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Generate dependency report
-      uses: gradle/gradle-build-action@v3
+      uses: gradle/actions/setup-gradle@v3
       with:
         arguments: downloadLicenses
     - if: ${{ matrix.os == 'macos-latest' }}
