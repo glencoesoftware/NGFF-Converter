@@ -26,11 +26,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: true
     - name: Set up JDK 17
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -45,22 +45,22 @@ jobs:
         c:\msys64\usr\bin\wget.exe 'https://github.com/glencoesoftware/c-blosc-windows-x86_64/releases/download/20220919/blosc.dll'
     - if: ${{ matrix.os == 'windows-latest' }}
       name: Run jpackage with Gradle (installer)
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
       with:
         arguments: jpackage
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Run jpackage with Gradle (application image only)
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
       with:
         arguments: jpackageImageZip
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Generate dependency report
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
       with:
         arguments: downloadLicenses
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Upload Mac pkg
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: macos-package
         path: ./build/distributions/*.zip
@@ -68,7 +68,7 @@ jobs:
         retention-days: 3
     - if: ${{ matrix.os == 'windows-latest' }}
       name: Upload Windows MSI
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: windows-package
         path: ./build/jpackage/*.msi
@@ -76,7 +76,7 @@ jobs:
         retention-days: 3
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Upload Mac pkg
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: dependency-report
         path: ./build/reports/license/dependency-license*
@@ -89,7 +89,7 @@ jobs:
     if: startswith(github.ref, 'refs/tags/')
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
       - name: List artifacts
         run: ls -R
       - name: Create release draft
