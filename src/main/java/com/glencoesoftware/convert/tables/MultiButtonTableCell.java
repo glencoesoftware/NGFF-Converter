@@ -17,6 +17,7 @@ import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -110,13 +111,23 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         showFile.setGraphic(openDirIcon);
         showFile.setTooltip(new Tooltip("Open containing folder"));
         showFile.setOnAction(evt -> {
+            File target = getTableRow().getItem().finalOutput;
+            if (!target.exists()) {
+                // If the user split the file we might need to show the parent directory instead.
+                target = target.getParentFile();
+                if (!target.exists()) {
+                    // User probably nuked the entire directory
+                    getTableRow().getItem().controller.updateStatus("Unable to locate output file");
+                    return;
+                }
+            }
             Desktop desktop = Desktop.getDesktop();
             try {
-                desktop.browseFileDirectory(getTableRow().getItem().finalOutput);
+                desktop.browseFileDirectory(target);
             } catch (UnsupportedOperationException e) {
-                // Some Windows versions don't support browse for some reason
+                // Some Windows versions don't support browsing to a specific file for some reason
                 try {
-                    desktop.open(getTableRow().getItem().finalOutput.getParentFile());
+                    desktop.open(target.getParentFile());
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
