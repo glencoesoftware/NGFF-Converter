@@ -7,10 +7,10 @@ plugins {
     id "com.github.hierynomus.license-report" version "0.16.1"
 }
 
-version = '2.0.1'
-String bfversion = "7.2.0"
-String b2rversion = "0.9.2"
-String r2oversion = "0.7.0"
+version = '2.0.2'
+String bfversion = "7.3.0"
+String b2rversion = "0.9.3"
+String r2oversion = "0.7.1"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
 applicationName = 'NGFF-Converter'
