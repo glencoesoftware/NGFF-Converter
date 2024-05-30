@@ -1189,7 +1189,7 @@ public class CreateNGFF extends BaseTask{
         if (subject != null) nested.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.WRITE_METADATA.name());
-        if (subject != null) originalMeta.setSelected(!subject.booleanValue());
+        if (subject != null) originalMeta.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.OME_META.name());
         if (subject != null) noOMEMeta.setSelected(subject.booleanValue());
