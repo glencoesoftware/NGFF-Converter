@@ -35,6 +35,8 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         architecture: 'x64'
+    - name: Setup Gradle wrapper
+      uses: gradle/actions/setup-gradle@v3
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Install bundler and download blosc
       run: |
@@ -46,19 +48,13 @@ jobs:
         c:\msys64\usr\bin\wget.exe 'https://github.com/glencoesoftware/c-blosc-windows-x86_64/releases/download/20220919/blosc.dll'
     - if: ${{ matrix.os == 'windows-latest' }}
       name: Run jpackage with Gradle (installer)
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        arguments: jpackage
+      run: ./gradlew jpackage
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Run jpackage with Gradle (application image only)
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        arguments: jpackageImageZip
+      run: ./gradlew jpackageImageZip
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Generate dependency report
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        arguments: downloadLicenses
+      run: ./gradlew downloadLicenses
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Upload Mac pkg
       uses: actions/upload-artifact@v4
