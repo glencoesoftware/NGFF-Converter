@@ -57,7 +57,7 @@ public class CreateNGFF extends BaseTask{
         DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, SCALE_FORMAT_STRING, SCALE_FORMAT_CSV,
         FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE, ZLIB_LEVEL,
         MAX_CACHED_TILES, MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
-        READER_OPTS, OUTPUT_OPTS, EXTRA_READERS
+        READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA
     }
 
 
@@ -91,6 +91,7 @@ public class CreateNGFF extends BaseTask{
     private static final ToggleSwitch disableMinMax;
     private static final ToggleSwitch disableHCS;
     private static final ToggleSwitch nested;
+    private static final ToggleSwitch originalMeta;
     private static final ToggleSwitch noOMEMeta;
     private static final ToggleSwitch noRoot;
     private static final TextField pyramidName;
@@ -175,6 +176,7 @@ public class CreateNGFF extends BaseTask{
         disableMinMax.setSelected(converter.getCalculateOMEROMetadata());
         disableHCS.setSelected(converter.getNoHCS());
         nested.setSelected(converter.getNested());
+        originalMeta.setSelected(converter.getOriginalMetadata());
         noOMEMeta.setSelected(converter.getNoOMEMeta());
         noRoot.setSelected(converter.getNoRootGroup());
         pyramidName.setText(converter.getPyramidName());
@@ -263,6 +265,7 @@ public class CreateNGFF extends BaseTask{
         converter.setNoHCS(disableHCS.isSelected());
 
         converter.setUnnested(!nested.isSelected());
+        converter.setNoOriginalMetadata(!originalMeta.isSelected());
         converter.setNoOMEMeta(noOMEMeta.isSelected());
         converter.setNoRootGroup(noRoot.isSelected());
         if (pyramidName.getText() != null && !pyramidName.getText().isEmpty())
@@ -323,6 +326,7 @@ public class CreateNGFF extends BaseTask{
         converter.setCalculateOMEROMetadata(source.converter.getCalculateOMEROMetadata());
         converter.setNoHCS(source.converter.getNoHCS());
         converter.setUnnested(!source.converter.getNested());
+        converter.setNoOriginalMetadata(!source.converter.getOriginalMetadata());
         converter.setNoOMEMeta(source.converter.getNoOMEMeta());
         converter.setNoRootGroup(source.converter.getNoRootGroup());
         converter.setPyramidName(source.converter.getPyramidName());
@@ -652,6 +656,16 @@ public class CreateNGFF extends BaseTask{
                 """
         ));
 
+        originalMeta = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                originalMeta,
+                "Write original metadata",
+                """
+                Write original metadata key/values
+                into NGFF file OME-XML metadata.
+                """
+        ));
+
         noOMEMeta = new ToggleSwitch();
         advancedSettings.add(getSettingContainer(
                 noOMEMeta,
@@ -890,6 +904,7 @@ public class CreateNGFF extends BaseTask{
         taskPreferences.putBoolean(prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata());
         taskPreferences.putBoolean(prefKeys.HCS.name(), converter.getNoHCS());
         taskPreferences.putBoolean(prefKeys.NESTED.name(), converter.getNested());
+        taskPreferences.putBoolean(prefKeys.WRITE_METADATA.name(), converter.getOriginalMetadata());
         taskPreferences.putBoolean(prefKeys.OME_META.name(), converter.getNoOMEMeta());
         taskPreferences.putBoolean(prefKeys.NO_ROOT.name(), converter.getNoRootGroup());
         if (converter.getPyramidName() != null) {
@@ -957,6 +972,8 @@ public class CreateNGFF extends BaseTask{
                 prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata()));
         converter.setNoHCS(taskPreferences.getBoolean(prefKeys.HCS.name(), converter.getNoHCS()));
         converter.setUnnested(!taskPreferences.getBoolean(prefKeys.NESTED.name(), converter.getNested()));
+        converter.setNoOriginalMetadata(
+                !taskPreferences.getBoolean(prefKeys.WRITE_METADATA.name(), converter.getOriginalMetadata()));
         converter.setNoOMEMeta(taskPreferences.getBoolean(prefKeys.OME_META.name(), converter.getNoOMEMeta()));
         converter.setNoRootGroup(taskPreferences.getBoolean(prefKeys.NO_ROOT.name(), converter.getNoRootGroup()));
         converter.setPyramidName(taskPreferences.get(prefKeys.PYRAMID_NAME.name(), converter.getPyramidName()));
@@ -1064,6 +1081,8 @@ public class CreateNGFF extends BaseTask{
         generator.writeBoolean(converter.getNoHCS());
         generator.writeFieldName(prefKeys.NESTED.name());
         generator.writeBoolean(converter.getNested());
+        generator.writeFieldName(prefKeys.WRITE_METADATA.name());
+        generator.writeBoolean(converter.getOriginalMetadata());
         generator.writeFieldName(prefKeys.OME_META.name());
         generator.writeBoolean(converter.getNoOMEMeta());
         generator.writeFieldName(prefKeys.NO_ROOT.name());
@@ -1168,6 +1187,9 @@ public class CreateNGFF extends BaseTask{
 
         subject = settings.get(prefKeys.NESTED.name());
         if (subject != null) nested.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.WRITE_METADATA.name());
+        if (subject != null) originalMeta.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.OME_META.name());
         if (subject != null) noOMEMeta.setSelected(subject.booleanValue());

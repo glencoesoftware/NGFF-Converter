@@ -1,3 +1,16 @@
+# v2.0.2 (2024-05-30)
+
+### Bugfixes/Maintenance:
+* Updated component package versions
+  * bioformats 7.3.0
+  * bioformats2raw 0.9.3
+  * raw2ometiff 0.7.1
+* CreateNGFF has a new option to omit original metadata from METADATA.ome.xml within the .zarr file
+* raw2ometiff now scans .zarr files much faster
+
+### Known issues:
+* The underlying bioformats package is currently unable to read some formats on ARM-based MacOS systems.
+
 # v2.0.1 (2024-05-02)
 
 ### Bugfixes/Maintenance:
