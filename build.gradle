@@ -47,6 +47,7 @@ dependencies {
     implementation "ome:formats-gpl:${bfversion}"
     implementation 'info.picocli:picocli:4.7.5'
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.18.0'
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.0'
     implementation 'org.kordamp.ikonli:ikonli-bootstrapicons-pack:12.3.0'
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.12'
