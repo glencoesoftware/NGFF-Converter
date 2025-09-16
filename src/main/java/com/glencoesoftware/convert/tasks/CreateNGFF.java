@@ -261,7 +261,7 @@ public class CreateNGFF extends BaseTask{
 
         if (!maxCachedTiles.getText().isEmpty()) converter.setMaxCachedTiles(
                 Integer.parseInt(maxCachedTiles.getText()));
-        converter.setCalculateOMEROMetadata(disableMinMax.isSelected());
+        converter.setCalculateOMEROMetadata(!disableMinMax.isSelected());
         converter.setNoHCS(disableHCS.isSelected());
 
         converter.setUnnested(!nested.isSelected());
@@ -323,7 +323,7 @@ public class CreateNGFF extends BaseTask{
         converter.setFillValue(source.converter.getFillValue());
         converter.setCompressionProperties(source.converter.getCompressionProperties());
         converter.setMaxCachedTiles(source.converter.getMaxCachedTiles());
-        converter.setCalculateOMEROMetadata(source.converter.getCalculateOMEROMetadata());
+        converter.setCalculateOMEROMetadata(!source.converter.getCalculateOMEROMetadata());
         converter.setNoHCS(source.converter.getNoHCS());
         converter.setUnnested(!source.converter.getNested());
         converter.setNoOriginalMetadata(!source.converter.getOriginalMetadata());
@@ -968,7 +968,7 @@ public class CreateNGFF extends BaseTask{
         converter.setMaxCachedTiles(taskPreferences.getInt(prefKeys.MAX_CACHED_TILES.name(),
                 converter.getMaxCachedTiles()));
 
-        converter.setCalculateOMEROMetadata(taskPreferences.getBoolean(
+        converter.setCalculateOMEROMetadata(!taskPreferences.getBoolean(
                 prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata()));
         converter.setNoHCS(taskPreferences.getBoolean(prefKeys.HCS.name(), converter.getNoHCS()));
         converter.setUnnested(!taskPreferences.getBoolean(prefKeys.NESTED.name(), converter.getNested()));
