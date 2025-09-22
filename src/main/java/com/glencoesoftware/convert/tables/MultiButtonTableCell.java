@@ -76,9 +76,9 @@ public class MultiButtonTableCell extends TableCell<BaseWorkflow, Void> {
         removeJobDisabled.setTooltip(new Tooltip("Job is already stopping"));
 
         startJob.setGraphic(startJobIcon);
-        startJob.setTooltip(new Tooltip("Stop execution"));
+        startJob.setTooltip(new Tooltip("Start execution"));
         startJob.setOnAction(evt -> {
-            // Stop an ongoing run
+            // Add a job to the queue
             BaseWorkflow subject = getTableRow().getItem();
             if (subject.canRun()) subject.queueJob();
             subject.controller.updateStatus("Queued " + subject.firstInput.getName());
