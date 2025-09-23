@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 
 plugins {
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.10'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'org.beryx.runtime' version '1.12.5'
     id "com.github.hierynomus.license-report" version "0.16.1"
 }
@@ -37,7 +37,7 @@ sourceCompatibility = 16
 targetCompatibility = 16
 
 javafx {
-    version = '17.0.9'
+    version = '17.0.16'
     modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
