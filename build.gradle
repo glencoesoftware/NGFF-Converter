@@ -8,9 +8,9 @@ plugins {
 }
 
 version = '2.0.2'
-String bfversion = "7.3.0"
-String b2rversion = "0.9.3"
-String r2oversion = "0.7.1"
+String bfversion = "8.3.0"
+String b2rversion = "0.11.0"
+String r2oversion = "0.8.0"
 
 mainClassName = 'com.glencoesoftware.convert.Launcher'
 applicationName = 'NGFF-Converter'
@@ -48,8 +48,9 @@ dependencies {
     implementation "com.glencoesoftware:raw2ometiff:${r2oversion}"
     implementation "com.glencoesoftware:bioformats2raw:${b2rversion}"
     implementation "ome:formats-gpl:${bfversion}"
-    implementation 'info.picocli:picocli:4.6.2'
+    implementation 'info.picocli:picocli:4.7.5'
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.18.0'
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.0'
     implementation 'org.kordamp.ikonli:ikonli-bootstrapicons-pack:12.3.0'
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.12'

@@ -54,9 +54,9 @@ public class CreateNGFF extends BaseTask{
 
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
-        DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, SCALE_FORMAT_STRING, SCALE_FORMAT_CSV,
-        FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE, ZLIB_LEVEL,
-        MAX_CACHED_TILES, MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
+        COMPACT_DIMENSIONS, DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, NO_TILES,
+        SCALE_FORMAT_STRING, SCALE_FORMAT_CSV, FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE,
+        ZLIB_LEVEL, MAX_CACHED_TILES, MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
         READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA
     }
 
@@ -72,6 +72,7 @@ public class CreateNGFF extends BaseTask{
     private static final TextField tileWidth;
     private static final TextField resolutions;
     private static final TextField series;
+    private static final ToggleSwitch compactDimensions;
     private static final ChoiceBox<DimensionOrder> dimensionOrder;
     private static final ChoiceBox<Downsampling> downsampling;
     private static final TextField minImageSize;
@@ -94,6 +95,7 @@ public class CreateNGFF extends BaseTask{
     private static final ToggleSwitch originalMeta;
     private static final ToggleSwitch noOMEMeta;
     private static final ToggleSwitch noRoot;
+    private static final ToggleSwitch noTiles;
     private static final TextField pyramidName;
     private static final ToggleSwitch keepMemos;
     private static final TextField memoDirectory;
@@ -131,6 +133,7 @@ public class CreateNGFF extends BaseTask{
         resolutions.setText(String.valueOf(converter.getResolutions()));
         series.setText(converter.getSeriesList().stream().map(String::valueOf)
                 .collect(joining(",")));
+        compactDimensions.setSelected(converter.getCompactDimensions());
         dimensionOrder.setValue(converter.getDimensionOrder());
         downsampling.setValue(converter.getDownsampling());
         minImageSize.setText(String.valueOf(converter.getMinImageSize()));
@@ -179,6 +182,7 @@ public class CreateNGFF extends BaseTask{
         originalMeta.setSelected(converter.getOriginalMetadata());
         noOMEMeta.setSelected(converter.getNoOMEMeta());
         noRoot.setSelected(converter.getNoRootGroup());
+        noTiles.setSelected(converter.getNoTiles());
         pyramidName.setText(converter.getPyramidName());
         keepMemos.setSelected(converter.getKeepMemoFiles());
         File memoDir = converter.getMemoDirectory();
@@ -247,6 +251,7 @@ public class CreateNGFF extends BaseTask{
                 errorCount++;
             }
         }
+        converter.setCompactDimensions(compactDimensions.isSelected());
         converter.setDimensionOrder(dimensionOrder.getValue());
         converter.setDownsampling(downsampling.getValue());
         if (!minImageSize.getText().isEmpty()) converter.setMinImageSize(Integer.parseInt(minImageSize.getText()));
@@ -268,6 +273,7 @@ public class CreateNGFF extends BaseTask{
         converter.setNoOriginalMetadata(!originalMeta.isSelected());
         converter.setNoOMEMeta(noOMEMeta.isSelected());
         converter.setNoRootGroup(noRoot.isSelected());
+        converter.setNoTiles(noTiles.isSelected());
         if (pyramidName.getText() != null && !pyramidName.getText().isEmpty())
             converter.setPyramidName(pyramidName.getText());
         converter.setKeepMemoFiles(keepMemos.isSelected());
@@ -313,6 +319,7 @@ public class CreateNGFF extends BaseTask{
         converter.setTileWidth(source.converter.getTileWidth());
         converter.setResolutions(source.converter.getResolutions());
         converter.setSeriesList(source.converter.getSeriesList());
+        converter.setCompactDimensions(source.converter.getCompactDimensions());
         converter.setDimensionOrder(source.converter.getDimensionOrder());
         converter.setDownsampling(source.converter.getDownsampling());
         converter.setMinImageSize(source.converter.getMinImageSize());
@@ -329,6 +336,7 @@ public class CreateNGFF extends BaseTask{
         converter.setNoOriginalMetadata(!source.converter.getOriginalMetadata());
         converter.setNoOMEMeta(source.converter.getNoOMEMeta());
         converter.setNoRootGroup(source.converter.getNoRootGroup());
+        converter.setNoTiles(source.converter.getNoTiles());
         converter.setPyramidName(source.converter.getPyramidName());
         converter.setKeepMemoFiles(source.converter.getKeepMemoFiles());
         converter.setMemoDirectory(source.converter.getMemoDirectory());
@@ -526,8 +534,15 @@ public class CreateNGFF extends BaseTask{
                 """
                 Override the input file dimension order in the
                 output file.
-                [Can break compatibility with raw2ometiff]
+                [DEPRECATED, results in invalid OME-NGFF data]
                 """
+        ));
+
+        compactDimensions = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                compactDimensions,
+                "Compact dimensions",
+                "Only write dimensions greater than 1"
         ));
 
         downsampling = new ChoiceBox<>();
@@ -683,6 +698,15 @@ public class CreateNGFF extends BaseTask{
                 """
                 Turn off creation of root group and corresponding metadata
                 [Will break compatibility with raw2ometiff]
+                """
+        ));
+
+        noTiles = new ToggleSwitch();
+        advancedSettings.add(getSettingContainer(
+                noTiles,
+                "Disable tile writing",
+                """
+                Write all metadata, but do not convert any tiles
                 """
         ));
 
@@ -868,6 +892,7 @@ public class CreateNGFF extends BaseTask{
         }
         taskPreferences.put(prefKeys.SERIES.name(), converter.getSeriesList()
                 .stream().map(String::valueOf).collect(joining(",")));
+        taskPreferences.putBoolean(prefKeys.COMPACT_DIMENSIONS.name(), converter.getCompactDimensions());
         taskPreferences.put(prefKeys.DIMENSION_ORDER.name(), converter.getDimensionOrder().name());
         taskPreferences.put(prefKeys.DOWNSAMPLING.name(), converter.getDownsampling().name());
         taskPreferences.putInt(prefKeys.MIN_IMAGE_SIZE.name(), converter.getMinImageSize());
@@ -907,6 +932,7 @@ public class CreateNGFF extends BaseTask{
         taskPreferences.putBoolean(prefKeys.WRITE_METADATA.name(), converter.getOriginalMetadata());
         taskPreferences.putBoolean(prefKeys.OME_META.name(), converter.getNoOMEMeta());
         taskPreferences.putBoolean(prefKeys.NO_ROOT.name(), converter.getNoRootGroup());
+        taskPreferences.putBoolean(prefKeys.NO_TILES.name(), converter.getNoTiles());
         if (converter.getPyramidName() != null) {
             taskPreferences.put(prefKeys.PYRAMID_NAME.name(), converter.getPyramidName());
         }
@@ -941,6 +967,8 @@ public class CreateNGFF extends BaseTask{
             converter.setSeriesList(Arrays.stream(seriesList.split(",")).map(Integer::parseInt).toList());
         }
 
+        converter.setCompactDimensions(taskPreferences.getBoolean(
+                prefKeys.COMPACT_DIMENSIONS.name(), converter.getCompactDimensions()));
         converter.setDimensionOrder(DimensionOrder.valueOf(taskPreferences.get(prefKeys.DIMENSION_ORDER.name(),
                 converter.getDimensionOrder().name())));
         converter.setDownsampling(Downsampling.valueOf(taskPreferences.get(prefKeys.DOWNSAMPLING.name(),
@@ -976,6 +1004,7 @@ public class CreateNGFF extends BaseTask{
                 !taskPreferences.getBoolean(prefKeys.WRITE_METADATA.name(), converter.getOriginalMetadata()));
         converter.setNoOMEMeta(taskPreferences.getBoolean(prefKeys.OME_META.name(), converter.getNoOMEMeta()));
         converter.setNoRootGroup(taskPreferences.getBoolean(prefKeys.NO_ROOT.name(), converter.getNoRootGroup()));
+        converter.setNoTiles(taskPreferences.getBoolean(prefKeys.NO_TILES.name(), converter.getNoTiles()));
         converter.setPyramidName(taskPreferences.get(prefKeys.PYRAMID_NAME.name(), converter.getPyramidName()));
         converter.setKeepMemoFiles(taskPreferences.getBoolean(
                 prefKeys.KEEP_MEMOS.name(), converter.getKeepMemoFiles()));
@@ -1037,6 +1066,8 @@ public class CreateNGFF extends BaseTask{
         generator.writeFieldName(prefKeys.SERIES.name());
         generator.writeString(converter.getSeriesList()
                 .stream().map(String::valueOf).collect(joining(",")));
+        generator.writeFieldName(prefKeys.COMPACT_DIMENSIONS.name());
+        generator.writeBoolean(converter.getCompactDimensions());
         generator.writeFieldName(prefKeys.DIMENSION_ORDER.name());
         generator.writeString(converter.getDimensionOrder().name());
         generator.writeFieldName(prefKeys.DOWNSAMPLING.name());
@@ -1087,6 +1118,8 @@ public class CreateNGFF extends BaseTask{
         generator.writeBoolean(converter.getNoOMEMeta());
         generator.writeFieldName(prefKeys.NO_ROOT.name());
         generator.writeBoolean(converter.getNoRootGroup());
+        generator.writeFieldName(prefKeys.NO_TILES.name());
+        generator.writeBoolean(converter.getNoTiles());
         if (converter.getPyramidName() != null) {
             generator.writeFieldName(prefKeys.PYRAMID_NAME.name());
             generator.writeString(converter.getPyramidName());
@@ -1139,6 +1172,9 @@ public class CreateNGFF extends BaseTask{
 
         subject = settings.get(prefKeys.SERIES.name());
         if (subject != null) series.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.COMPACT_DIMENSIONS.name());
+        if (subject != null) compactDimensions.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.DIMENSION_ORDER.name());
         if (subject != null) dimensionOrder.setValue(DimensionOrder.valueOf(subject.textValue()));
@@ -1196,6 +1232,9 @@ public class CreateNGFF extends BaseTask{
 
         subject = settings.get(prefKeys.NO_ROOT.name());
         if (subject != null) noRoot.setSelected(subject.booleanValue());
+
+        subject = settings.get(prefKeys.NO_TILES.name());
+        if (subject != null) noTiles.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.PYRAMID_NAME.name());
         if (subject != null) pyramidName.setText(subject.textValue());

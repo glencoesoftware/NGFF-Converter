@@ -46,7 +46,7 @@ import javafx.stage.*;
 import javafx.stage.Window;
 import loci.formats.ImageReader;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.controlsfx.control.HyperlinkLabel;
 import org.controlsfx.control.Notifications;
 import org.controlsfx.control.StatusBar;

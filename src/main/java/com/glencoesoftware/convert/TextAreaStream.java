@@ -9,7 +9,7 @@ package com.glencoesoftware.convert;
 
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.OutputStream;
 
