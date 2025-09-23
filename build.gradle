@@ -33,8 +33,11 @@ repositories {
     }
 }
 
-sourceCompatibility = 16
-targetCompatibility = 16
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 javafx {
     version = '17.0.16'
