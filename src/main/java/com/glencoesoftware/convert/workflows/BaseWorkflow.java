@@ -343,6 +343,8 @@ public abstract class BaseWorkflow extends Service<Void> {
         JsonGenerator generator = factory.createGenerator(targetFile, JsonEncoding.UTF8);
         generator.useDefaultPrettyPrinter();
         generator.writeStartObject();
+        generator.writeFieldName("Version");
+        generator.writeString(App.version);
         for (BaseTask task: tasks) task.exportSettings(generator);
         generator.writeEndObject();
         generator.close();

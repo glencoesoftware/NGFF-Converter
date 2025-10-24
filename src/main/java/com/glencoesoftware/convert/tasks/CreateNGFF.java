@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
+import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.tasks.progress.ConverterProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -882,6 +883,7 @@ public class CreateNGFF extends BaseTask{
         // Ensure displayed settings are what gets stored
         applySettings();
         taskPreferences.clear();
+        taskPreferences.put("Version", App.version);
         taskPreferences.put(prefKeys.LOG_LEVEL.name(), converter.getLogLevel());
         taskPreferences.putInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers());
         taskPreferences.put(prefKeys.COMPRESSION.name(), converter.getCompression().name());
