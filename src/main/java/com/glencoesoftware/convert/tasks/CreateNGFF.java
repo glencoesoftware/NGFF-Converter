@@ -56,7 +56,7 @@ public class CreateNGFF extends BaseTask{
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
         COMPACT_DIMENSIONS, DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, NO_TILES,
         SCALE_FORMAT_STRING, SCALE_FORMAT_CSV, FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE,
-        ZLIB_LEVEL, MAX_CACHED_TILES, MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
+        ZLIB_LEVEL, MAX_CACHED_TILES, CALC_MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
         READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA
     }
 
@@ -926,7 +926,7 @@ public class CreateNGFF extends BaseTask{
         }
         taskPreferences.putInt(prefKeys.MAX_CACHED_TILES.name(), converter.getMaxCachedTiles());
 
-        taskPreferences.putBoolean(prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata());
+        taskPreferences.putBoolean(prefKeys.CALC_MIN_MAX.name(), converter.getCalculateOMEROMetadata());
         taskPreferences.putBoolean(prefKeys.HCS.name(), converter.getNoHCS());
         taskPreferences.putBoolean(prefKeys.NESTED.name(), converter.getNested());
         taskPreferences.putBoolean(prefKeys.WRITE_METADATA.name(), converter.getOriginalMetadata());
@@ -997,7 +997,7 @@ public class CreateNGFF extends BaseTask{
                 converter.getMaxCachedTiles()));
 
         converter.setCalculateOMEROMetadata(!taskPreferences.getBoolean(
-                prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata()));
+                prefKeys.CALC_MIN_MAX.name(), converter.getCalculateOMEROMetadata()));
         converter.setNoHCS(taskPreferences.getBoolean(prefKeys.HCS.name(), converter.getNoHCS()));
         converter.setUnnested(!taskPreferences.getBoolean(prefKeys.NESTED.name(), converter.getNested()));
         converter.setNoOriginalMetadata(
@@ -1106,7 +1106,7 @@ public class CreateNGFF extends BaseTask{
         generator.writeFieldName(prefKeys.MAX_CACHED_TILES.name());
         generator.writeString(String.valueOf(converter.getMaxCachedTiles()));
 
-        generator.writeFieldName(prefKeys.MIN_MAX.name());
+        generator.writeFieldName(prefKeys.CALC_MIN_MAX.name());
         generator.writeBoolean(converter.getCalculateOMEROMetadata());
         generator.writeFieldName(prefKeys.HCS.name());
         generator.writeBoolean(converter.getNoHCS());
@@ -1218,7 +1218,7 @@ public class CreateNGFF extends BaseTask{
         subject = settings.get(prefKeys.MAX_CACHED_TILES.name());
         if (subject != null) maxCachedTiles.setText(subject.textValue());
 
-        subject = settings.get(prefKeys.MIN_MAX.name());
+        subject = settings.get(prefKeys.CALC_MIN_MAX.name());
         if (subject != null) disableMinMax.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.NESTED.name());
