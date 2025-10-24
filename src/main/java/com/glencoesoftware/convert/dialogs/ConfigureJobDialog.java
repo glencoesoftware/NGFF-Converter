@@ -356,6 +356,8 @@ public class ConfigureJobDialog {
                     JsonGenerator generator = factory.createGenerator(selectedFile, JsonEncoding.UTF8);
                     generator.useDefaultPrettyPrinter();
                     generator.writeStartObject();
+                    generator.writeFieldName("Version");
+                    generator.writeString(App.version);
                     currentTask.exportSettings(generator);
                     generator.writeEndObject();
                     generator.close();
