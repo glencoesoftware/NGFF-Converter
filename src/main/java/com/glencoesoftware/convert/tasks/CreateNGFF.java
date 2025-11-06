@@ -106,6 +106,7 @@ public class CreateNGFF extends BaseTask{
 
     private static final ListView<Class<?>> extraReaders;
     private final HashSet<Class<?>> desiredReaders = new HashSet<>();
+    private static boolean userWarned = false;
 
     public String getName() { return name; }
 
@@ -1038,6 +1039,27 @@ public class CreateNGFF extends BaseTask{
                     return null;
                 }
             }).toList());
+        }
+        // Warn users if outdated settings were loaded
+        if (!userWarned
+                && taskPreferences.get(prefKeys.MAX_WORKERS.name(), null) != null
+                && taskPreferences.get("Version", null) == null) {
+            Alert warn = new Alert(Alert.AlertType.WARNING,
+                             """
+                             Your default CreateNGFF settings were saved in an earlier version of \
+                             NGFF-Converter and may not have applied properly in this version.
+                             
+                             Please check the task settings and save new defaults.
+                             """,
+                    ButtonType.OK
+            );
+            warn.initOwner(App.getScene().getWindow());
+            warn.setTitle("CreateNGFF settings");
+            warn.setHeaderText("Loading settings from an outdated version");
+            warn.getDialogPane().getStylesheets().add(
+                    Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+            warn.showAndWait();
+            userWarned = true;
         }
     }
 
