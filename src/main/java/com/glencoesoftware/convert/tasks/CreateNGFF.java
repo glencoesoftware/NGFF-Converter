@@ -1044,6 +1044,7 @@ public class CreateNGFF extends BaseTask{
         if (!userWarned
                 && taskPreferences.get(prefKeys.MAX_WORKERS.name(), null) != null
                 && taskPreferences.get("Version", null) == null) {
+            // We check MAX_WORKERS as an indicator of whether any saved settings are present at all
             Alert warn = new Alert(Alert.AlertType.WARNING,
                              """
                              Your default CreateNGFF settings were saved in an earlier version of \
