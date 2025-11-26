@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
+import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.tasks.progress.ConverterProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -56,7 +57,7 @@ public class CreateNGFF extends BaseTask{
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
         COMPACT_DIMENSIONS, DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, NO_TILES,
         SCALE_FORMAT_STRING, SCALE_FORMAT_CSV, FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE,
-        ZLIB_LEVEL, MAX_CACHED_TILES, MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
+        ZLIB_LEVEL, MAX_CACHED_TILES, CALC_MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
         READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA
     }
 
@@ -105,6 +106,7 @@ public class CreateNGFF extends BaseTask{
 
     private static final ListView<Class<?>> extraReaders;
     private final HashSet<Class<?>> desiredReaders = new HashSet<>();
+    private static boolean userWarned = false;
 
     public String getName() { return name; }
 
@@ -882,6 +884,7 @@ public class CreateNGFF extends BaseTask{
         // Ensure displayed settings are what gets stored
         applySettings();
         taskPreferences.clear();
+        taskPreferences.put("Version", App.version);
         taskPreferences.put(prefKeys.LOG_LEVEL.name(), converter.getLogLevel());
         taskPreferences.putInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers());
         taskPreferences.put(prefKeys.COMPRESSION.name(), converter.getCompression().name());
@@ -926,7 +929,7 @@ public class CreateNGFF extends BaseTask{
         }
         taskPreferences.putInt(prefKeys.MAX_CACHED_TILES.name(), converter.getMaxCachedTiles());
 
-        taskPreferences.putBoolean(prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata());
+        taskPreferences.putBoolean(prefKeys.CALC_MIN_MAX.name(), converter.getCalculateOMEROMetadata());
         taskPreferences.putBoolean(prefKeys.HCS.name(), converter.getNoHCS());
         taskPreferences.putBoolean(prefKeys.NESTED.name(), converter.getNested());
         taskPreferences.putBoolean(prefKeys.WRITE_METADATA.name(), converter.getOriginalMetadata());
@@ -997,7 +1000,7 @@ public class CreateNGFF extends BaseTask{
                 converter.getMaxCachedTiles()));
 
         converter.setCalculateOMEROMetadata(!taskPreferences.getBoolean(
-                prefKeys.MIN_MAX.name(), converter.getCalculateOMEROMetadata()));
+                prefKeys.CALC_MIN_MAX.name(), converter.getCalculateOMEROMetadata()));
         converter.setNoHCS(taskPreferences.getBoolean(prefKeys.HCS.name(), converter.getNoHCS()));
         converter.setUnnested(!taskPreferences.getBoolean(prefKeys.NESTED.name(), converter.getNested()));
         converter.setNoOriginalMetadata(
@@ -1036,6 +1039,28 @@ public class CreateNGFF extends BaseTask{
                     return null;
                 }
             }).toList());
+        }
+        // Warn users if outdated settings were loaded
+        if (!userWarned
+                && taskPreferences.get(prefKeys.MAX_WORKERS.name(), null) != null
+                && taskPreferences.get("Version", null) == null) {
+            // We check MAX_WORKERS as an indicator of whether any saved settings are present at all
+            Alert warn = new Alert(Alert.AlertType.WARNING,
+                             """
+                             Your default CreateNGFF settings were saved in an earlier version of \
+                             NGFF-Converter and may not have applied properly in this version.
+                             
+                             Please check the task settings and save new defaults.
+                             """,
+                    ButtonType.OK
+            );
+            warn.initOwner(App.getScene().getWindow());
+            warn.setTitle("CreateNGFF settings");
+            warn.setHeaderText("Loading settings from an outdated version");
+            warn.getDialogPane().getStylesheets().add(
+                    Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
+            warn.showAndWait();
+            userWarned = true;
         }
     }
 
@@ -1106,7 +1131,7 @@ public class CreateNGFF extends BaseTask{
         generator.writeFieldName(prefKeys.MAX_CACHED_TILES.name());
         generator.writeString(String.valueOf(converter.getMaxCachedTiles()));
 
-        generator.writeFieldName(prefKeys.MIN_MAX.name());
+        generator.writeFieldName(prefKeys.CALC_MIN_MAX.name());
         generator.writeBoolean(converter.getCalculateOMEROMetadata());
         generator.writeFieldName(prefKeys.HCS.name());
         generator.writeBoolean(converter.getNoHCS());
@@ -1218,7 +1243,7 @@ public class CreateNGFF extends BaseTask{
         subject = settings.get(prefKeys.MAX_CACHED_TILES.name());
         if (subject != null) maxCachedTiles.setText(subject.textValue());
 
-        subject = settings.get(prefKeys.MIN_MAX.name());
+        subject = settings.get(prefKeys.CALC_MIN_MAX.name());
         if (subject != null) disableMinMax.setSelected(subject.booleanValue());
 
         subject = settings.get(prefKeys.NESTED.name());

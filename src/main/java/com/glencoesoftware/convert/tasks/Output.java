@@ -593,6 +593,7 @@ public class Output extends BaseTask {
 
     public static void setDefaultsFromWidgets() throws BackingStoreException {
         taskPreferences.clear();
+        taskPreferences.put("Version", App.version);
 
         taskPreferences.put(prefKeys.OUTPUT_CHOICE.name(), outputChoice.getValue().name());
         if (outputChoice.getValue() == outputLocationType.CUSTOM_FOLDER)

@@ -8,6 +8,7 @@ package com.glencoesoftware.convert.tasks;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
 import com.glencoesoftware.convert.tasks.progress.ConverterProgressListener;
 import com.glencoesoftware.convert.workflows.BaseWorkflow;
@@ -265,6 +266,7 @@ public class CreateTiff extends BaseTask {
         // Ensure displayed settings are what gets stored
         applySettings();
         taskPreferences.clear();
+        taskPreferences.put("Version", App.version);
         taskPreferences.put(prefKeys.LOG_LEVEL.name(), converter.getLogLevel());
         taskPreferences.putInt(prefKeys.MAX_WORKERS.name(), converter.getMaxWorkers());
         taskPreferences.put(prefKeys.COMPRESSION.name(), converter.getCompression().name());
