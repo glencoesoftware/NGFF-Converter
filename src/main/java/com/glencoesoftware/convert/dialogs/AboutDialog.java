@@ -9,6 +9,7 @@ package com.glencoesoftware.convert.dialogs;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.pyramid.PyramidFromDirectoryWriter;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import loci.formats.ImageReader;
@@ -37,12 +38,13 @@ public class AboutDialog {
     }
 
     @FXML
-    public void licenseLink() {
+    public void licenseLink(ActionEvent event) {
         try {
             Desktop.getDesktop().browse(
                     new URI("https://github.com/glencoesoftware/NGFF-Converter/blob/main/LICENSE.txt"));
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
+        event.consume();
     }
 }
