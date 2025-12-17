@@ -14,6 +14,9 @@ NGFF-Converter releases can be downloaded here:
 
 [<img src="https://img.shields.io/badge/Downloads_Page-2980B8?style=flat" height="35"  alt="Downloads Page"/>](https://downloads.glencoesoftware.com/public/NGFF-Converter/latest/)
 
+### Known issues:
+* The underlying bioformats package is currently unable to read some formats on ARM-based MacOS systems.
+
 ## Usage
 
 Running the tool will display a desktop GUI:
