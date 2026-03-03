@@ -7,7 +7,7 @@ plugins {
     id "com.github.hierynomus.license-report" version "0.16.1"
 }
 
-version = '2.1.0'
+version = '2.1.1-SNAPSHOT'
 String bfversion = "8.3.0"
 String b2rversion = "0.11.0"
 String r2oversion = "0.8.0"
@@ -125,7 +125,7 @@ runtime {
 
         imageName = applicationName
         installerName = applicationName
-
+        version = version.replace("-SNAPSHOT", "")
         def imgType = currentOs.windows ? 'ico' : currentOs.macOsX ? 'icns' : 'png'
         imageOptions += ['--icon', "src/main/resources/com/glencoesoftware/convert/main-icon.$imgType"]
         installerOptions += ['--resource-dir', "src/main/resources"]
