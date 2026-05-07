@@ -38,7 +38,7 @@ jobs:
         distribution: 'temurin'
         architecture: 'x64'
     - name: Setup Gradle wrapper
-      uses: gradle/actions/setup-gradle@v3
+      uses: gradle/actions/setup-gradle@v6
     - if: ${{ matrix.os == 'macos-latest' }}
       name: Install bundler and download blosc
       run: |
