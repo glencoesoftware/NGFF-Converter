@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
+import com.glencoesoftware.bioformats2raw.SupportedVersions;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
@@ -58,7 +59,8 @@ public class CreateNGFF extends BaseTask{
         COMPACT_DIMENSIONS, DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, NO_TILES,
         SCALE_FORMAT_STRING, SCALE_FORMAT_CSV, FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE,
         ZLIB_LEVEL, MAX_CACHED_TILES, CALC_MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
-        READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA
+        READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA,
+        NGFF_VERSION, SHARD_WIDTH, SHARD_HEIGHT, SHARD_DEPTH
     }
 
 
@@ -82,6 +84,10 @@ public class CreateNGFF extends BaseTask{
     private static final TextField scaleFormatString;
     private static final TextField scaleFormatCSV;
     private static final TextField fillValue;
+    private static final ChoiceBox<SupportedVersions> ngffVersion;
+    private static final TextField shardWidth;
+    private static final TextField shardHeight;
+    private static final TextField shardDepth;
     private static final VBox compressionPropertiesBox;
     private static final ChoiceBox<String> compressorBloscCname;
     private static final TextField compressorBloscClevel;
@@ -460,6 +466,9 @@ public class CreateNGFF extends BaseTask{
                 "Detail level of logs to record"
         ));
 
+        ngffVersion = new ChoiceBox<>(FXCollections.observableArrayList(SupportedVersions.values()));
+        standardSettings.add(getSettingContainer(ngffVersion, "NGFF schema version", "NGFF schema version"));
+
         maxWorkers = new TextField();
         maxWorkers.setTextFormatter(new TextFormatter<>(integerFilter));
         standardSettings.add(getSettingContainer(
@@ -586,6 +595,39 @@ public class CreateNGFF extends BaseTask{
                 chunkDepth,
                 "Maximum Chunk Depth",
                 "Maximum chunk depth to read"
+        ));
+
+        shardWidth = new TextField();
+        shardWidth.setTextFormatter(new TextFormatter<>(integerFilter));
+        advancedSettings.add(getSettingContainer(
+                shardWidth,
+                "Shard width",
+                """
+                Maximum shard width (default: 1024). This only applies
+                if the NGFF version is set to 0.5.
+                """
+        ));
+
+        shardHeight = new TextField();
+        shardHeight.setTextFormatter(new TextFormatter<>(integerFilter));
+        advancedSettings.add(getSettingContainer(
+                shardHeight,
+                "Shard height",
+                """
+                Maximum shard height (default: 1024). This only applies
+                if the NGFF version is set to 0.5.
+                """
+        ));
+
+        shardDepth = new TextField();
+        shardDepth.setTextFormatter(new TextFormatter<>(integerFilter));
+        advancedSettings.add(getSettingContainer(
+                shardDepth,
+                "Shard depth",
+                """
+                Maximum shard depth (default: 1). This only applies
+                if the NGFF version is set to 0.5.
+                """
         ));
 
         scaleFormatString = new TextField();
@@ -908,6 +950,11 @@ public class CreateNGFF extends BaseTask{
             taskPreferences.putInt(prefKeys.FILL_VALUE.name(), converter.getFillValue());
         }
 
+        taskPreferences.put(prefKeys.NGFF_VERSION.name(), converter.getNGFFVersion().name());
+        taskPreferences.putInt(prefKeys.SHARD_WIDTH.name(), converter.getShardWidth());
+        taskPreferences.putInt(prefKeys.SHARD_HEIGHT.name(), converter.getShardHeight());
+        taskPreferences.putInt(prefKeys.SHARD_DEPTH.name(), converter.getShardDepth());
+
         Map<String, Object> compressionProps = converter.getCompressionProperties();
         taskPreferences.remove(prefKeys.BLOSC_CNAME.name());
         taskPreferences.remove(prefKeys.BLOSC_CLEVEL.name());
@@ -984,6 +1031,11 @@ public class CreateNGFF extends BaseTask{
         // Scale format CSV not saved
         if (taskPreferences.get(prefKeys.FILL_VALUE.name(), null) != null)
             converter.setFillValue((short) taskPreferences.getInt(prefKeys.FILL_VALUE.name(), 0));
+
+        converter.setNGFFVersion(Enum.valueOf(SupportedVersions.class, taskPreferences.get(prefKeys.NGFF_VERSION.name(), converter.getNGFFVersion().name())));
+        converter.setShardWidth(taskPreferences.getInt(prefKeys.SHARD_WIDTH.name(), converter.getShardWidth()));
+        converter.setShardHeight(taskPreferences.getInt(prefKeys.SHARD_HEIGHT.name(), converter.getShardHeight()));
+        converter.setShardDepth(taskPreferences.getInt(prefKeys.SHARD_DEPTH.name(), converter.getShardDepth()));
 
         Map<String, Object> compressionProps = converter.getCompressionProperties();
         if (converter.getCompression() == ZarrCompression.blosc) {
@@ -1113,6 +1165,15 @@ public class CreateNGFF extends BaseTask{
             generator.writeFieldName(prefKeys.FILL_VALUE.name());
             generator.writeString(String.valueOf(converter.getFillValue()));
         }
+        generator.writeFieldName(prefKeys.NGFF_VERSION.name());
+        generator.writeString(converter.getNGFFVersion().name());
+        generator.writeFieldName(prefKeys.SHARD_WIDTH.name());
+        generator.writeString(String.valueOf(converter.getShardWidth()));
+        generator.writeFieldName(prefKeys.SHARD_HEIGHT.name());
+        generator.writeString(String.valueOf(converter.getShardHeight()));
+        generator.writeFieldName(prefKeys.SHARD_DEPTH.name());
+        generator.writeString(String.valueOf(converter.getShardDepth()));
+
         Map<String, Object> compressionProps = converter.getCompressionProperties();
         if (converter.getCompression() == ZarrCompression.blosc) {
             generator.writeFieldName(prefKeys.BLOSC_CNAME.name());
@@ -1224,6 +1285,18 @@ public class CreateNGFF extends BaseTask{
 
         subject = settings.get(prefKeys.FILL_VALUE.name());
         if (subject != null) fillValue.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.NGFF_VERSION.name());
+        if (subject != null) ngffVersion.setValue(SupportedVersions.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.SHARD_WIDTH.name());
+        if (subject != null) shardWidth.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.SHARD_HEIGHT.name());
+        if (subject != null) shardHeight.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.SHARD_DEPTH.name());
+        if (subject != null) shardDepth.setText(subject.textValue());
 
         subject = settings.get(prefKeys.BLOSC_CNAME.name());
         if (subject != null) compressorBloscCname.setValue(subject.textValue());
