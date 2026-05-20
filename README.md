@@ -8,6 +8,8 @@ With default settings, the resulting files should automatically have resolution 
 
 Release notes detailing changes between versions can be found [here](https://github.com/glencoesoftware/NGFF-Converter/releases)
 
+NGFF-Converter is [not supported on Linux](https://github.com/glencoesoftware/NGFF-Converter/issues/74#issuecomment-3131337548). To convert files on Linux, please use the [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw) and [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff) command line tools.
+
 ## Prebuilt Binaries
 
 NGFF-Converter releases can be downloaded here:
