@@ -23,9 +23,6 @@ repositories {
         url 'https://repo.glencoesoftware.com/repository/bioformats2raw2ometiff/'
     }
     maven {
-        url 'https://nexus.senbox.net/nexus/content/groups/public/'
-    }
-    maven {
         url 'https://artifacts.glencoesoftware.com/artifactory/ome.releases/'
     }
     maven {
