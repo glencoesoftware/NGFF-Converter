@@ -18,7 +18,6 @@ applicationName = 'NGFF-Converter'
 repositories {
     mavenLocal()
     mavenCentral()
-
     maven {
         url 'https://repo.glencoesoftware.com/repository/bioformats2raw2ometiff/'
     }
@@ -26,7 +25,7 @@ repositories {
         url 'https://artifacts.glencoesoftware.com/artifactory/ome.releases/'
     }
     maven {
-        url 'https://maven.scijava.org/content/groups/public'
+        url 'https://artifacts.glencoesoftware.com/artifactory/scijava-thirdparty'
     }
 }
 
