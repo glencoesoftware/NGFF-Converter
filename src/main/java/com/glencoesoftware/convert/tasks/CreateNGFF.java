@@ -134,6 +134,7 @@ public class CreateNGFF extends BaseTask{
 
         // Populate setting values
         logLevel.setValue(converter.getLogLevel());
+        ngffVersion.setValue(converter.getNGFFVersion());
         maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
         compression.setValue(converter.getCompression());
         tileHeight.setText(String.valueOf(converter.getTileHeight()));
@@ -147,6 +148,9 @@ public class CreateNGFF extends BaseTask{
         minImageSize.setText(String.valueOf(converter.getMinImageSize()));
         useExistingResolutions.setSelected(converter.getReuseExistingResolutions());
         chunkDepth.setText(String.valueOf(converter.getChunkDepth()));
+        shardWidth.setText(String.valueOf(converter.getShardWidth()));
+        shardHeight.setText(String.valueOf(converter.getShardHeight()));
+        shardDepth.setText(String.valueOf(converter.getShardDepth()));
         scaleFormatString.setText(converter.getScaleFormat());
         Path csvPath = converter.getAdditionalScaleFormatCSV();
         if (csvPath == null) {
