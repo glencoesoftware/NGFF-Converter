@@ -245,6 +245,7 @@ public class CreateNGFF extends BaseTask{
         resetConverter();
         int errorCount = 0;
         converter.setLogLevel(logLevel.getValue());
+        converter.setNGFFVersion(ngffVersion.getValue());
         if (!maxWorkers.getText().isEmpty()) converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
         converter.setCompression(compression.getValue());
         if (!tileHeight.getText().isEmpty()) converter.setTileHeight(Integer.parseInt(tileHeight.getText()));
@@ -324,6 +325,7 @@ public class CreateNGFF extends BaseTask{
             return;
         }
         converter.setLogLevel(source.converter.getLogLevel());
+        converter.setNGFFVersion(source.converter.getNGFFVersion());
         converter.setMaxWorkers(source.converter.getMaxWorkers());
         converter.setCompression(source.converter.getCompression());
         converter.setTileHeight(source.converter.getTileHeight());
@@ -336,6 +338,9 @@ public class CreateNGFF extends BaseTask{
         converter.setMinImageSize(source.converter.getMinImageSize());
         converter.setReuseExistingResolutions(source.converter.getReuseExistingResolutions());
         converter.setChunkDepth(source.converter.getChunkDepth());
+        converter.setShardWidth(source.converter.getShardWidth());
+        converter.setShardHeight(source.converter.getShardHeight());
+        converter.setShardDepth(source.converter.getShardDepth());
         converter.setScaleFormat(source.converter.getScaleFormat());
         converter.setAdditionalScaleFormatCSV(source.converter.getAdditionalScaleFormatCSV());
         converter.setFillValue(source.converter.getFillValue());
