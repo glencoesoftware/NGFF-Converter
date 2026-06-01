@@ -289,6 +289,9 @@ public class CreateNGFF extends BaseTask{
         if (!minImageSize.getText().isEmpty()) converter.setMinImageSize(Integer.parseInt(minImageSize.getText()));
         converter.setReuseExistingResolutions(useExistingResolutions.isSelected());
         if (!chunkDepth.getText().isEmpty()) converter.setChunkDepth(Integer.parseInt(chunkDepth.getText()));
+        if (!shardWidth.getText().isEmpty()) converter.setShardWidth(Integer.parseInt(shardWidth.getText()));
+        if (!shardHeight.getText().isEmpty()) converter.setShardHeight(Integer.parseInt(shardHeight.getText()));
+        if (!shardDepth.getText().isEmpty()) converter.setShardDepth(Integer.parseInt(shardDepth.getText()));
         converter.setScaleFormat(scaleFormatString.getText());
         if (scaleFormatCSV.getText() != null && !scaleFormatCSV.getText().isEmpty())
             converter.setAdditionalScaleFormatCSV(Paths.get(scaleFormatCSV.getText()));
