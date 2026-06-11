@@ -29,7 +29,7 @@
            </Menu>
            <Menu mnemonicParsing="false" text="Help">
                <MenuItem mnemonicParsing="false" onAction="#programHelp" text="NGFF-Converter Docs" />
-               <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="OME-NGFF Docs" />
+               <MenuItem mnemonicParsing="false" onAction="#b2rHelp" text="OME-Zarr Docs" />
                <MenuItem mnemonicParsing="false" onAction="#r2oHelp" text="OME-TIFF Docs" />
                <MenuItem mnemonicParsing="false" onAction="#manualCheckForUpdate" text="Check for Updates" />
                <MenuItem mnemonicParsing="false" onAction="#displayAbout" text="About" />

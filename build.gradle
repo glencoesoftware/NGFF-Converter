@@ -130,7 +130,7 @@ runtime {
         installerOptions += ['--resource-dir', "src/main/resources"]
         installerOptions += ['--vendor', 'Glencoe Software']
         installerOptions += ['--app-version', version]
-        installerOptions += ['--description', "Converts image files to NGFF .zarr"]
+        installerOptions += ['--description', "Converts image files to OME-Zarr or OME-TIFF"]
 
         if(currentOs.windows) {
             installerType = "msi"
