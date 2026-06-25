@@ -51,7 +51,7 @@ public class CreateNGFF extends BaseTask{
     public final Converter converter = new Converter();
     private final CommandLine cli = new CommandLine(converter);
 
-    public static final String name = "Convert to NGFF";
+    public static final String name = "Convert to OME-Zarr";
 
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
@@ -353,7 +353,7 @@ public class CreateNGFF extends BaseTask{
 
     public void calculateOutput(String basePath) {
         if (input.getAbsolutePath().endsWith(".zarr")) {
-            LOGGER.info("Input file appears to already be NGFF, will skip conversion step");
+            LOGGER.info("Input file appears to already be OME-Zarr, will skip conversion step");
             this.output = this.input;
             return;
         }
@@ -379,12 +379,12 @@ public class CreateNGFF extends BaseTask{
         }
         if (this.input.getName().endsWith(".zarr")) {
             this.status = JobState.status.WARNING;
-            this.warningMessage = "Input already appears to be NGFF, this step will be skipped";
+            this.warningMessage = "Input already appears to be OME-Zarr, this step will be skipped";
             return;
         }
         if (this.output.exists() & !converter.getOverwrite()) {
             this.status = JobState.status.WARNING;
-            this.warningMessage = "NGFF file %s already exists".formatted(this.output.getName());
+            this.warningMessage = "OME-Zarr file %s already exists".formatted(this.output.getName());
             return;
         }
         this.status = JobState.status.READY;
@@ -400,9 +400,9 @@ public class CreateNGFF extends BaseTask{
         LOGGER.info("Running bioformats2raw");
         this.status = JobState.status.RUNNING;
 
-        // Check if we actually need to convert to NGFF
+        // Check if we actually need to convert to OME-Zarr
         if (input.getName().endsWith(".zarr")) {
-            LOGGER.info("Input file appears to already be NGFF, skipping conversion step");
+            LOGGER.info("Input file appears to already be OME-Zarr, skipping conversion step");
             status = JobState.status.COMPLETED;
             listener.stop();
             return;
@@ -411,14 +411,14 @@ public class CreateNGFF extends BaseTask{
             int result = converter.call();
             if (result == 0) {
                 this.status = JobState.status.COMPLETED;
-                LOGGER.info("NGFF creation complete");
+                LOGGER.info("OME-Zarr creation complete");
             } else {
                 this.status = JobState.status.FAILED;
-                LOGGER.error("NGFF creation failed with exit code %d".formatted(result));
+                LOGGER.error("OME-Zarr creation failed with exit code %d".formatted(result));
 
             }
         } catch (Exception e) {
-            LOGGER.error("NGFF creation failed - " + e);
+            LOGGER.error("OME-Zarr creation failed - " + e);
             parent.statusText = "Job Failed: " + e;
             this.status = JobState.status.FAILED;
         } finally {
@@ -536,7 +536,7 @@ public class CreateNGFF extends BaseTask{
                 """
                 Override the input file dimension order in the
                 output file.
-                [DEPRECATED, results in invalid OME-NGFF data]
+                [DEPRECATED, results in invalid OME-Zarr data]
                 """
         ));
 
@@ -679,7 +679,7 @@ public class CreateNGFF extends BaseTask{
                 "Write original metadata",
                 """
                 Write original metadata key/values
-                into NGFF file OME-XML metadata.
+                into OME-Zarr file OME-XML metadata.
                 """
         ));
 
@@ -1047,7 +1047,7 @@ public class CreateNGFF extends BaseTask{
             // We check MAX_WORKERS as an indicator of whether any saved settings are present at all
             Alert warn = new Alert(Alert.AlertType.WARNING,
                              """
-                             Your default CreateNGFF settings were saved in an earlier version of \
+                             Your default OME-Zarr settings were saved in an earlier version of \
                              NGFF-Converter and may not have applied properly in this version.
                              
                              Please check the task settings and save new defaults.
@@ -1055,7 +1055,7 @@ public class CreateNGFF extends BaseTask{
                     ButtonType.OK
             );
             warn.initOwner(App.getScene().getWindow());
-            warn.setTitle("CreateNGFF settings");
+            warn.setTitle("OME-Zarr settings");
             warn.setHeaderText("Loading settings from an outdated version");
             warn.getDialogPane().getStylesheets().add(
                     Objects.requireNonNull(App.class.getResource("Alert.css")).toExternalForm());
