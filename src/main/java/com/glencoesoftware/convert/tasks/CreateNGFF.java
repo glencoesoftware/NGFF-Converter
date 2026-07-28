@@ -1169,7 +1169,7 @@ public class CreateNGFF extends BaseTask{
                     LOGGER.error("Did not find class for extra reader " + s);
                     return null;
                 }
-            }).toList());
+            }).filter(readerClass -> readerClass != null).toList());
         }
         // Warn users if outdated settings were loaded
         if (!userWarned
@@ -1462,7 +1462,7 @@ public class CreateNGFF extends BaseTask{
                     LOGGER.error("Did not find class for extra reader " + s);
                     return null;
                 }
-            }).toList());
+            }).filter(readerClass -> readerClass != null).toList());
         }
         LOGGER.info("Loaded settings for Task %s".formatted(getName()));
     }
