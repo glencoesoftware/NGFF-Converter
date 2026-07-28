@@ -1,12 +1,14 @@
 # NGFF-Converter
 
-NGFF-Converter is an open source tool for converting bioimage formats to the [OME-TIFF](https://ome-model.readthedocs.io/en/stable/ome-tiff/) and [OME-NGFF](https://ngff.openmicroscopy.org/) specifications.
+NGFF-Converter is an open source tool for converting bioimage formats to the [OME-TIFF](https://ome-model.readthedocs.io/en/stable/ome-tiff/) and [OME-Zarr](https://ngff.openmicroscopy.org/) specifications.
 
 Formats [supported by the bio-formats library](https://bio-formats.readthedocs.io/en/stable/supported-formats.html) should be able to be converted by this tool. 
 Internally NGFF-Converter uses the [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw) and [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff) packages for conversion.
 With default settings, the resulting files should automatically have resolution pyramids generated if needed.
 
 Release notes detailing changes between versions can be found [here](https://github.com/glencoesoftware/NGFF-Converter/releases)
+
+NGFF-Converter is [not supported on Linux](https://github.com/glencoesoftware/NGFF-Converter/issues/74#issuecomment-3131337548). To convert files on Linux, please use the [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw) and [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff) command line tools.
 
 ## Prebuilt Binaries
 
@@ -30,7 +32,7 @@ some basic settings when adding jobs.
 
 When conversion jobs are added, you'll see a different interface with two lists. Each conversion **"Job"** is divided into 
 multiple **"Tasks"** within each job. For example, converting .png to .ome.tiff requires two steps: The PNG is converted to
-NGFF, then the resulting NGFF file is converted to TIFF. A third "Output" job offers settings for where to save the final result.
+OME-Zarr, then the resulting OME-Zarr file is converted to TIFF. A third "Output" job offers settings for where to save the final result.
 
 ![Alt text](./docs/images/interface.png?raw=true "Main window")
 

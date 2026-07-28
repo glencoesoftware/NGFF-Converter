@@ -25,8 +25,8 @@ public class ConvertToNGFF extends BaseWorkflow {
         this.setTasks(tasks);
     }
 
-    public static final String shortName = "OME-NGFF";
-    public static final String fullName = "Convert to OME-NGFF";
+    public static final String shortName = "OME-Zarr";
+    public static final String fullName = "Convert to OME-Zarr";
 
 
     public String getShortName() { return shortName; }
@@ -39,7 +39,7 @@ public class ConvertToNGFF extends BaseWorkflow {
 
     public FileChooser.ExtensionFilter[] getExtensionFilters() {
         return new FileChooser.ExtensionFilter[]{
-                new FileChooser.ExtensionFilter("NGFF Files", "*.zarr", "*.ngff")
+                new FileChooser.ExtensionFilter("OME-Zarr Files", "*.zarr", "*.ngff")
         };
     }
 }
