@@ -182,7 +182,7 @@ public class CreateNGFF extends BaseTask{
         if (compressionProps.containsKey("shuffle")) {
             compressorBloscShuffle.setValue((String) compressionProps.get("shuffle"));
         } else {
-            compressorBloscShuffle.setValue("byteshuffle");
+            compressorBloscShuffle.setValue("shuffle");
         }
         if (compressionProps.containsKey("level")) {
             compressorZlibLevel.setText(String.valueOf(compressionProps.get("level")));
@@ -840,7 +840,7 @@ public class CreateNGFF extends BaseTask{
         );
 
         compressorBloscShuffle = new ChoiceBox<>(FXCollections.observableArrayList(
-                "noshuffle", "byteshuffle", "bitshuffle"));
+                "noshuffle", "shuffle", "bitshuffle"));
         VBox bloscShuffleBox = getSettingContainer(
                 compressorBloscShuffle,
                 "shuffle",
@@ -1116,7 +1116,7 @@ public class CreateNGFF extends BaseTask{
             compressionProps.put("cname", taskPreferences.get(prefKeys.BLOSC_CNAME.name(), "lz4"));
             compressionProps.put("clevel", taskPreferences.getInt(prefKeys.BLOSC_CLEVEL.name(), 5 ));
             compressionProps.put("blocksize", taskPreferences.getInt(prefKeys.BLOSC_BLOCKSIZE.name(), 0));
-            compressionProps.put("shuffle", taskPreferences.get(prefKeys.BLOSC_SHUFFLE.name(), "byteshuffle"));
+            compressionProps.put("shuffle", taskPreferences.get(prefKeys.BLOSC_SHUFFLE.name(), "shuffle"));
         } else if (converter.getCompression() == ZarrCompression.zlib) {
             compressionProps.put("level", taskPreferences.getInt(prefKeys.ZLIB_LEVEL.name(),1));
         } else if (converter.getCompression() == ZarrCompression.gzip) {
