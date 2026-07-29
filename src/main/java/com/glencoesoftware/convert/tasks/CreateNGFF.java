@@ -1465,6 +1465,7 @@ public class CreateNGFF extends BaseTask{
             }).filter(readerClass -> readerClass != null).toList());
         }
         LOGGER.info("Loaded settings for Task %s".formatted(getName()));
+        bindWidgets();
     }
 
     public void resetConverter() {
