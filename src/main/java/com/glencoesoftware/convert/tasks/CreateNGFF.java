@@ -193,6 +193,9 @@ public class CreateNGFF extends BaseTask{
             compressorGzipLevel.setText("5");
             compressorZstdLevel.setText("5");
         }
+        if (compressionProps.containsKey("checksum")) {
+            checksum.setSelected(Boolean.parseBoolean(String.valueOf(compressionProps.get("checksum"))));
+        }
 
         maxCachedTiles.setText(String.valueOf(converter.getMaxCachedTiles()));
         disableMinMax.setSelected(converter.getCalculateOMEROMetadata());
@@ -1377,6 +1380,11 @@ public class CreateNGFF extends BaseTask{
         subject = settings.get(prefKeys.FILL_VALUE.name());
         if (subject != null) fillValue.setText(subject.textValue());
 
+        subject = settings.get(prefKeys.HCS.name());
+        if (subject != null) {
+            disableHCS.setSelected(subject.booleanValue());
+        }
+
         subject = settings.get(prefKeys.NGFF_VERSION.name());
         if (subject != null) ngffVersion.setValue(SupportedVersions.valueOf(subject.textValue()));
 
@@ -1414,6 +1422,11 @@ public class CreateNGFF extends BaseTask{
         subject = settings.get(prefKeys.ZSTD_LEVEL.name());
         if (subject != null && compressionSetting == ZarrCompression.zstd) {
             compressorZstdLevel.setText(subject.textValue());
+        }
+
+        subject = settings.get(prefKeys.CHECKSUM.name());
+        if (subject != null) {
+            checksum.setSelected(Boolean.parseBoolean(subject.textValue()));
         }
 
         subject = settings.get(prefKeys.MAX_CACHED_TILES.name());
