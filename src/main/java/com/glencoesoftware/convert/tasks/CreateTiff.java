@@ -136,7 +136,7 @@ public class CreateTiff extends BaseTask {
             LOGGER.info("TIFF creation successful");
         } catch (Exception e) {
             this.status = JobState.status.FAILED;
-            LOGGER.error("TIFF creation failed - " + e);
+            LOGGER.error("TIFF creation failed", e);
             parent.statusText = "Job Failed: " + e;
         } finally {
             listener.stop();
