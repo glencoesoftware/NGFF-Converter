@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.glencoesoftware.bioformats2raw.Converter;
 import com.glencoesoftware.bioformats2raw.Downsampling;
+import com.glencoesoftware.bioformats2raw.SupportedVersions;
 import com.glencoesoftware.bioformats2raw.ZarrCompression;
 import com.glencoesoftware.convert.App;
 import com.glencoesoftware.convert.JobState;
@@ -57,8 +58,10 @@ public class CreateNGFF extends BaseTask{
     public enum prefKeys {LOG_LEVEL, MAX_WORKERS, COMPRESSION, TILE_WIDTH, TILE_HEIGHT, RESOLUTIONS, SERIES,
         COMPACT_DIMENSIONS, DIMENSION_ORDER, DOWNSAMPLING, MIN_IMAGE_SIZE, REUSE_RES, CHUNK_DEPTH, NO_TILES,
         SCALE_FORMAT_STRING, SCALE_FORMAT_CSV, FILL_VALUE, BLOSC_CNAME, BLOSC_CLEVEL, BLOSC_BLOCKSIZE, BLOSC_SHUFFLE,
-        ZLIB_LEVEL, MAX_CACHED_TILES, CALC_MIN_MAX, HCS, NESTED, OME_META, NO_ROOT, PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
-        READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA
+        ZLIB_LEVEL, GZIP_LEVEL, ZSTD_LEVEL, CHECKSUM, MAX_CACHED_TILES, CALC_MIN_MAX, HCS, NESTED, OME_META, NO_ROOT,
+        PYRAMID_NAME, KEEP_MEMOS, MEMO_DIR,
+        READER_OPTS, OUTPUT_OPTS, EXTRA_READERS, WRITE_METADATA,
+        NGFF_VERSION, SHARD_WIDTH, SHARD_HEIGHT, SHARD_DEPTH
     }
 
 
@@ -82,12 +85,19 @@ public class CreateNGFF extends BaseTask{
     private static final TextField scaleFormatString;
     private static final TextField scaleFormatCSV;
     private static final TextField fillValue;
+    private static final ChoiceBox<SupportedVersions> ngffVersion;
+    private static final TextField shardWidth;
+    private static final TextField shardHeight;
+    private static final TextField shardDepth;
     private static final VBox compressionPropertiesBox;
     private static final ChoiceBox<String> compressorBloscCname;
     private static final TextField compressorBloscClevel;
     private static final TextField compressorBloscBlockSize;
     private static final ChoiceBox<String> compressorBloscShuffle;
     private static final TextField compressorZlibLevel;
+    private static final TextField compressorGzipLevel;
+    private static final TextField compressorZstdLevel;
+    private static final ToggleSwitch checksum;
 
     private static final TextField maxCachedTiles;
     private static final ToggleSwitch disableMinMax;
@@ -128,6 +138,7 @@ public class CreateNGFF extends BaseTask{
 
         // Populate setting values
         logLevel.setValue(converter.getLogLevel());
+        ngffVersion.setValue(converter.getNGFFVersion());
         maxWorkers.setText(String.valueOf(converter.getMaxWorkers()));
         compression.setValue(converter.getCompression());
         tileHeight.setText(String.valueOf(converter.getTileHeight()));
@@ -141,6 +152,9 @@ public class CreateNGFF extends BaseTask{
         minImageSize.setText(String.valueOf(converter.getMinImageSize()));
         useExistingResolutions.setSelected(converter.getReuseExistingResolutions());
         chunkDepth.setText(String.valueOf(converter.getChunkDepth()));
+        shardWidth.setText(String.valueOf(converter.getShardWidth()));
+        shardHeight.setText(String.valueOf(converter.getShardHeight()));
+        shardDepth.setText(String.valueOf(converter.getShardDepth()));
         scaleFormatString.setText(converter.getScaleFormat());
         Path csvPath = converter.getAdditionalScaleFormatCSV();
         if (csvPath == null) {
@@ -166,15 +180,21 @@ public class CreateNGFF extends BaseTask{
             compressorBloscClevel.setText("5");
         }
         if (compressionProps.containsKey("shuffle")) {
-            // Auto = -1, No = 0, Byte = 1, Bit = 2. So add 1 to get an index for the choicebox
-            compressorBloscShuffle.getSelectionModel().select((int) compressionProps.get("shuffle") + 1);
+            compressorBloscShuffle.setValue((String) compressionProps.get("shuffle"));
         } else {
-            compressorBloscShuffle.getSelectionModel().select(2);
+            compressorBloscShuffle.setValue("shuffle");
         }
         if (compressionProps.containsKey("level")) {
             compressorZlibLevel.setText(String.valueOf(compressionProps.get("level")));
+            compressorGzipLevel.setText(String.valueOf(compressionProps.get("level")));
+            compressorZstdLevel.setText(String.valueOf(compressionProps.get("level")));
         } else {
             compressorZlibLevel.setText("1");
+            compressorGzipLevel.setText("5");
+            compressorZstdLevel.setText("5");
+        }
+        if (compressionProps.containsKey("checksum")) {
+            checksum.setSelected(Boolean.parseBoolean(String.valueOf(compressionProps.get("checksum"))));
         }
 
         maxCachedTiles.setText(String.valueOf(converter.getMaxCachedTiles()));
@@ -236,6 +256,7 @@ public class CreateNGFF extends BaseTask{
         resetConverter();
         int errorCount = 0;
         converter.setLogLevel(logLevel.getValue());
+        converter.setNGFFVersion(ngffVersion.getValue());
         if (!maxWorkers.getText().isEmpty()) converter.setMaxWorkers(Integer.parseInt(maxWorkers.getText()));
         converter.setCompression(compression.getValue());
         if (!tileHeight.getText().isEmpty()) converter.setTileHeight(Integer.parseInt(tileHeight.getText()));
@@ -259,6 +280,9 @@ public class CreateNGFF extends BaseTask{
         if (!minImageSize.getText().isEmpty()) converter.setMinImageSize(Integer.parseInt(minImageSize.getText()));
         converter.setReuseExistingResolutions(useExistingResolutions.isSelected());
         if (!chunkDepth.getText().isEmpty()) converter.setChunkDepth(Integer.parseInt(chunkDepth.getText()));
+        if (!shardWidth.getText().isEmpty()) converter.setShardWidth(Integer.parseInt(shardWidth.getText()));
+        if (!shardHeight.getText().isEmpty()) converter.setShardHeight(Integer.parseInt(shardHeight.getText()));
+        if (!shardDepth.getText().isEmpty()) converter.setShardDepth(Integer.parseInt(shardDepth.getText()));
         converter.setScaleFormat(scaleFormatString.getText());
         if (scaleFormatCSV.getText() != null && !scaleFormatCSV.getText().isEmpty())
             converter.setAdditionalScaleFormatCSV(Paths.get(scaleFormatCSV.getText()));
@@ -315,6 +339,7 @@ public class CreateNGFF extends BaseTask{
             return;
         }
         converter.setLogLevel(source.converter.getLogLevel());
+        converter.setNGFFVersion(source.converter.getNGFFVersion());
         converter.setMaxWorkers(source.converter.getMaxWorkers());
         converter.setCompression(source.converter.getCompression());
         converter.setTileHeight(source.converter.getTileHeight());
@@ -327,6 +352,9 @@ public class CreateNGFF extends BaseTask{
         converter.setMinImageSize(source.converter.getMinImageSize());
         converter.setReuseExistingResolutions(source.converter.getReuseExistingResolutions());
         converter.setChunkDepth(source.converter.getChunkDepth());
+        converter.setShardWidth(source.converter.getShardWidth());
+        converter.setShardHeight(source.converter.getShardHeight());
+        converter.setShardDepth(source.converter.getShardDepth());
         converter.setScaleFormat(source.converter.getScaleFormat());
         converter.setAdditionalScaleFormatCSV(source.converter.getAdditionalScaleFormatCSV());
         converter.setFillValue(source.converter.getFillValue());
@@ -460,6 +488,9 @@ public class CreateNGFF extends BaseTask{
                 "Detail level of logs to record"
         ));
 
+        ngffVersion = new ChoiceBox<>(FXCollections.observableArrayList(SupportedVersions.values()));
+        standardSettings.add(getSettingContainer(ngffVersion, "NGFF schema version", "NGFF schema version"));
+
         maxWorkers = new TextField();
         maxWorkers.setTextFormatter(new TextFormatter<>(integerFilter));
         standardSettings.add(getSettingContainer(
@@ -477,7 +508,9 @@ public class CreateNGFF extends BaseTask{
                         Type of compression to use with the image.
                         
                         blosc - Fast, lossless compression (recommended)
-                        zlib - Alternative lossless compression
+                        zstd - Alternative fast lossless compression (NGFF 0.5 only)
+                        zlib - Alternative lossless compression (NGFF 0.4 only)
+                        gzip - Alternative lossless compression (NGFF 0.5 only)
                         null/raw - No compression. Will increase file size
                         """
         ));
@@ -586,6 +619,39 @@ public class CreateNGFF extends BaseTask{
                 chunkDepth,
                 "Maximum Chunk Depth",
                 "Maximum chunk depth to read"
+        ));
+
+        shardWidth = new TextField();
+        shardWidth.setTextFormatter(new TextFormatter<>(integerFilter));
+        advancedSettings.add(getSettingContainer(
+                shardWidth,
+                "Shard width",
+                """
+                Maximum shard width (default: 1024). This only applies
+                if the NGFF version is set to 0.5.
+                """
+        ));
+
+        shardHeight = new TextField();
+        shardHeight.setTextFormatter(new TextFormatter<>(integerFilter));
+        advancedSettings.add(getSettingContainer(
+                shardHeight,
+                "Shard height",
+                """
+                Maximum shard height (default: 1024). This only applies
+                if the NGFF version is set to 0.5.
+                """
+        ));
+
+        shardDepth = new TextField();
+        shardDepth.setTextFormatter(new TextFormatter<>(integerFilter));
+        advancedSettings.add(getSettingContainer(
+                shardDepth,
+                "Shard depth",
+                """
+                Maximum shard depth (default: 1). This only applies
+                if the NGFF version is set to 0.5.
+                """
         ));
 
         scaleFormatString = new TextField();
@@ -777,7 +843,7 @@ public class CreateNGFF extends BaseTask{
         );
 
         compressorBloscShuffle = new ChoiceBox<>(FXCollections.observableArrayList(
-                "-1 (AUTOSHUFFLE)", "0 (NOSHUFFLE)", "1 (BYTESHUFFLE)", "2 (BITSHUFFLE)"));
+                "noshuffle", "shuffle", "bitshuffle"));
         VBox bloscShuffleBox = getSettingContainer(
                 compressorBloscShuffle,
                 "shuffle",
@@ -791,6 +857,23 @@ public class CreateNGFF extends BaseTask{
                 "level",
                 ""
         );
+        compressorGzipLevel = new TextField();
+        compressorGzipLevel.setTextFormatter(new TextFormatter<>(integerFilterSingleDigit));
+        VBox gzipLevelBox = getSettingContainer(
+                compressorGzipLevel,
+                "level",
+                ""
+        );
+        compressorZstdLevel = new TextField();
+        compressorZstdLevel.setTextFormatter(new TextFormatter<>(integerFilterSingleDigit));
+        VBox zstdLevelBox = getSettingContainer(
+                compressorZstdLevel,
+                "level",
+                ""
+        );
+
+        checksum = new ToggleSwitch();
+        VBox checksumBox = getSettingContainer(checksum, "Checksum", "Calculate checksums");
 
         compression.getSelectionModel().selectedIndexProperty().addListener(
                 (observableValue, number, number2) -> {
@@ -804,6 +887,16 @@ public class CreateNGFF extends BaseTask{
                         case zlib -> {
                             compressionPropertiesBox.getChildren().addAll(compressionTitle, zlibLevelBox,
                                     compressionHelpText);
+                            compressionPropertiesBox.setVisible(true);
+                        }
+                        case gzip -> {
+                            compressionPropertiesBox.getChildren().addAll(compressionTitle, gzipLevelBox,
+                                    compressionHelpText);
+                            compressionPropertiesBox.setVisible(true);
+                        }
+                        case zstd -> {
+                            compressionPropertiesBox.getChildren().addAll(compressionTitle, zstdLevelBox,
+                                    checksumBox, compressionHelpText);
                             compressionPropertiesBox.setVisible(true);
                         }
                         case raw -> compressionPropertiesBox.setVisible(false);
@@ -870,11 +963,20 @@ public class CreateNGFF extends BaseTask{
                     compressionProps.put("blocksize", Integer.parseInt(compressorBloscBlockSize.getText()));
                 // Auto = -1, No = 0, Byte = 1, Bit = 2. So subtract 1 to convert
                 if (compressorBloscShuffle.getValue() != null)
-                    compressionProps.put("shuffle", compressorBloscShuffle.getSelectionModel().getSelectedIndex() - 1);
+                    compressionProps.put("shuffle", compressorBloscShuffle.getValue());
             }
             case zlib -> {
                 if (compressorZlibLevel.getText() != null)
                     compressionProps.put("level", Integer.parseInt(compressorZlibLevel.getText()));
+            }
+            case gzip -> {
+                if (compressorGzipLevel.getText() != null)
+                    compressionProps.put("level", Integer.parseInt(compressorGzipLevel.getText()));
+            }
+            case zstd -> {
+                if (compressorZstdLevel.getText() != null)
+                    compressionProps.put("level", Integer.parseInt(compressorZstdLevel.getText()));
+                compressionProps.put("checksum", String.valueOf(checksum.isSelected()));
             }
         }
         return compressionProps;
@@ -908,12 +1010,19 @@ public class CreateNGFF extends BaseTask{
             taskPreferences.putInt(prefKeys.FILL_VALUE.name(), converter.getFillValue());
         }
 
+        taskPreferences.put(prefKeys.NGFF_VERSION.name(), converter.getNGFFVersion().name());
+        taskPreferences.putInt(prefKeys.SHARD_WIDTH.name(), converter.getShardWidth());
+        taskPreferences.putInt(prefKeys.SHARD_HEIGHT.name(), converter.getShardHeight());
+        taskPreferences.putInt(prefKeys.SHARD_DEPTH.name(), converter.getShardDepth());
+
         Map<String, Object> compressionProps = converter.getCompressionProperties();
         taskPreferences.remove(prefKeys.BLOSC_CNAME.name());
         taskPreferences.remove(prefKeys.BLOSC_CLEVEL.name());
         taskPreferences.remove(prefKeys.BLOSC_BLOCKSIZE.name());
         taskPreferences.remove(prefKeys.BLOSC_SHUFFLE.name());
         taskPreferences.remove(prefKeys.ZLIB_LEVEL.name());
+        taskPreferences.remove(prefKeys.GZIP_LEVEL.name());
+        taskPreferences.remove(prefKeys.ZSTD_LEVEL.name());
         if (converter.getCompression() == ZarrCompression.blosc) {
             if (compressionProps.containsKey(prefKeys.BLOSC_CNAME.name()))
                 taskPreferences.put(prefKeys.BLOSC_CNAME.name(), (String) compressionProps.get("cname"));
@@ -922,10 +1031,25 @@ public class CreateNGFF extends BaseTask{
             if (compressionProps.containsKey(prefKeys.BLOSC_BLOCKSIZE.name()))
                 taskPreferences.putInt(prefKeys.BLOSC_BLOCKSIZE.name(), (Integer) compressionProps.get("blocksize"));
             if (compressionProps.containsKey(prefKeys.BLOSC_SHUFFLE.name()))
-                taskPreferences.putInt(prefKeys.BLOSC_SHUFFLE.name(), (Integer) compressionProps.get("shuffle"));
-        } else if (converter.getCompression() == ZarrCompression.zlib) {
-            if (compressionProps.containsKey(prefKeys.ZLIB_LEVEL.name()))
+                taskPreferences.put(prefKeys.BLOSC_SHUFFLE.name(), (String) compressionProps.get("shuffle"));
+        } else if (converter.getCompression() == ZarrCompression.zlib)
+        {
+            if (compressionProps.containsKey(prefKeys.ZLIB_LEVEL.name())) {
                 taskPreferences.putInt(prefKeys.ZLIB_LEVEL.name(), (Integer) compressionProps.get("level"));
+            }
+        } else if (converter.getCompression() == ZarrCompression.gzip)
+        {
+            if (compressionProps.containsKey(prefKeys.GZIP_LEVEL.name())) {
+                taskPreferences.putInt(prefKeys.GZIP_LEVEL.name(), (Integer) compressionProps.get("level"));
+            }
+        }
+        else if (converter.getCompression() == ZarrCompression.zstd) {
+            if (compressionProps.containsKey(prefKeys.ZSTD_LEVEL.name())) {
+                taskPreferences.putInt(prefKeys.ZSTD_LEVEL.name(), (Integer) compressionProps.get("level"));
+            }
+            if (compressionProps.containsKey(prefKeys.CHECKSUM.name())) {
+                taskPreferences.put(prefKeys.CHECKSUM.name(), (String) compressionProps.get("checksum"));
+            }
         }
         taskPreferences.putInt(prefKeys.MAX_CACHED_TILES.name(), converter.getMaxCachedTiles());
 
@@ -985,14 +1109,24 @@ public class CreateNGFF extends BaseTask{
         if (taskPreferences.get(prefKeys.FILL_VALUE.name(), null) != null)
             converter.setFillValue((short) taskPreferences.getInt(prefKeys.FILL_VALUE.name(), 0));
 
+        converter.setNGFFVersion(Enum.valueOf(SupportedVersions.class, taskPreferences.get(prefKeys.NGFF_VERSION.name(), converter.getNGFFVersion().name())));
+        converter.setShardWidth(taskPreferences.getInt(prefKeys.SHARD_WIDTH.name(), converter.getShardWidth()));
+        converter.setShardHeight(taskPreferences.getInt(prefKeys.SHARD_HEIGHT.name(), converter.getShardHeight()));
+        converter.setShardDepth(taskPreferences.getInt(prefKeys.SHARD_DEPTH.name(), converter.getShardDepth()));
+
         Map<String, Object> compressionProps = converter.getCompressionProperties();
         if (converter.getCompression() == ZarrCompression.blosc) {
             compressionProps.put("cname", taskPreferences.get(prefKeys.BLOSC_CNAME.name(), "lz4"));
             compressionProps.put("clevel", taskPreferences.getInt(prefKeys.BLOSC_CLEVEL.name(), 5 ));
             compressionProps.put("blocksize", taskPreferences.getInt(prefKeys.BLOSC_BLOCKSIZE.name(), 0));
-            compressionProps.put("shuffle", taskPreferences.getInt(prefKeys.BLOSC_SHUFFLE.name(), 1));
+            compressionProps.put("shuffle", taskPreferences.get(prefKeys.BLOSC_SHUFFLE.name(), "shuffle"));
         } else if (converter.getCompression() == ZarrCompression.zlib) {
             compressionProps.put("level", taskPreferences.getInt(prefKeys.ZLIB_LEVEL.name(),1));
+        } else if (converter.getCompression() == ZarrCompression.gzip) {
+            compressionProps.put("level", taskPreferences.getInt(prefKeys.GZIP_LEVEL.name(), 5));
+        } else if (converter.getCompression() == ZarrCompression.zstd) {
+            compressionProps.put("level", taskPreferences.getInt(prefKeys.ZSTD_LEVEL.name(), 5));
+            compressionProps.put("checksum", taskPreferences.get(prefKeys.CHECKSUM.name(), "true"));
         }
         converter.setCompressionProperties(compressionProps);
 
@@ -1038,7 +1172,7 @@ public class CreateNGFF extends BaseTask{
                     LOGGER.error("Did not find class for extra reader " + s);
                     return null;
                 }
-            }).toList());
+            }).filter(readerClass -> readerClass != null).toList());
         }
         // Warn users if outdated settings were loaded
         if (!userWarned
@@ -1113,6 +1247,15 @@ public class CreateNGFF extends BaseTask{
             generator.writeFieldName(prefKeys.FILL_VALUE.name());
             generator.writeString(String.valueOf(converter.getFillValue()));
         }
+        generator.writeFieldName(prefKeys.NGFF_VERSION.name());
+        generator.writeString(converter.getNGFFVersion().name());
+        generator.writeFieldName(prefKeys.SHARD_WIDTH.name());
+        generator.writeString(String.valueOf(converter.getShardWidth()));
+        generator.writeFieldName(prefKeys.SHARD_HEIGHT.name());
+        generator.writeString(String.valueOf(converter.getShardHeight()));
+        generator.writeFieldName(prefKeys.SHARD_DEPTH.name());
+        generator.writeString(String.valueOf(converter.getShardDepth()));
+
         Map<String, Object> compressionProps = converter.getCompressionProperties();
         if (converter.getCompression() == ZarrCompression.blosc) {
             generator.writeFieldName(prefKeys.BLOSC_CNAME.name());
@@ -1126,6 +1269,14 @@ public class CreateNGFF extends BaseTask{
         } else if (converter.getCompression() == ZarrCompression.zlib) {
             generator.writeFieldName(prefKeys.ZLIB_LEVEL.name());
             generator.writeString(String.valueOf(compressionProps.get("level")));
+        } else if (converter.getCompression() == ZarrCompression.gzip) {
+            generator.writeFieldName(prefKeys.GZIP_LEVEL.name());
+            generator.writeString(String.valueOf(compressionProps.get("level")));
+        } else if (converter.getCompression() == ZarrCompression.zstd) {
+            generator.writeFieldName(prefKeys.ZSTD_LEVEL.name());
+            generator.writeString(String.valueOf(compressionProps.get("level")));
+            generator.writeFieldName(prefKeys.CHECKSUM.name());
+            generator.writeString(String.valueOf(compressionProps.get("checksum")));
         }
 
         generator.writeFieldName(prefKeys.MAX_CACHED_TILES.name());
@@ -1184,7 +1335,11 @@ public class CreateNGFF extends BaseTask{
         if (subject != null) maxWorkers.setText(subject.textValue());
 
         subject = settings.get(prefKeys.COMPRESSION.name());
-        if (subject != null) compression.setValue(ZarrCompression.valueOf(subject.textValue()));
+        ZarrCompression compressionSetting = null;
+        if (subject != null) {
+            compressionSetting = ZarrCompression.valueOf(subject.textValue());
+            compression.setValue(compressionSetting);
+        }
 
         subject = settings.get(prefKeys.TILE_WIDTH.name());
         if (subject != null) tileWidth.setText(subject.textValue());
@@ -1225,6 +1380,23 @@ public class CreateNGFF extends BaseTask{
         subject = settings.get(prefKeys.FILL_VALUE.name());
         if (subject != null) fillValue.setText(subject.textValue());
 
+        subject = settings.get(prefKeys.HCS.name());
+        if (subject != null) {
+            disableHCS.setSelected(subject.booleanValue());
+        }
+
+        subject = settings.get(prefKeys.NGFF_VERSION.name());
+        if (subject != null) ngffVersion.setValue(SupportedVersions.valueOf(subject.textValue()));
+
+        subject = settings.get(prefKeys.SHARD_WIDTH.name());
+        if (subject != null) shardWidth.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.SHARD_HEIGHT.name());
+        if (subject != null) shardHeight.setText(subject.textValue());
+
+        subject = settings.get(prefKeys.SHARD_DEPTH.name());
+        if (subject != null) shardDepth.setText(subject.textValue());
+
         subject = settings.get(prefKeys.BLOSC_CNAME.name());
         if (subject != null) compressorBloscCname.setValue(subject.textValue());
 
@@ -1238,7 +1410,24 @@ public class CreateNGFF extends BaseTask{
         if (subject != null) compressorBloscShuffle.setValue(subject.textValue());
 
         subject = settings.get(prefKeys.ZLIB_LEVEL.name());
-        if (subject != null) compressorZlibLevel.setText(subject.textValue());
+        if (subject != null && compressionSetting == ZarrCompression.zlib) {
+            compressorZlibLevel.setText(subject.textValue());
+        }
+
+        subject = settings.get(prefKeys.GZIP_LEVEL.name());
+        if (subject != null && compressionSetting == ZarrCompression.gzip) {
+            compressorGzipLevel.setText(subject.textValue());
+        }
+
+        subject = settings.get(prefKeys.ZSTD_LEVEL.name());
+        if (subject != null && compressionSetting == ZarrCompression.zstd) {
+            compressorZstdLevel.setText(subject.textValue());
+        }
+
+        subject = settings.get(prefKeys.CHECKSUM.name());
+        if (subject != null) {
+            checksum.setSelected(Boolean.parseBoolean(subject.textValue()));
+        }
 
         subject = settings.get(prefKeys.MAX_CACHED_TILES.name());
         if (subject != null) maxCachedTiles.setText(subject.textValue());
@@ -1286,9 +1475,10 @@ public class CreateNGFF extends BaseTask{
                     LOGGER.error("Did not find class for extra reader " + s);
                     return null;
                 }
-            }).toList());
+            }).filter(readerClass -> readerClass != null).toList());
         }
         LOGGER.info("Loaded settings for Task %s".formatted(getName()));
+        bindWidgets();
     }
 
     public void resetConverter() {

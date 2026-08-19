@@ -105,6 +105,7 @@ public class CreateTiff extends BaseTask {
         } else {
             converter.setCompressionOptions(null);
         }
+        converter.setOverwrite(overwrite);
         // This task doesn't have settings which can fail to be set
         return 0;
     }
@@ -130,13 +131,12 @@ public class CreateTiff extends BaseTask {
         LOGGER.info("Running raw2ometiff");
         this.status = JobState.status.RUNNING;
         try {
-            if (!overwrite && output.exists()) throw new IOException("Output path already exists");
             converter.call();
             this.status = JobState.status.COMPLETED;
             LOGGER.info("TIFF creation successful");
         } catch (Exception e) {
             this.status = JobState.status.FAILED;
-            LOGGER.error("TIFF creation failed - " + e);
+            LOGGER.error("TIFF creation failed", e);
             parent.statusText = "Job Failed: " + e;
         } finally {
             listener.stop();
