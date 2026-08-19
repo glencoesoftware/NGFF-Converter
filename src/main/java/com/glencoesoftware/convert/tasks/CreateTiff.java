@@ -361,7 +361,7 @@ public class CreateTiff extends BaseTask {
         if (subject != null) logLevel.setValue(subject.textValue());
 
         subject = settings.get(prefKeys.MAX_WORKERS.name());
-        if (subject != null) maxWorkers.setText(String.valueOf(subject.intValue()));
+        if (subject != null) maxWorkers.setText(subject.textValue());
 
         subject = settings.get(prefKeys.COMPRESSION.name());
         if (subject != null) compression.setValue(CompressionType.valueOf(subject.textValue()));
