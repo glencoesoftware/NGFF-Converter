@@ -2,7 +2,7 @@
 
 NGFF-Converter is an open source tool for converting bioimage formats to the [OME-TIFF](https://ome-model.readthedocs.io/en/stable/ome-tiff/) and [OME-Zarr](https://ngff.openmicroscopy.org/) specifications.
 
-Formats [supported by the bio-formats library](https://bio-formats.readthedocs.io/en/stable/supported-formats.html) should be able to be converted by this tool. 
+Formats [supported by the Bio-formats library](https://bio-formats.readthedocs.io/en/stable/supported-formats.html) should be able to be converted by this tool.
 Internally NGFF-Converter uses the [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw) and [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff) packages for conversion.
 With default settings, the resulting files should automatically have resolution pyramids generated if needed.
 
@@ -10,13 +10,14 @@ Release notes detailing changes between versions can be found [here](https://git
 
 NGFF-Converter is [not supported on Linux](https://github.com/glencoesoftware/NGFF-Converter/issues/74#issuecomment-3131337548). To convert files on Linux, please use the [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw) and [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff) command line tools.
 
-## Prebuilt Binaries
+## Installation
 
-NGFF-Converter releases can be downloaded here:
+Pre-built signed Windows and MacOS artifacts can be downloaded for the latest NGFF-Converter release here:
 
 [<img src="https://img.shields.io/badge/Downloads_Page-2980B8?style=flat" height="35"  alt="Downloads Page"/>](https://downloads.glencoesoftware.com/public/NGFF-Converter/latest/)
 
 ### Known issues:
+
 * The underlying bioformats package is currently unable to read some formats on ARM-based MacOS systems.
 
 ## Usage
@@ -55,10 +56,26 @@ steps. The "help" icon next to each setting provides warnings about particularly
 
 If you need further help, please feel free to [raise an issue](https://github.com/glencoesoftware/NGFF-Converter/issues).
 
-## License
-NGFF-converter is distributed under the terms of the GPL license. Please see LICENSE.txt for further details.
+## Development
 
-## Build and run:
+### Dependencies
+
+NGFF-Converter has the following requirements/dependencies:
+
+- Java 17+
+- JavaFX
+- [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw)
+- [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff)
+
+See [build.gradle](build.gradle) for more precise versioning.
+
+### Building from source
+
+Clone the repository:
+
+    git clone https://github.com/glencoesoftware/NGFF-Converter
+
+Run the build command:
 
     ./gradlew clean build
     cd build/distributions
@@ -66,30 +83,10 @@ NGFF-converter is distributed under the terms of the GPL license. Please see LIC
     cd NGFF-Converter-0.1-SNAPSHOT
     ./bin/NGFF-Converter
 
-### Dependencies
-NGFF-Converter has the following requirements/dependencies:
-- Java 16+
-- JavaFX
-- [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw)
-- [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff)
+## License
 
-See `build.gradle` for more precise versioning.
-
-### Windows & MacOS
-Download prebuilt, signed binaries for these platforms [here](https://www.glencoesoftware.com/products/ngff-converter/).
-
-### Ubuntu
-Running from source is possible via the following steps:
-
-Install openjdk-17
-
-    sudo apt install openjdk-17-jdk
-    
-Install the blosc dependency
-
-    sudo apt-get install libblosc-dev
-
-Clone and run the repo
+NGFF-converter is distributed under the terms of the GPL license.
+Please see [LICENSE.txt](LICENSE.txt) for further details.
 
 ## Project skeleton created using a combination of:
 
