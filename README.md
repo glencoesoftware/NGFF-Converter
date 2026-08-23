@@ -72,7 +72,6 @@ NGFF-Converter has the following requirements/dependencies:
 - JavaFX
 - [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw)
 - [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff)
-- [blosc](https://github.com/Blosc/c-blosc)
 
 See `build.gradle` for more precise versioning.
 
