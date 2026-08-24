@@ -121,6 +121,7 @@ public class CreateTiff extends BaseTask {
 
     public void setOverwrite(boolean shouldOverwrite) {
         overwrite = shouldOverwrite;
+        converter.setOverwrite(shouldOverwrite);
     }
 
     public void run() {
