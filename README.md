@@ -2,7 +2,7 @@
 
 NGFF-Converter is an open source tool for converting bioimage formats to the [OME-TIFF](https://ome-model.readthedocs.io/en/stable/ome-tiff/) and [OME-Zarr](https://ngff.openmicroscopy.org/) specifications.
 
-Formats [supported by the Bio-formats library](https://bio-formats.readthedocs.io/en/stable/supported-formats.html) should be able to be converted by this tool.
+Formats [supported by the Bio-Formats library](https://bio-formats.readthedocs.io/en/stable/supported-formats.html) should be able to be converted by this tool.
 Internally NGFF-Converter uses the [bioformats2raw](https://github.com/glencoesoftware/bioformats2raw) and [raw2ometiff](https://github.com/glencoesoftware/raw2ometiff) packages for conversion.
 With default settings, the resulting files should automatically have resolution pyramids generated if needed.
 
@@ -85,7 +85,7 @@ Run the build command:
 
 ## License
 
-NGFF-converter is distributed under the terms of the GPL license.
+NGFF-Converter is distributed under the terms of the GPL license.
 Please see [LICENSE.txt](LICENSE.txt) for further details.
 
 ## Project skeleton created using a combination of:
