@@ -80,6 +80,8 @@ jobs:
     runs-on: ubuntu-latest
     if: startswith(github.ref, 'refs/tags/')
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
       - name: Download artifacts
         uses: actions/download-artifact@v8
       - name: List artifacts
