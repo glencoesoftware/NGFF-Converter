@@ -174,3 +174,9 @@ downloadLicenses {
         (license('The MIT License', 'https://opensource.org/license/mit/')) : ['MIT License', 'MIT']
     ]
 }
+
+startScripts {
+  doLast {
+    windowsScript.text = windowsScript.text.replaceAll('set CLASSPATH=.*', 'set CLASSPATH=.;%APP_HOME%\\\\lib\\\\*')
+  }
+}
