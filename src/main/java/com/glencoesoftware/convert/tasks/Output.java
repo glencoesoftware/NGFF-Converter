@@ -42,7 +42,7 @@ public class Output extends BaseTask {
 
     private static final String REPLACEMENT = "_";
     private static final String[] INVALID = new String[] {
-      "/", "\\\\"
+      "/", "\\\\", ":"
     };
 
     public static final String name = "Output";
