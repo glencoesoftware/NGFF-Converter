@@ -19,7 +19,6 @@ import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
@@ -69,7 +68,11 @@ public abstract class BaseTask {
 
     public void setInput(File input){
         this.input = input;
-        this.outputName = FilenameUtils.getBaseName(input.getAbsolutePath());
+        this.outputName = input.getAbsoluteFile().getName();
+        int dot = this.outputName.lastIndexOf(".");
+        if (dot > 0) {
+          this.outputName = this.outputName.substring(0, dot);
+        }
     }
 
     // Get status as a string for display
