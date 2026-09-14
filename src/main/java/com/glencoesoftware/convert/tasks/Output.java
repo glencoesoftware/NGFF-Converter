@@ -40,11 +40,6 @@ import java.util.prefs.Preferences;
 // Virtual task to allow configuration of the output file destination and other misc options
 public class Output extends BaseTask {
 
-    private static final String REPLACEMENT = "_";
-    private static final String[] INVALID = new String[] {
-      "/", "\\\\", ":"
-    };
-
     public static final String name = "Output";
     public static final Preferences taskPreferences = Preferences.userRoot().node(name);
     public enum prefKeys {OVERWRITE, DIRECT_WRITE, LOG_CHOICE, LOG_LOCATION,
@@ -433,7 +428,7 @@ public class Output extends BaseTask {
         fileNameWidget.setAlignment(Pos.CENTER_LEFT);
 
         outputFileNameContainer = getSettingContainer(fileNameWidget, "File name",
-          "Invalid characters ('/', '\\'), will be automatically replaced with '_'");
+          "Invalid characters ('/', '\\', ':'), will be automatically replaced with '_'");
         outputChoiceContainer = getSettingContainer(outputChoice, "Location", "");
 
         HBox outputDirWidget = getDirectorySelectWidget(outputDirectory, "Choose output directory", null);
@@ -698,13 +693,5 @@ public class Output extends BaseTask {
         if (subject != null) workingDirectoryField.setText(subject.textValue());
 
         LOGGER.info("Loaded settings for Task %s".formatted(getName()));
-    }
-
-    private String sanitizeFileName(String name) {
-      String rtn = new String(name);
-      for (String c : INVALID) {
-        rtn = rtn.replaceAll(c, REPLACEMENT);
-      }
-      return rtn;
     }
 }

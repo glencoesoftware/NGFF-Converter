@@ -31,6 +31,11 @@ import java.util.prefs.BackingStoreException;
 // Abstract base class for Tasks.
 public abstract class BaseTask {
 
+    private static final String REPLACEMENT = "_";
+    private static final String[] INVALID = new String[] {
+      "/", "\\\\", ":"
+    };
+
     public final BaseWorkflow parent;
     public final ch.qos.logback.classic.Logger LOGGER =
             (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(this.getClass());
@@ -68,7 +73,7 @@ public abstract class BaseTask {
 
     public void setInput(File input){
         this.input = input;
-        this.outputName = input.getAbsoluteFile().getName();
+        this.outputName = sanitizeFileName(input.getAbsoluteFile().getName());
         int dot = this.outputName.lastIndexOf(".");
         if (dot > 0) {
           this.outputName = this.outputName.substring(0, dot);
@@ -245,5 +250,20 @@ public abstract class BaseTask {
         HBox.setHgrow(pathField, Priority.ALWAYS);
         container.setAlignment(Pos.CENTER_LEFT);
         return container;
+    }
+
+    /**
+     * Replace a defined list of invalid characters in the given name
+     * with the replacement character '_'.
+     *
+     * @param name file name to sanitize
+     * @return name with invalid characters replaced with '_'
+     */
+    protected String sanitizeFileName(String name) {
+      String rtn = new String(name);
+      for (String c : INVALID) {
+        rtn = rtn.replaceAll(c, REPLACEMENT);
+      }
+      return rtn;
     }
 }
