@@ -128,12 +128,6 @@ public class Output extends BaseTask {
         else outputChoice.setValue(outputLocationType.CUSTOM_FOLDER);
     }
 
-    @Override
-    public void setInput(File input) {
-      super.setInput(input);
-      outputName = sanitizeFileName(outputName);
-    }
-
     public void setOutputFromWidgets() {
         // Can only do this if input was already set
         if (input == null) return;
