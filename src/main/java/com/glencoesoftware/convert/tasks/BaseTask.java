@@ -19,7 +19,6 @@ import javafx.scene.layout.*;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,11 @@ import java.util.prefs.BackingStoreException;
 
 // Abstract base class for Tasks.
 public abstract class BaseTask {
+
+    private static final String REPLACEMENT = "_";
+    private static final String[] INVALID = new String[] {
+      "/", "\\\\", ":"
+    };
 
     public final BaseWorkflow parent;
     public final ch.qos.logback.classic.Logger LOGGER =
@@ -69,7 +73,11 @@ public abstract class BaseTask {
 
     public void setInput(File input){
         this.input = input;
-        this.outputName = FilenameUtils.getBaseName(input.getAbsolutePath());
+        this.outputName = sanitizeFileName(input.getAbsoluteFile().getName());
+        int dot = this.outputName.lastIndexOf(".");
+        if (dot > 0) {
+          this.outputName = this.outputName.substring(0, dot);
+        }
     }
 
     // Get status as a string for display
@@ -242,5 +250,20 @@ public abstract class BaseTask {
         HBox.setHgrow(pathField, Priority.ALWAYS);
         container.setAlignment(Pos.CENTER_LEFT);
         return container;
+    }
+
+    /**
+     * Replace a defined list of invalid characters in the given name
+     * with the replacement character '_'.
+     *
+     * @param name file name to sanitize
+     * @return name with invalid characters replaced with '_'
+     */
+    protected String sanitizeFileName(String name) {
+      String rtn = new String(name);
+      for (String c : INVALID) {
+        rtn = rtn.replaceAll(c, REPLACEMENT);
+      }
+      return rtn;
     }
 }

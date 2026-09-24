@@ -122,7 +122,8 @@ public class Output extends BaseTask {
 
     public void applyOutputToWidgets() {
         outputDirectory.setText(this.output.getParent());
-        outputFileName.setText(this.output.getName());
+        String sanitizedName = sanitizeFileName(this.output.getName());
+        outputFileName.setText(sanitizedName);
         if (parent.firstInput.getParent().equals(this.output.getParent())) outputChoice.setValue(outputLocationType.INPUT_FOLDER);
         else outputChoice.setValue(outputLocationType.CUSTOM_FOLDER);
     }
@@ -133,14 +134,20 @@ public class Output extends BaseTask {
         String fileName = outputFileName.getText();
         String extension = parent.getOutputExtension();
         // User cleared a custom name
-        if (fileName.isEmpty()) fileName = input.getName();
-        else if (!fileName.toLowerCase().endsWith(extension)) {
-            fileName += extension;
-            outputFileName.setText(fileName);
+        if (fileName.isEmpty()) {
+            fileName = input.getName();
         }
-        if (outputChoice.getValue() == outputLocationType.INPUT_FOLDER)
+        if (!fileName.toLowerCase().endsWith(extension)) {
+            fileName += extension;
+        }
+        fileName = sanitizeFileName(fileName);
+        outputFileName.setText(fileName);
+        if (outputChoice.getValue() == outputLocationType.INPUT_FOLDER) {
             this.output = new File(parent.firstInput.getParent(), fileName);
-        else this.output = new File(outputDirectory.getText(), fileName);
+        }
+        else {
+            this.output = new File(outputDirectory.getText(), fileName);
+        }
     }
 
     public void prepareForDisplay() {
@@ -157,7 +164,7 @@ public class Output extends BaseTask {
     // Attach this instance to the static widgets
     private void bindWidgets() {
         // This File chooser in particular is instance-specific
-        fileResetButton.onMouseClickedProperty().set(e -> outputFileName.setText(input.getName()));
+        fileResetButton.onMouseClickedProperty().set(e -> outputFileName.setText(sanitizeFileName(input.getName())));
 
         fileBrowseButton.onMouseClickedProperty().set(e -> {
                     FileChooser fileChooser = new FileChooser();
@@ -171,7 +178,7 @@ public class Output extends BaseTask {
                             outputChoice.getSelectionModel().select(0);
                         else outputChoice.getSelectionModel().select(1);
                         outputDirectory.setText(selectedFile.getParent());
-                        outputFileName.setText(selectedFile.getName());
+                        outputFileName.setText(sanitizeFileName(selectedFile.getName()));
                     }
                 });
     }
@@ -414,7 +421,8 @@ public class Output extends BaseTask {
         HBox.setHgrow(outputFileName, Priority.ALWAYS);
         fileNameWidget.setAlignment(Pos.CENTER_LEFT);
 
-        outputFileNameContainer = getSettingContainer(fileNameWidget, "File name", "");
+        outputFileNameContainer = getSettingContainer(fileNameWidget, "File name",
+          "Invalid characters ('/', '\\', ':'), will be automatically replaced with '_'");
         outputChoiceContainer = getSettingContainer(outputChoice, "Location", "");
 
         HBox outputDirWidget = getDirectorySelectWidget(outputDirectory, "Choose output directory", null);
