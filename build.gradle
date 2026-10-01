@@ -7,7 +7,7 @@ plugins {
     id "com.github.hierynomus.license-report" version "0.16.1"
 }
 
-version = '2.2.0-rc1'
+version = '2.2.0-SNAPSHOT'
 String bfversion = "8.5.0"
 String b2rversion = "0.12.1"
 String r2oversion = "0.10.1"
