@@ -281,7 +281,7 @@ public abstract class BaseWorkflow extends Service<Void> {
         LOGGER.info("Execution finished\n");
 
         // Print anything left in the console buffer.
-        textAreaStream.forceFlush();
+        textAreaStream.flush();
         if (logBoxAppender != null) rootLogger.detachAppender(logBoxAppender);
         if (fileAppender != null) rootLogger.detachAppender(fileAppender);
 
