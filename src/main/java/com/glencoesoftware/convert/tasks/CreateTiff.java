@@ -96,7 +96,7 @@ public class CreateTiff extends BaseTask {
         converter.setRGB(rgb.isSelected());
         converter.setSplitTIFFs(split.isSelected());
         converter.setSplitSinglePlaneTIFFs(splitPlanes.isSelected());
-        if (compression.getValue() == CompressionType.JPEG_2000) {
+        if (compression.getValue() == CompressionType.JPEG_2000_LOSSY) {
             CodecOptions codec = JPEG2000CodecOptions.getDefaultOptions();
             if (compressionQuality.getText() != null && !compressionQuality.getText().isEmpty()) {
                 codec.quality = Double.parseDouble(compressionQuality.getText());
@@ -291,7 +291,7 @@ public class CreateTiff extends BaseTask {
         converter.setSplitSinglePlaneTIFFs(taskPreferences.getBoolean(
                 prefKeys.SPLIT_PLANES.name(), converter.getSplitSinglePlaneTIFFs()));
         CodecOptions codec = null;
-        if (converter.getCompression() == CompressionType.JPEG_2000) {
+        if (converter.getCompression() == CompressionType.JPEG_2000_LOSSY) {
             codec = JPEG2000CodecOptions.getDefaultOptions();
             if (!compressionQuality.getText().isEmpty()) {
                 codec.quality = taskPreferences.getDouble(
