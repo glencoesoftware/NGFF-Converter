@@ -131,6 +131,9 @@ public class Output extends BaseTask {
     public void setOutputFromWidgets() {
         // Can only do this if input was already set
         if (input == null) return;
+        if (!outputFileNameContainer.isVisible()) {
+          return;
+        }
         String fileName = outputFileName.getText();
         String extension = parent.getOutputExtension();
         // User cleared a custom name
