@@ -386,9 +386,13 @@ public class Output extends BaseTask {
                     else {
                         String moveName = fileToMove.getName().replace(baseName, finalName);
                         File targetFile = new File(output.getParentFile().getAbsolutePath(), moveName);
-                        if (overwrite)
+                        if (overwrite) {
+                            if (targetFile.exists()) {
+                              targetFile.delete();
+                            }
                             FileUtils.moveFile(fileToMove, targetFile,
                                     StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                        }
                         else FileUtils.moveFile(fileToMove, targetFile);
                     }
                 }
