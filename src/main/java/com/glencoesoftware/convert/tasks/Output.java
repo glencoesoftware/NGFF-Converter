@@ -478,7 +478,9 @@ public class Output extends BaseTask {
                         If enabled, execution logs will also be recorded into a text file.
                         The file will be named <output_file_name>.log
                         
-                        Regardless of this setting, logs are captured in the viewer within NGFF-Converter
+                        Regardless of this setting, logs are captured in the viewer within NGFF-Converter.
+                        However, the viewer may truncate or omit some logging, especially at log levels
+                        of 'DEBUG', 'TRACE', and 'ALL'.
                         """
         ));
 

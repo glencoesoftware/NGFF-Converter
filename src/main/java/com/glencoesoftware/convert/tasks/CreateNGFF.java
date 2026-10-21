@@ -485,7 +485,8 @@ public class CreateNGFF extends BaseTask{
         standardSettings.add(getSettingContainer(
                 logLevel,
                 "Log Level",
-                "Detail level of logs to record"
+                "Detail level of logs to record. If 'DEBUG', 'TRACE', or 'ALL' is selected, " +
+                "it is recommended to enable logging to a file in the 'Output' settings."
         ));
 
         ngffVersion = new ChoiceBox<>(FXCollections.observableArrayList(SupportedVersions.values()));
