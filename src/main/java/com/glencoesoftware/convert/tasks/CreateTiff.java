@@ -96,7 +96,7 @@ public class CreateTiff extends BaseTask {
         converter.setRGB(rgb.isSelected());
         converter.setSplitTIFFs(split.isSelected());
         converter.setSplitSinglePlaneTIFFs(splitPlanes.isSelected());
-        if (compression.getValue() == CompressionType.JPEG_2000) {
+        if (compression.getValue() == CompressionType.JPEG_2000_LOSSY) {
             CodecOptions codec = JPEG2000CodecOptions.getDefaultOptions();
             if (compressionQuality.getText() != null && !compressionQuality.getText().isEmpty()) {
                 codec.quality = Double.parseDouble(compressionQuality.getText());
@@ -182,7 +182,8 @@ public class CreateTiff extends BaseTask {
         standardSettings.add(getSettingContainer(
                 logLevel,
                 "Log Level",
-                "Detail level of logs to record"
+                "Detail level of logs to record. If 'DEBUG', 'TRACE', or 'ALL' is selected, " +
+                "it is recommended to enable logging to a file in the 'Output' settings."
         ));
 
         maxWorkers = new TextField();
@@ -291,11 +292,24 @@ public class CreateTiff extends BaseTask {
         converter.setSplitSinglePlaneTIFFs(taskPreferences.getBoolean(
                 prefKeys.SPLIT_PLANES.name(), converter.getSplitSinglePlaneTIFFs()));
         CodecOptions codec = null;
-        if (converter.getCompression() == CompressionType.JPEG_2000) {
+        // only makes sense to reset the quality if:
+        // - the selected compression type was lossy JPEG-2000 (so quality can actually be used)
+        // - a quality exists in the text box (so there is something to overwrite)
+        //
+        // pick the default quality from the following in order:
+        // - the value stored in the preferences
+        // - the value set in the converter's compression options
+        // - the default lossy JPEG-2000 quality in the underlying codec implementation
+        if (converter.getCompression() == CompressionType.JPEG_2000_LOSSY) {
             codec = JPEG2000CodecOptions.getDefaultOptions();
             if (!compressionQuality.getText().isEmpty()) {
+                CodecOptions sourceOptions = converter.getCompressionOptions();
+                double defaultQuality = codec.quality;
+                if (sourceOptions != null) {
+                  defaultQuality = sourceOptions.quality;
+                }
                 codec.quality = taskPreferences.getDouble(
-                        prefKeys.COMPRESSION_OPTS.name(), converter.getCompressionOptions().quality);
+                        prefKeys.COMPRESSION_OPTS.name(), defaultQuality);
             }}
         converter.setCompressionOptions(codec);
     }

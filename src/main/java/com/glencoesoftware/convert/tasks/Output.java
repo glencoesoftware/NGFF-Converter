@@ -131,6 +131,9 @@ public class Output extends BaseTask {
     public void setOutputFromWidgets() {
         // Can only do this if input was already set
         if (input == null) return;
+        if (!outputFileNameContainer.isVisible()) {
+          return;
+        }
         String fileName = outputFileName.getText();
         String extension = parent.getOutputExtension();
         // User cleared a custom name
@@ -383,9 +386,13 @@ public class Output extends BaseTask {
                     else {
                         String moveName = fileToMove.getName().replace(baseName, finalName);
                         File targetFile = new File(output.getParentFile().getAbsolutePath(), moveName);
-                        if (overwrite)
+                        if (overwrite) {
+                            if (targetFile.exists()) {
+                              targetFile.delete();
+                            }
                             FileUtils.moveFile(fileToMove, targetFile,
                                     StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+                        }
                         else FileUtils.moveFile(fileToMove, targetFile);
                     }
                 }
@@ -471,7 +478,9 @@ public class Output extends BaseTask {
                         If enabled, execution logs will also be recorded into a text file.
                         The file will be named <output_file_name>.log
                         
-                        Regardless of this setting, logs are captured in the viewer within NGFF-Converter
+                        Regardless of this setting, logs are captured in the viewer within NGFF-Converter.
+                        However, the viewer may truncate or omit some logging, especially at log levels
+                        of 'DEBUG', 'TRACE', and 'ALL'.
                         """
         ));
 

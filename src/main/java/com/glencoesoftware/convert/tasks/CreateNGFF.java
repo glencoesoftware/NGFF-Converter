@@ -485,7 +485,8 @@ public class CreateNGFF extends BaseTask{
         standardSettings.add(getSettingContainer(
                 logLevel,
                 "Log Level",
-                "Detail level of logs to record"
+                "Detail level of logs to record. If 'DEBUG', 'TRACE', or 'ALL' is selected, " +
+                "it is recommended to enable logging to a file in the 'Output' settings."
         ));
 
         ngffVersion = new ChoiceBox<>(FXCollections.observableArrayList(SupportedVersions.values()));
@@ -1024,30 +1025,34 @@ public class CreateNGFF extends BaseTask{
         taskPreferences.remove(prefKeys.GZIP_LEVEL.name());
         taskPreferences.remove(prefKeys.ZSTD_LEVEL.name());
         if (converter.getCompression() == ZarrCompression.blosc) {
-            if (compressionProps.containsKey(prefKeys.BLOSC_CNAME.name()))
+            if (compressionProps.containsKey("cname")) {
                 taskPreferences.put(prefKeys.BLOSC_CNAME.name(), (String) compressionProps.get("cname"));
-            if (compressionProps.containsKey(prefKeys.BLOSC_CLEVEL.name()))
+            }
+            if (compressionProps.containsKey("clevel")) {
                 taskPreferences.putInt(prefKeys.BLOSC_CLEVEL.name(), (Integer) compressionProps.get("clevel"));
-            if (compressionProps.containsKey(prefKeys.BLOSC_BLOCKSIZE.name()))
+            }
+            if (compressionProps.containsKey("blocksize")) {
                 taskPreferences.putInt(prefKeys.BLOSC_BLOCKSIZE.name(), (Integer) compressionProps.get("blocksize"));
-            if (compressionProps.containsKey(prefKeys.BLOSC_SHUFFLE.name()))
+            }
+            if (compressionProps.containsKey("shuffle")) {
                 taskPreferences.put(prefKeys.BLOSC_SHUFFLE.name(), (String) compressionProps.get("shuffle"));
+            }
         } else if (converter.getCompression() == ZarrCompression.zlib)
         {
-            if (compressionProps.containsKey(prefKeys.ZLIB_LEVEL.name())) {
+            if (compressionProps.containsKey("level")) {
                 taskPreferences.putInt(prefKeys.ZLIB_LEVEL.name(), (Integer) compressionProps.get("level"));
             }
         } else if (converter.getCompression() == ZarrCompression.gzip)
         {
-            if (compressionProps.containsKey(prefKeys.GZIP_LEVEL.name())) {
+            if (compressionProps.containsKey("level")) {
                 taskPreferences.putInt(prefKeys.GZIP_LEVEL.name(), (Integer) compressionProps.get("level"));
             }
         }
         else if (converter.getCompression() == ZarrCompression.zstd) {
-            if (compressionProps.containsKey(prefKeys.ZSTD_LEVEL.name())) {
+            if (compressionProps.containsKey("level")) {
                 taskPreferences.putInt(prefKeys.ZSTD_LEVEL.name(), (Integer) compressionProps.get("level"));
             }
-            if (compressionProps.containsKey(prefKeys.CHECKSUM.name())) {
+            if (compressionProps.containsKey("checksum")) {
                 taskPreferences.put(prefKeys.CHECKSUM.name(), (String) compressionProps.get("checksum"));
             }
         }
